@@ -3,15 +3,13 @@ import { FormikCombobox } from "@/components/formik/FormikCombobox";
 import { FormikInput } from "@/components/formik/FormikInput";
 import { FormikSelect } from "@/components/formik/FormikSelect";
 import { FormikTextArea } from "@/components/formik/FormikTextArea";
-import useHeroList from "@/hooks/heroes/useHeroList";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
-import { useQuery } from "@tanstack/react-query";
 import { CellContext } from "@tanstack/react-table";
 import { RefObject } from "react";
 
 // Define a custom type for the column definition meta
 type ColumnDefMeta = {
-  type: "Textarea" | "Checkbox" | "Input" | "Select" | "ComboBox";
+  type: "Textarea" | "Checkbox" | "Input" | "Select" | "ComboBox" | "Decimal";
   options: BasicModel[];
   isNumeric: boolean;
   isWholeNumber: boolean;
@@ -116,6 +114,20 @@ export const EditableTableCell = <TData, TValue>({
           items={options || []}
           label={label}
           showLabel={false}
+        />
+      );
+    case "Decimal":
+      return (
+        <FormikInput
+          placeholder={label}
+          isNumeric={true}
+          wholeNumberOnly={false}
+          {...commonProps}
+          inputRef={
+            dataRows === index + 1 && column.id === firstFieldInForm
+              ? (ref as RefObject<HTMLInputElement>)
+              : undefined
+          }
         />
       );
     default:

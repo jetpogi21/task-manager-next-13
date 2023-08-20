@@ -64,9 +64,7 @@ export const FormikCheckbox: React.FC<FormikCheckboxProps> = ({
   }, [inputRef, setFocusOnLoad]);
 
   return (
-    <div
-      className={cn("flex flex-col gap-1.5 items-center", containerClassNames)}
-    >
+    <div className={cn("flex gap-1.5 items-center", containerClassNames)}>
       <Checkbox
         checked={fieldValue}
         onCheckedChange={handleChange}

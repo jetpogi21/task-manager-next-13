@@ -80,7 +80,11 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
   return (
     <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
       {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
-      <div className={cn("flex", { "-mr-4": allowBlank && fieldValue })}>
+      <div
+        className={cn("flex", {
+          "-mr-4": allowBlank && fieldValue,
+        })}
+      >
         <Select
           onValueChange={handleChange}
           defaultValue={fieldValue}
@@ -88,7 +92,7 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
             typeof fieldValue === "number" ? fieldValue.toString() : fieldValue
           }
         >
-          <SelectTrigger>
+          <SelectTrigger className="whitespace-nowrap">
             {fieldValue ? (
               <>
                 <SelectValue />

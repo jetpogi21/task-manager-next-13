@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, RefObject } from "react";
 import _ from "lodash";
 import { ClassValue } from "clsx";
 import { cn } from "@/lib/utils";
+import { isValidCurrency } from "@/utils/utilities";
 
 export interface FormikInputProps extends InputProps {
   label?: string;
@@ -54,7 +55,7 @@ export const FormikInput: React.FC<FormikInputProps> = ({
   const hasError = meta.touched && meta.error;
 
   let inputType = "text";
-  if (isNumeric) {
+  if (isNumeric && wholeNumberOnly) {
     inputType = "number";
   }
 
@@ -85,7 +86,24 @@ export const FormikInput: React.FC<FormikInputProps> = ({
   const handleBlur = () => {
     internalVal && setArrayTouched && setArrayTouched();
     internalVal && setHasUpdate && setHasUpdate();
-    setValue(internalVal);
+
+    if (isNumeric) {
+      if (internalVal.includes("+")) {
+        //@ts-ignore
+        const values = internalVal.split("+").map((val) => parseFloat(val));
+
+        //@ts-ignore
+        const sum = values.reduce((acc, curr) => acc + curr, 0);
+
+        setValue(sum.toFixed(2));
+      } else if (isValidCurrency(internalVal)) {
+        setValue(internalVal);
+      } else {
+        setValue("0.00");
+      }
+    } else {
+      setValue(internalVal);
+    }
   };
 
   const isNumericInput = (
@@ -102,6 +120,8 @@ export const FormikInput: React.FC<FormikInputProps> = ({
 
     // Allow backspace, tab, enter, escape, arrow keys, home, end, and minus (-)
     if (
+      key === "Plus" ||
+      key === "Equal" ||
       key === "Backspace" ||
       key === "Tab" ||
       key === "Enter" ||
