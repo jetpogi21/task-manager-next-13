@@ -110,7 +110,7 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
             )}
           </SelectTrigger>
           <SelectContent>
-            {options.map(({ id, name }) => (
+            {options?.map(({ id, name }) => (
               <SelectItem
                 value={id.toString()}
                 key={id}

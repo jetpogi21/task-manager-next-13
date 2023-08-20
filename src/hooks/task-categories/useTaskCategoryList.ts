@@ -8,15 +8,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 const getTaskCategories = async () => {
-  const { data } = await axiosClient.get<GetTaskCategoriesResponse>(
-    `task-categories`,
-    {
-      params: {
-        fetchCount: "false",
-        simpleOnly: "true",
-      } as Partial<TaskCategorySearchParams>,
-    }
-  );
+  const { data } = await axiosClient.get<GetTaskCategoriesResponse>(`task-categories`, {
+    params: {
+      fetchCount: "false",
+      simpleOnly: "true",
+    } as Partial<TaskCategorySearchParams>,
+  });
 
   return data.rows.map((item) => ({
     id: item.id,

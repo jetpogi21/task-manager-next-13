@@ -36,6 +36,8 @@ import { ChevronLast, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 
+
+
 interface TaskNoteSubformProps {
   formik: FormikProps<TaskFormFormikInitialValues>;
 }
@@ -64,13 +66,14 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
     setCurrentData: state.setCurrentData,
   }));
   const { setRecordsToDelete } = useTaskNoteDeleteDialog();
-
+  
   //Zustand
   const { setHasUpdate } = useTaskStore((state) => ({
     setHasUpdate: state.setHasUpdate,
   }));
 
   //Tanstack queries
+  
 
   //Page Constants
   const DEFAULT_TASKNOTE = DEFAULT_FORM_VALUE;
@@ -78,7 +81,9 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
   //Transformations
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
-  const dataRowCount = formik.values.TaskNotes.filter((item) => item.id).length;
+  const dataRowCount = formik.values.TaskNotes.filter(
+    (item) => item.id
+  ).length;
   const pageStatus = `Showing ${dataRowCount} of ${dataRowCount} record(s)`;
 
   //Utility Functions
@@ -170,7 +175,7 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
     );
     resetRowSelection();
   };
-
+  
   const taskNoteTable = useReactTable<TaskNoteFormikShape>({
     data: formik.values.TaskNotes,
     columns: TaskNoteColumns,
@@ -201,7 +206,9 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
       lastFieldInForm: "file",
       ref,
       editable: true,
-      options: {},
+      options: {
+        
+      }
     },
   });
 

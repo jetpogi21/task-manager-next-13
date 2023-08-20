@@ -17,7 +17,7 @@ const getTags = async () => {
 
   return data.rows.map((item) => ({
     id: item.id,
-    name: item.id,
+    name: item.name,
   }));
 };
 

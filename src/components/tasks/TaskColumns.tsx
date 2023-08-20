@@ -135,7 +135,7 @@ export const TaskColumns: ColumnDef<TaskModel>[] = [
         />
       ) : (
         //@ts-ignore
-        cell.row.original.TaskTemplate.id.toString()
+        cell.row.original.TaskTemplate.id?.toString()
       );
     },
     meta: {
