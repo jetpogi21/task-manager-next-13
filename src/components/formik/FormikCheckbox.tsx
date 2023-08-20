@@ -17,6 +17,7 @@ export interface FormikCheckboxProps extends ButtonProps {
   helperText?: string;
   submitOnChange?: boolean;
   containerClassNames?: ClassValue[];
+  setHasUpdate?: () => void;
 }
 
 export const FormikCheckbox: React.FC<FormikCheckboxProps> = ({
@@ -28,6 +29,7 @@ export const FormikCheckbox: React.FC<FormikCheckboxProps> = ({
   onKeyDown,
   helperText,
   submitOnChange = false,
+  setHasUpdate,
   ...props
 }) => {
   const { submitForm } = useFormikContext();
@@ -42,6 +44,7 @@ export const FormikCheckbox: React.FC<FormikCheckboxProps> = ({
 
   const handleChange = (checked: boolean) => {
     setArrayTouched && setArrayTouched();
+    setHasUpdate && setHasUpdate();
     setValue(checked);
     if (submitOnChange) {
       submitForm();
