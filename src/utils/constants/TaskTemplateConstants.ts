@@ -2,7 +2,7 @@
 import { TaskTemplateFormikFilter } from "@/interfaces/TaskTemplateInterfaces";
 
 export const MODEL_NAME = "TaskTemplate";
-export const TABLE_NAME = "task_templates";
+export const TABLE_NAME = "taskmanager_tasktemplate";
 export const PLURALIZED_MODEL_NAME = "TaskTemplates";
 export const VERBOSE_MODEL_NAME = "Task Template";
 export const PLURALIZED_VERBOSE_MODEL_NAME = "Task Templates";
