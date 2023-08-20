@@ -39,12 +39,13 @@ import { Form, FormikProps } from "formik";
 import { ChevronLast, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
-
 interface TaskIntervalFormArrayProps {
   formik: FormikProps<{ TaskIntervals: TaskIntervalFormikShape[] }>;
 }
 
-const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({ formik }) => {
+const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
+  formik,
+}) => {
   //URL States
   const { router, query, pathname } = useURL<TaskIntervalSearchParams>();
   const sort = query["sort"] || DEFAULT_SORT_BY;
@@ -76,9 +77,9 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({ formik })
     isLoading,
     isFetching,
     fetchNextPage,
-  } = useInfiniteQuery<GetTaskIntervalsResponse>(["taskIntervals"], { enabled: false });
-
-  
+  } = useInfiniteQuery<GetTaskIntervalsResponse>(["taskIntervals"], {
+    enabled: false,
+  });
 
   //Transformations
   const sorting = getSorting(sort);
@@ -163,7 +164,9 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({ formik })
 
   const toggleRow = (idx: number) => setRowSelection(idx);
   const toggleSelectAllRow = () => {
-    if (Object.keys(rowSelection).length === formik.values.TaskIntervals.length) {
+    if (
+      Object.keys(rowSelection).length === formik.values.TaskIntervals.length
+    ) {
       resetRowSelection();
     } else {
       setRowSelectionToAll(formik.values.TaskIntervals.length);
@@ -209,7 +212,7 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({ formik })
 
     resetRowSelection();
   };
- 
+
   const taskIntervalTable = useReactTable<TaskIntervalFormikShape>({
     data: formik.values.TaskIntervals,
     columns: TaskIntervalColumns,
@@ -236,9 +239,7 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({ formik })
       lastFieldInForm: LAST_FIELD_IN_FORM,
       ref,
       editable: true,
-      options: {
-        
-      }
+      options: {},
     },
   });
 
@@ -258,7 +259,8 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({ formik })
         <div className="flex items-center gap-4">
           <div className="text-sm">
             {taskIntervalTable.getFilteredSelectedRowModel().rows.length} of{" "}
-            {taskIntervalTable.getFilteredRowModel().rows.length} row(s) selected.
+            {taskIntervalTable.getFilteredRowModel().rows.length} row(s)
+            selected.
           </div>
           {hasSelected && (
             <Button

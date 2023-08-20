@@ -24,12 +24,14 @@ import { useSubTaskTemplateStore } from "@/hooks/sub-task-templates/useSubTaskTe
 
 interface SubTaskTemplateDeleteDialogProps {
   onSuccess?: () => void;
-   formik?: any;
+  formik?: any;
 }
 
-export function SubTaskTemplateDeleteDialog(props: SubTaskTemplateDeleteDialogProps) {
+export function SubTaskTemplateDeleteDialog(
+  props: SubTaskTemplateDeleteDialogProps
+) {
   const [mounted, setMounted] = useState(false);
-    const [
+  const [
     isDialogLoading,
     recordsToDelete,
     setRecordsToDelete,
@@ -41,13 +43,16 @@ export function SubTaskTemplateDeleteDialog(props: SubTaskTemplateDeleteDialogPr
     state.setIsDialogLoading,
   ]);
 
-  const [currentData, resetRowSelection, setCurrentData] = useSubTaskTemplateStore((state) => [
-    state.currentData,
-    state.resetRowSelection,
-    state.setCurrentData,
-  ]);
+  const [currentData, resetRowSelection, setCurrentData] =
+    useSubTaskTemplateStore((state) => [
+      state.currentData,
+      state.resetRowSelection,
+      state.setCurrentData,
+    ]);
 
-  const deleteSubTaskTemplates = async (payload: SubTaskTemplateDeletePayload) => {
+  const deleteSubTaskTemplates = async (
+    payload: SubTaskTemplateDeletePayload
+  ) => {
     const { data } = (await axiosClient({
       url: "sub-task-templates",
       method: "delete",
@@ -81,7 +86,8 @@ export function SubTaskTemplateDeleteDialog(props: SubTaskTemplateDeleteDialogPr
   const open = recordsToDelete.length > 0;
   const s = recordsToDelete.length > 1 ? "s" : "";
   const caption =
-    recordsToDelete.length > 1 ? PLURALIZED_VERBOSE_MODEL_NAME
+    recordsToDelete.length > 1
+      ? PLURALIZED_VERBOSE_MODEL_NAME
       : VERBOSE_MODEL_NAME;
 
   const mutateSubTaskTemplate = () => {

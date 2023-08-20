@@ -39,7 +39,6 @@ import { Form, FormikProps } from "formik";
 import { ChevronLast, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
-
 interface TagFormArrayProps {
   formik: FormikProps<{ Tags: TagFormikShape[] }>;
 }
@@ -77,8 +76,6 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
     isFetching,
     fetchNextPage,
   } = useInfiniteQuery<GetTagsResponse>(["tags"], { enabled: false });
-
-  
 
   //Transformations
   const sorting = getSorting(sort);
@@ -209,7 +206,7 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
 
     resetRowSelection();
   };
- 
+
   const tagTable = useReactTable<TagFormikShape>({
     data: formik.values.Tags,
     columns: TagColumns,
@@ -236,9 +233,7 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
       lastFieldInForm: LAST_FIELD_IN_FORM,
       ref,
       editable: true,
-      options: {
-        
-      }
+      options: {},
     },
   });
 

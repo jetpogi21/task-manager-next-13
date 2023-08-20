@@ -8,12 +8,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 const getTaskIntervals = async () => {
-  const { data } = await axiosClient.get<GetTaskIntervalsResponse>(`task-intervals`, {
-    params: {
-      fetchCount: "false",
-      simpleOnly: "true",
-    } as Partial<TaskIntervalSearchParams>,
-  });
+  const { data } = await axiosClient.get<GetTaskIntervalsResponse>(
+    `task-intervals`,
+    {
+      params: {
+        fetchCount: "false",
+        simpleOnly: "true",
+      } as Partial<TaskIntervalSearchParams>,
+    }
+  );
 
   return data.rows.map((item) => ({
     id: item.id,

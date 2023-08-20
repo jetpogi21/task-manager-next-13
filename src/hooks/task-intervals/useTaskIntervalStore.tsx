@@ -28,7 +28,7 @@ type Actions = {
   setRowSelectionToAll: (idx: number) => void;
   setCurrentData: (item: TaskIntervalFormikShape[]) => void;
   setIsUpdating: (isUpdating: boolean) => void;
-  setSort: (sort:string) => void;
+  setSort: (sort: string) => void;
   setHasUpdate: (hasUpdate: boolean) => void;
 };
 

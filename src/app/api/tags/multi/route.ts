@@ -58,4 +58,4 @@ export const POST = async (req: Request) => {
     await t.rollback();
     return handleSequelizeError(err);
   }
-};;
+};

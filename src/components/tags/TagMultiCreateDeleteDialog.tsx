@@ -24,7 +24,7 @@ import { useTagStore } from "@/hooks/tags/useTagStore";
 
 export function TagMultiCreateDeleteDialog() {
   const [mounted, setMounted] = useState(false);
-    const [
+  const [
     isDialogLoading,
     recordsToDelete,
     setRecordsToDelete,
@@ -38,11 +38,13 @@ export function TagMultiCreateDeleteDialog() {
     state.mutate,
   ]);
 
-  const [currentData, resetRowSelection, setCurrentData] = useTagStore((state) => [
-    state.currentData,
-    state.resetRowSelection,
-    state.setCurrentData,
-  ]);
+  const [currentData, resetRowSelection, setCurrentData] = useTagStore(
+    (state) => [
+      state.currentData,
+      state.resetRowSelection,
+      state.setCurrentData,
+    ]
+  );
 
   const deleteTags = async (payload: TagDeletePayload) => {
     const { data } = (await axiosClient({
@@ -58,7 +60,8 @@ export function TagMultiCreateDeleteDialog() {
   const open = recordsToDelete.length > 0;
   const s = recordsToDelete.length > 1 ? "s" : "";
   const caption =
-    recordsToDelete.length > 1 ? PLURALIZED_VERBOSE_MODEL_NAME
+    recordsToDelete.length > 1
+      ? PLURALIZED_VERBOSE_MODEL_NAME
       : VERBOSE_MODEL_NAME;
 
   const mutateTag = () => {

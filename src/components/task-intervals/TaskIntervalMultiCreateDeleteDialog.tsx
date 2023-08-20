@@ -24,7 +24,7 @@ import { useTaskIntervalStore } from "@/hooks/task-intervals/useTaskIntervalStor
 
 export function TaskIntervalMultiCreateDeleteDialog() {
   const [mounted, setMounted] = useState(false);
-    const [
+  const [
     isDialogLoading,
     recordsToDelete,
     setRecordsToDelete,
@@ -38,11 +38,13 @@ export function TaskIntervalMultiCreateDeleteDialog() {
     state.mutate,
   ]);
 
-  const [currentData, resetRowSelection, setCurrentData] = useTaskIntervalStore((state) => [
-    state.currentData,
-    state.resetRowSelection,
-    state.setCurrentData,
-  ]);
+  const [currentData, resetRowSelection, setCurrentData] = useTaskIntervalStore(
+    (state) => [
+      state.currentData,
+      state.resetRowSelection,
+      state.setCurrentData,
+    ]
+  );
 
   const deleteTaskIntervals = async (payload: TaskIntervalDeletePayload) => {
     const { data } = (await axiosClient({
@@ -58,7 +60,8 @@ export function TaskIntervalMultiCreateDeleteDialog() {
   const open = recordsToDelete.length > 0;
   const s = recordsToDelete.length > 1 ? "s" : "";
   const caption =
-    recordsToDelete.length > 1 ? PLURALIZED_VERBOSE_MODEL_NAME
+    recordsToDelete.length > 1
+      ? PLURALIZED_VERBOSE_MODEL_NAME
       : VERBOSE_MODEL_NAME;
 
   const mutateTaskInterval = () => {
