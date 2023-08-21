@@ -1,7 +1,7 @@
 "use client";
 import { Label } from "@/components/ui/Label";
 import { useField, useFormikContext } from "formik";
-import { useEffect, useRef, useState, RefObject } from "react";
+import { useEffect, useRef, useState, RefObject, forwardRef } from "react";
 import { ClassValue } from "clsx";
 import { cn } from "@/lib/utils";
 import { ButtonProps } from "@/components/ui/Button";
@@ -24,59 +24,64 @@ export interface FormikDatePickerProps
   setHasUpdate?: () => void;
 }
 
-export const FormikDatePicker: React.FC<FormikDatePickerProps> = ({
-  containerClassNames = "",
-  label = "",
-  setArrayTouched,
-  setFocusOnLoad = false,
-  inputRef: propInputRef,
-  onKeyDown,
-  helperText,
-  submitOnChange = false,
-  showLabel = true,
-  format,
-  ...props
-}) => {
-  const { submitForm } = useFormikContext();
-  const [field, meta, { setValue }] = useField(props.name);
+export const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
+  (
+    {
+      containerClassNames = "",
+      label = "",
+      setArrayTouched,
+      setFocusOnLoad = false,
+      inputRef: propInputRef,
+      onKeyDown,
+      helperText,
+      submitOnChange = false,
+      showLabel = true,
+      format,
+      ...props
+    },
+    ref
+  ) => {
+    const { submitForm } = useFormikContext();
+    const [field, meta, { setValue }] = useField(props.name);
 
-  const fieldValue = field.value
-    ? field.value instanceof Date
-      ? field.value
-      : new Date(field.value)
-    : null;
+    const fieldValue = field.value
+      ? field.value instanceof Date
+        ? field.value
+        : new Date(field.value)
+      : null;
 
-  const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  const hasError = meta.touched && meta.error;
+    const hasError = meta.touched && meta.error;
 
-  const handleChange: SelectSingleEventHandler = (newValue) => {
-    setValue(newValue);
-    setArrayTouched && setArrayTouched();
-    props.setHasUpdate && props.setHasUpdate();
-    submitOnChange && submitForm();
-  };
+    const handleChange: SelectSingleEventHandler = (newValue) => {
+      setValue(newValue);
+      setArrayTouched && setArrayTouched();
+      props.setHasUpdate && props.setHasUpdate();
+      submitOnChange && submitForm();
+    };
 
-  useEffect(() => {
-    if (inputRef && setFocusOnLoad) {
-      inputRef.current?.focus();
-    }
-  }, [inputRef, setFocusOnLoad]);
+    useEffect(() => {
+      if (inputRef && setFocusOnLoad) {
+        inputRef.current?.focus();
+      }
+    }, [inputRef, setFocusOnLoad]);
 
-  return (
-    <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
-      {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
-      <DatePicker
-        value={fieldValue}
-        handleChange={handleChange}
-      />
+    return (
+      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+        {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
+        <DatePicker
+          value={fieldValue}
+          handleChange={handleChange}
+        />
 
-      {helperText && (
-        <span className="mt-1 text-xs font-bold text-muted-foreground">
-          {helperText}
-        </span>
-      )}
-      {hasError && <span className="text-xs text-red-500">{meta.error}</span>}
-    </div>
-  );
-};
+        {helperText && (
+          <span className="mt-1 text-xs font-bold text-muted-foreground">
+            {helperText}
+          </span>
+        )}
+        {hasError && <span className="text-xs text-red-500">{meta.error}</span>}
+      </div>
+    );
+  }
+);

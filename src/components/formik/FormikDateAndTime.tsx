@@ -5,20 +5,16 @@ import {
   useEffect,
   useRef,
   useState,
-  RefObject,
   ChangeEventHandler,
   FocusEventHandler,
+  forwardRef,
 } from "react";
 import { ClassValue } from "clsx";
 import { cn } from "@/lib/utils";
 import { ButtonProps } from "@/components/ui/Button";
-import { DatePicker, DatePickerProps } from "@/components/ui/DatePicker";
-import { SelectSingleEventHandler } from "react-day-picker";
+import { DatePickerProps } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
-import {
-  convertStringToLocaleString,
-  toValidDateTime,
-} from "@/utils/utilities";
+import { toValidDateTime } from "@/utils/utilities";
 
 export interface FormikDateAndTimeProps
   extends ButtonProps,
@@ -28,7 +24,6 @@ export interface FormikDateAndTimeProps
   setFocusOnLoad?: boolean;
   setArrayTouched?: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  inputRef?: RefObject<HTMLInputElement> | undefined;
   helperText?: string;
   submitOnChange?: boolean;
   containerClassNames?: ClassValue[];
@@ -36,63 +31,90 @@ export interface FormikDateAndTimeProps
   setHasUpdate?: () => void;
 }
 
-export const FormikDateAndTime: React.FC<FormikDateAndTimeProps> = ({
-  containerClassNames = "",
-  label = "",
-  setArrayTouched,
-  setFocusOnLoad = false,
-  inputRef: propInputRef,
-  onKeyDown,
-  helperText,
-  submitOnChange = false,
-  showLabel = true,
-  format,
-  ...props
-}) => {
-  const { submitForm } = useFormikContext();
-  const [field, meta, { setValue }] = useField(props.name);
-  const fieldValue = field.value
-    ? toValidDateTime(new Date(field.value))
-    : undefined;
+export const FormikDateAndTime = forwardRef<
+  HTMLInputElement,
+  FormikDateAndTimeProps
+>(
+  (
+    {
+      containerClassNames = "",
+      label = "",
+      setArrayTouched,
+      setFocusOnLoad = false,
+      onKeyDown,
+      helperText,
+      submitOnChange = false,
+      showLabel = true,
+      format,
+      ...props
+    },
+    ref
+  ) => {
+    const { submitForm } = useFormikContext();
+    const [field, meta, { setValue }] = useField(props.name);
+    const fieldValue = field.value
+      ? toValidDateTime(new Date(field.value))
+      : undefined;
 
-  const [internal, setInternal] = useState(fieldValue);
+    const [internal, setInternal] = useState(fieldValue);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-  const hasError = meta.touched && meta.error;
+    const hasError = meta.touched && meta.error;
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    setInternal(e.currentTarget.value);
-    submitOnChange && submitForm();
-  };
+    const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+      setInternal(e.currentTarget.value);
+      submitOnChange && submitForm();
+    };
 
-  const handleBlur: FocusEventHandler<HTMLInputElement> = (e) => {
-    setValue(internal);
-    setArrayTouched && setArrayTouched();
-    props.setHasUpdate && props.setHasUpdate();
-  };
+    const handleBlur: FocusEventHandler<HTMLInputElement> = (e) => {
+      internal &&
+        fieldValue !== internal &&
+        setArrayTouched &&
+        setArrayTouched();
+      internal &&
+        fieldValue !== internal &&
+        props.setHasUpdate &&
+        props.setHasUpdate();
 
-  useEffect(() => {
-    if (inputRef && setFocusOnLoad) {
-      inputRef.current?.focus();
-    }
-  }, [inputRef, setFocusOnLoad]);
+      fieldValue !== internal && setValue(internal);
+    };
 
-  return (
-    <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
-      {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
-      <Input
-        type="datetime-local"
-        value={fieldValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-      />
-      {helperText && (
-        <span className="mt-1 text-xs font-bold text-muted-foreground">
-          {helperText}
-        </span>
-      )}
-      {hasError && <span className="text-xs text-red-500">{meta.error}</span>}
-    </div>
-  );
-};
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        //@ts-ignore
+        setValue(e.target.value);
+      }
+
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
+    };
+
+    useEffect(() => {
+      if (inputRef && setFocusOnLoad) {
+        inputRef.current?.focus();
+      }
+    }, [inputRef, setFocusOnLoad]);
+
+    return (
+      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+        {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
+        <Input
+          type="datetime-local"
+          value={fieldValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          ref={ref || inputRef}
+        />
+        {helperText && (
+          <span className="mt-1 text-xs font-bold text-muted-foreground">
+            {helperText}
+          </span>
+        )}
+        {hasError && <span className="text-xs text-red-500">{meta.error}</span>}
+      </div>
+    );
+  }
+);

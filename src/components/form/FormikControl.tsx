@@ -13,7 +13,7 @@ import {
 import { FormikTextArea } from "@/components/formik/FormikTextArea";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ClassValue } from "clsx";
-import React, { RefObject } from "react";
+import React, { RefObject, forwardRef } from "react";
 
 interface ControlProps {
   name: string;
@@ -23,11 +23,11 @@ interface ControlProps {
   containerClassNames?: ClassValue[];
   disabled?: boolean;
   setHasUpdate?: () => void;
+  ref?: RefObject<any> | undefined;
 }
 
 interface TextProps extends ControlProps {
   type: "Text";
-  inputRef?: RefObject<any> | undefined;
   setFocusOnLoad?: boolean;
 }
 
@@ -87,7 +87,7 @@ type FormikControlProps =
   | DatePickerProps
   | DateAndTimeProps;
 
-const FormikControl: React.FC<FormikControlProps> = (props) => {
+const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
   const {
     type,
     name,
@@ -197,13 +197,13 @@ const FormikControl: React.FC<FormikControlProps> = (props) => {
           submitOnChange={submitOnChange}
           placeholder={placeholder}
           containerClassNames={containerClassNames}
-          inputRef={props.inputRef}
+          ref={ref}
           setFocusOnLoad={props.setFocusOnLoad}
           disabled={props.disabled}
           setHasUpdate={props.setHasUpdate}
         />
       );
   }
-};
+});
 
 export default FormikControl;

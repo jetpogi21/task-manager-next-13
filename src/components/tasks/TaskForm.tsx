@@ -402,7 +402,7 @@ const TaskForm: React.FC<TaskFormProps> = (prop) => {
           type="Text"
           label="Description"
           containerClassNames={["w-full"]}
-          inputRef={ref}
+          ref={ref}
           setFocusOnLoad={true}
           setHasUpdate={handleHasUdpate}
         />

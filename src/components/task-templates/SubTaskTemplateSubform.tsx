@@ -205,7 +205,7 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
       toggleSelectAllRow,
       firstFieldInForm: FIRST_FIELD_IN_FORM,
       lastFieldInForm: "priority",
-      ref,
+      forwardedRef: ref,
       editable: true,
       options: {},
     },

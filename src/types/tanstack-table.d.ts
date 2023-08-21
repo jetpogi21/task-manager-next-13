@@ -9,7 +9,7 @@ declare module "@tanstack/table-core" {
     deleteRow?: (idx: number) => void;
     toggleRow?: (idx: number) => void;
     toggleSelectAllRow?: () => void;
-    ref?: React.RefObject<HTMLElement>;
+    forwardedRef?: React.RefObject<HTMLElement>;
     firstFieldInForm?: string;
     lastFieldInForm?: string;
     editable?: boolean;

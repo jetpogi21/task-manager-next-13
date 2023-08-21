@@ -36,8 +36,6 @@ import { ChevronLast, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 
-
-
 interface SubTaskSubformProps {
   formik: FormikProps<TaskFormFormikInitialValues>;
 }
@@ -66,14 +64,13 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
     setCurrentData: state.setCurrentData,
   }));
   const { setRecordsToDelete } = useSubTaskDeleteDialog();
-  
+
   //Zustand
   const { setHasUpdate } = useTaskStore((state) => ({
     setHasUpdate: state.setHasUpdate,
   }));
 
   //Tanstack queries
-  
 
   //Page Constants
   const DEFAULT_SUBTASK = DEFAULT_FORM_VALUE;
@@ -81,9 +78,7 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
   //Transformations
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
-  const dataRowCount = formik.values.SubTasks.filter(
-    (item) => item.id
-  ).length;
+  const dataRowCount = formik.values.SubTasks.filter((item) => item.id).length;
   const pageStatus = `Showing ${dataRowCount} of ${dataRowCount} record(s)`;
 
   //Utility Functions
@@ -175,7 +170,7 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
     );
     resetRowSelection();
   };
-  
+
   const subTaskTable = useReactTable<SubTaskFormikShape>({
     data: formik.values.SubTasks,
     columns: SubTaskColumns,
@@ -204,11 +199,9 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
       toggleSelectAllRow,
       firstFieldInForm: FIRST_FIELD_IN_FORM,
       lastFieldInForm: "finishDateTime",
-      ref,
+      forwardedRef: ref,
       editable: true,
-      options: {
-        
-      }
+      options: {},
     },
   });
 
