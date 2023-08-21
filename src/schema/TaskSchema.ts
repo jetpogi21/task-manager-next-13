@@ -6,9 +6,11 @@ const TaskSchema = Yup.object().shape({
   description: Yup.string().required("Description is a required field."),
   taskCategoryID: Yup.number().required("Task Category is a required field."),
   taskIntervalID: Yup.number().required("Task Interval is a required field."),
-  taskTemplateID: Yup.number().required(
-    "Task Template ID is a required field."
-  ),
+  taskTemplateID: Yup.number()
+    .nullable()
+    .transform((value, originalValue) =>
+      originalValue && originalValue !== "" ? value : null
+    ),
   date: Yup.string().required("Date is a required field."),
   targetDate: Yup.string().required("Target Date is a required field."),
   finishDateTime: Yup.string()
@@ -72,11 +74,7 @@ const TaskArraySchema = Yup.object().shape({
           ? schema.required("Task Interval is a required field.")
           : schema.notRequired()
       ),
-      taskTemplateID: Yup.number().when("touched", ([touched], schema) =>
-        touched
-          ? schema.required("Task Template ID is a required field.")
-          : schema.notRequired()
-      ),
+      taskTemplateID: Yup.number().nullable(),
       date: Yup.string().when("touched", ([touched], schema) =>
         touched
           ? schema.required("Date is a required field.")

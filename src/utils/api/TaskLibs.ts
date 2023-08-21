@@ -15,7 +15,9 @@ export const createTask = async (
       taskCategoryID: parseInt(task.taskCategoryID as string),
       taskIntervalID: parseInt(task.taskIntervalID as string),
       description: task.description!,
-      taskTemplateID: parseInt(task.taskTemplateID as string),
+      taskTemplateID: task.taskTemplateID
+        ? parseInt(task.taskTemplateID as string)
+        : null,
       date: task.date!,
       targetDate: task.targetDate!,
       finishDateTime: task.finishDateTime ? task.finishDateTime! : null,
@@ -37,7 +39,9 @@ export const updateTask = async (
       taskCategoryID: parseInt(task.taskCategoryID as string),
       taskIntervalID: parseInt(task.taskIntervalID as string),
       description: task.description!,
-      taskTemplateID: parseInt(task.taskTemplateID as string),
+      taskTemplateID: task.taskTemplateID
+        ? parseInt(task.taskTemplateID as string)
+        : null,
       date: task.date!,
       targetDate: task.targetDate!,
       finishDateTime: task.finishDateTime ? task.finishDateTime! : null,
