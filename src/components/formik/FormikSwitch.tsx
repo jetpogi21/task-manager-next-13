@@ -35,6 +35,7 @@ export const FormikSwitch: React.FC<FormikSwitchProps> = ({
   onKeyDown,
   helperText,
   submitOnChange = false,
+  setHasUpdate,
   ...props
 }) => {
   const { submitForm } = useFormikContext();
@@ -48,7 +49,7 @@ export const FormikSwitch: React.FC<FormikSwitchProps> = ({
 
   const handleChange = (checked: boolean) => {
     setValue(checked);
-    props.setHasUpdate && props.setHasUpdate();
+    setHasUpdate && setHasUpdate();
     if (submitOnChange) {
       submitForm();
     }

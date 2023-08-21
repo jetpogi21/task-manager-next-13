@@ -52,9 +52,7 @@ export const FormikDateAndTime: React.FC<FormikDateAndTimeProps> = ({
   const { submitForm } = useFormikContext();
   const [field, meta, { setValue }] = useField(props.name);
   const fieldValue = field.value
-    ? field.value instanceof Date
-      ? toValidDateTime(new Date(field.value))
-      : field.value
+    ? toValidDateTime(new Date(field.value))
     : undefined;
 
   const [internal, setInternal] = useState(fieldValue);
