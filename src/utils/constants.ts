@@ -16,4 +16,4 @@ export const monthsModel: BasicModel[] = [
   { id: 12, name: "December" },
 ];
 
-export const DEFAULT_LIMIT = "10";
+export const DEFAULT_LIMIT = "20";
