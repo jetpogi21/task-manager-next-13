@@ -1,5 +1,7 @@
 import { FormikCheckbox } from "@/components/formik/FormikCheckbox";
 import { FormikCombobox } from "@/components/formik/FormikCombobox";
+import { FormikDateAndTime } from "@/components/formik/FormikDateAndTime";
+import { FormikDatePicker } from "@/components/formik/FormikDatePicker";
 import { FormikInput } from "@/components/formik/FormikInput";
 import { FormikSelect } from "@/components/formik/FormikSelect";
 import { FormikTextArea } from "@/components/formik/FormikTextArea";
@@ -9,7 +11,15 @@ import { RefObject } from "react";
 
 // Define a custom type for the column definition meta
 type ColumnDefMeta = {
-  type: "Textarea" | "Checkbox" | "Input" | "Select" | "ComboBox" | "Decimal";
+  type:
+    | "Textarea"
+    | "Checkbox"
+    | "Input"
+    | "Select"
+    | "ComboBox"
+    | "Decimal"
+    | "DateAndTime"
+    | "DatePicker";
   options: BasicModel[];
   isNumeric: boolean;
   isWholeNumber: boolean;
@@ -128,6 +138,28 @@ export const EditableTableCell = <TData, TValue>({
               ? (ref as RefObject<HTMLInputElement>)
               : undefined
           }
+        />
+      );
+    case "DateAndTime":
+      return (
+        <FormikDateAndTime
+          inputRef={
+            dataRows === index + 1 && column.id === firstFieldInForm
+              ? (ref as RefObject<HTMLInputElement>)
+              : undefined
+          }
+          {...commonProps}
+        />
+      );
+    case "DatePicker":
+      return (
+        <FormikDatePicker
+          inputRef={
+            dataRows === index + 1 && column.id === firstFieldInForm
+              ? (ref as RefObject<HTMLInputElement>)
+              : undefined
+          }
+          {...commonProps}
         />
       );
     default:

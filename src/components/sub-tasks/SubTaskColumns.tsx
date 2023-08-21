@@ -7,6 +7,7 @@ import { EditableTableCell } from "@/components/ui/DataTable/EditableTableCell";
 import { SubTaskFormikShape } from "@/interfaces/SubTaskInterfaces";
 import { DeleteRowColumn } from "@/components/ui/DataTable/DeleteRowColumn";
 import { Check, X } from "lucide-react";
+import { format } from "date-fns";
 
 export const SubTaskColumns: ColumnDef<SubTaskFormikShape>[] = [
   {
@@ -99,9 +100,12 @@ export const SubTaskColumns: ColumnDef<SubTaskFormikShape>[] = [
     cell: (cell) => {
       return cell.table.options.meta?.editable ? (
         <EditableTableCell cell={cell} />
-      ) : (
+      ) : //@ts-ignore
+      cell.getValue() ? (
         //@ts-ignore
-        cell.getValue()
+        format(new Date(cell.getValue()), "M/d/yyyy hh:mm a")
+      ) : (
+        ""
       );
     },
     meta: {
@@ -126,7 +130,7 @@ export const SubTaskColumns: ColumnDef<SubTaskFormikShape>[] = [
         />
       ) : (
         //@ts-ignore
-        cell.row.original.Task.id.toString()
+        cell.row.original.Task.id?.toString()
       );
     },
     meta: {
