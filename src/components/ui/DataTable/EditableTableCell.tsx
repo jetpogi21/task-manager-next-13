@@ -1,5 +1,6 @@
 import { FormikCheckbox } from "@/components/formik/FormikCheckbox";
 import { FormikCombobox } from "@/components/formik/FormikCombobox";
+import { FormikDate } from "@/components/formik/FormikDate";
 import { FormikDateAndTime } from "@/components/formik/FormikDateAndTime";
 import { FormikDatePicker } from "@/components/formik/FormikDatePicker";
 import { FormikInput } from "@/components/formik/FormikInput";
@@ -19,7 +20,8 @@ type ColumnDefMeta = {
     | "ComboBox"
     | "Decimal"
     | "DateAndTime"
-    | "DatePicker";
+    | "DatePicker"
+    | "Date";
   options: BasicModel[];
   isNumeric: boolean;
   isWholeNumber: boolean;
@@ -143,6 +145,17 @@ export const EditableTableCell = <TData, TValue>({
     case "DateAndTime":
       return (
         <FormikDateAndTime
+          ref={
+            dataRows === index + 1 && column.id === firstFieldInForm
+              ? (forwardedRef as RefObject<HTMLInputElement>)
+              : undefined
+          }
+          {...commonProps}
+        />
+      );
+    case "Date":
+      return (
+        <FormikDate
           ref={
             dataRows === index + 1 && column.id === firstFieldInForm
               ? (forwardedRef as RefObject<HTMLInputElement>)

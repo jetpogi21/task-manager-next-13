@@ -8,6 +8,7 @@ import _ from "lodash";
 import { ClassValue } from "clsx";
 import { cn } from "@/lib/utils";
 import { isValidCurrency } from "@/utils/utilities";
+import { convertStringToFloat } from "@/utils/utils";
 
 export interface FormikInputProps extends InputProps {
   label?: string;
@@ -105,7 +106,11 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
 
           setValue(sum.toFixed(2));
         } else if (isValidCurrency(internalVal)) {
-          setValue(internalVal);
+          setValue(
+            !wholeNumberOnly
+              ? convertStringToFloat(internalVal).toFixed(2)
+              : internalVal
+          );
         } else {
           setValue("0.00");
         }
@@ -128,6 +133,7 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
 
       // Allow backspace, tab, enter, escape, arrow keys, home, end, and minus (-)
       if (
+        (!wholeNumberOnly && key === "Period") ||
         key === "Plus" ||
         key === "Equal" ||
         key === "Backspace" ||
