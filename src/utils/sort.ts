@@ -9,8 +9,27 @@ export const sortData = <T>(
   b: T,
   desc: boolean,
   field: string,
-  COLUMNS: ColumnType
+  COLUMNS: ColumnType,
+  primaryKeyField: string = "id"
 ) => {
+  //@ts-ignore
+  const primaryKeyA = a[primaryKeyField];
+  //@ts-ignore
+  const primaryKeyB = b[primaryKeyField];
+
+  if (primaryKeyA === "") {
+    return 1; // Move empty primaryKeyField to the end
+  }
+  if (primaryKeyB === "") {
+    return -1; // Move empty primaryKeyField to the end
+  }
+
+  if (primaryKeyA === "") {
+    return 1; // Move empty primaryKeyField to the end
+  }
+  if (primaryKeyB === "") {
+    return -1; // Move empty primaryKeyField to the end
+  }
   //@ts-ignore
   if (COLUMNS[field].type === "string") {
     return desc
