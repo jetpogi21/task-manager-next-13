@@ -3,6 +3,7 @@ import { FormikCombobox } from "@/components/formik/FormikCombobox";
 import { FormikDate } from "@/components/formik/FormikDate";
 import { FormikDateAndTime } from "@/components/formik/FormikDateAndTime";
 import { FormikDatePicker } from "@/components/formik/FormikDatePicker";
+import { FormikFileInput } from "@/components/formik/FormikFileInput";
 import { FormikInput } from "@/components/formik/FormikInput";
 import { FormikSelect } from "@/components/formik/FormikSelect";
 import { FormikTextArea } from "@/components/formik/FormikTextArea";
@@ -21,7 +22,8 @@ type ColumnDefMeta = {
     | "Decimal"
     | "DateAndTime"
     | "DatePicker"
-    | "Date";
+    | "Date"
+    | "FileInput";
   options: BasicModel[];
   isNumeric: boolean;
   isWholeNumber: boolean;
@@ -173,6 +175,15 @@ export const EditableTableCell = <TData, TValue>({
               : undefined
           }
           {...commonProps}
+        />
+      );
+    case "FileInput":
+      return (
+        <FormikFileInput
+          {...commonProps}
+          index={row.index}
+          parent={name}
+          fieldName={column.id}
         />
       );
     default:

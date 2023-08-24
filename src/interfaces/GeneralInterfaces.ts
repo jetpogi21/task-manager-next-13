@@ -1,3 +1,5 @@
+import { UploadFileResponse } from "uploadthing/client";
+
 export interface BasicModel {
   id: number | string;
   name: string;
@@ -60,3 +62,8 @@ export interface RowSelection {
 }
 
 export type TouchedRows = string[];
+
+export interface FileState
+  extends Pick<UploadFileResponse, "name" | "size" | "url"> {
+  uploadedOn?: Date;
+}

@@ -7,6 +7,7 @@ import { EditableTableCell } from "@/components/ui/DataTable/EditableTableCell";
 import { TaskNoteFormikShape } from "@/interfaces/TaskNoteInterfaces";
 import { DeleteRowColumn } from "@/components/ui/DataTable/DeleteRowColumn";
 import { Check, X } from "lucide-react";
+import { format } from "date-fns";
 
 export const TaskNoteColumns: ColumnDef<TaskNoteFormikShape>[] = [
   {
@@ -82,7 +83,7 @@ export const TaskNoteColumns: ColumnDef<TaskNoteFormikShape>[] = [
         />
       ) : (
         //@ts-ignore
-        cell.row.original.Task.id.toString()
+        cell.row.original.Task.id?.toString()
       );
     },
     meta: {
@@ -110,8 +111,9 @@ export const TaskNoteColumns: ColumnDef<TaskNoteFormikShape>[] = [
     meta: {
       type: "FileInput",
       label: "File",
+      width: 300,
     },
-    enableSorting: true,
+    enableSorting: false,
   },
   {
     id: "actions",

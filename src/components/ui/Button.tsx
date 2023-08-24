@@ -6,6 +6,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
+const uploadButtonVariants = cva(
+  "ut-button:inline-flex ut-button:items-center ut-button:justify-center ut-button:rounded-md ut-button:text-sm ut-button:font-medium ut-button:transition-colors ut-button:focus-visible:outline-none ut-button:focus-visible:ring-2 ut-button:focus-visible:ring-ring focus-visible:ring-offset-2 ut-button:disabled:opacity-50 ut-button:disabled:pointer-events-none ut-button:ring-offset-background ut-button:select-none ut-button:after:bg-slate-500/20",
+  {
+    variants: {
+      variant: {
+        default:
+          "ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90",
+        secondary:
+          "ut-button:bg-secondary ut-button:text-secondary-foreground ut-button:hover:bg-secondary/80",
+      },
+      size: {
+        default: "ut-button:h-9 ut-button:px-4 ut-button:py-2",
+        sm: "ut-button:h-8 ut-button:rounded-md ut-button:px-3 ut-button:text-xs",
+        lg: "ut-button:h-10 ut-button:rounded-md ut-button:px-8",
+        icon: "ut-button:h-9 ut-button:w-9",
+      },
+    },
+  }
+);
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background select-none",
   {
@@ -78,4 +98,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button, buttonVariants, uploadButtonVariants };
