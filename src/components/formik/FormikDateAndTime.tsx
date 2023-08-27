@@ -107,6 +107,7 @@ export const FormikDateAndTime = forwardRef<
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           ref={ref || inputRef}
+          id={props.name}
         />
         {helperText && (
           <span className="mt-1 text-xs font-bold text-muted-foreground">

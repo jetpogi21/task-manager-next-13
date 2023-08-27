@@ -102,6 +102,7 @@ export const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           value={internalVal}
+          id={props.name}
           {...props}
         />
         {helperText && (

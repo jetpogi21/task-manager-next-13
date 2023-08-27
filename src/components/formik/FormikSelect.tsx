@@ -92,7 +92,10 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
             typeof fieldValue === "number" ? fieldValue.toString() : fieldValue
           }
         >
-          <SelectTrigger className="whitespace-nowrap">
+          <SelectTrigger
+            className="whitespace-nowrap"
+            id={props.name}
+          >
             {fieldValue ? (
               <>
                 <SelectValue />

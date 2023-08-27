@@ -78,6 +78,7 @@ export const FormikSwitch: React.FC<FormikSwitchProps> = ({
         checked={fieldValue}
         onCheckedChange={handleChange}
         ref={propInputRef || inputRef}
+        id={props.name}
         {...props}
       />
       {!!label && <Label htmlFor={props.name}>{label}</Label>}

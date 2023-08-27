@@ -1,60 +1,17 @@
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
+import { FileValues } from "@/interfaces/GeneralInterfaces";
 import { cn } from "@/lib/utils";
-import { useUploadThing } from "@/utils/uploadthing";
+import {
+  allowedContentTextLabelGenerator,
+  generatePermittedFileTypes,
+  useUploadThing,
+} from "@/utils/uploadthing";
 import { formatFileSize } from "@/utils/utilities";
 import { useFormikContext } from "formik";
 import { Paperclip, X } from "lucide-react";
 import { ChangeEvent, useState } from "react";
 import { generateMimeTypes } from "uploadthing/client";
-
-const generatePermittedFileTypes = (config?: any) => {
-  const fileTypes = config ? Object.keys(config) : [];
-
-  const maxFileCount = config
-    ? Object.values(config).map((v: any) => v.maxFileCount)
-    : [];
-
-  return { fileTypes, multiple: maxFileCount.some((v) => v && v > 1) };
-};
-
-const capitalizeStart = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-const INTERNAL_doFormatting = (config?: Record<string, unknown>): string => {
-  if (!config) return "";
-
-  const allowedTypes = Object.keys(config) as (keyof any)[];
-
-  const formattedTypes = allowedTypes.map((f) => (f === "blob" ? "file" : f));
-
-  // Format multi-type uploader label as "Supports videos, images and files";
-  if (formattedTypes.length > 1) {
-    const lastType = formattedTypes.pop() as string | number;
-    return `${formattedTypes.join("s, ")} and ${lastType}s`;
-  }
-
-  // Single type uploader label
-  const key = allowedTypes[0] as string;
-  const formattedKey = formattedTypes[0] as string;
-
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  //@ts-ignore
-  const { maxFileSize, maxFileCount } = config[key]!;
-
-  if (maxFileCount && maxFileCount > 1) {
-    return `${formattedKey}s up to ${maxFileSize}, max ${maxFileCount}`;
-  } else {
-    return `${formattedKey} (${maxFileSize})`;
-  }
-};
-
-const allowedContentTextLabelGenerator = (
-  config?: Record<string, unknown>
-): string => {
-  return capitalizeStart(INTERNAL_doFormatting(config));
-};
 
 interface FormikFileInputProp {
   setArrayTouched?: () => void;
@@ -64,12 +21,6 @@ interface FormikFileInputProp {
   index?: number;
   parent?: string;
   fieldName?: string;
-}
-
-interface FileValues {
-  fileName: string | null;
-  fileSize: number | null;
-  file: string | null;
 }
 
 interface AttachmentProps {
@@ -244,6 +195,7 @@ export const FormikFileInput = ({
         )}
       >
         <input
+          id={name}
           className="hidden"
           type="file"
           multiple={multiple}

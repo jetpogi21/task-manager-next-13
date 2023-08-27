@@ -210,6 +210,7 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
           onKeyDown={handleKeyDown}
           value={internalVal}
           disabled={props.disabled}
+          id={props.name}
           {...props}
         />
         {helperText && (

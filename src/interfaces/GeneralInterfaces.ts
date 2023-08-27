@@ -67,3 +67,9 @@ export interface FileState
   extends Pick<UploadFileResponse, "name" | "size" | "url"> {
   uploadedOn?: Date;
 }
+
+export interface FileValues {
+  fileName: string | null;
+  fileSize: number | null;
+  file: string | null;
+}

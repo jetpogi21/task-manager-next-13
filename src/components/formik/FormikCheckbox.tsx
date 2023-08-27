@@ -75,6 +75,7 @@ export const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
           onKeyDown={(e) => {
             onKeyDown && onKeyDown(e);
           }}
+          id={props.name}
           {...props}
         />
         {!!label && <Label htmlFor={props.name}>{label}</Label>}
