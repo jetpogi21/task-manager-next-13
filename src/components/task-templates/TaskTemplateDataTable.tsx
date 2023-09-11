@@ -203,7 +203,7 @@ const TaskTemplateDataTable: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col flex-1 gap-4">
         <div className="flex items-center gap-4">
           <div className="text-sm">
             {taskTemplateTable.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -300,7 +300,7 @@ const TaskTemplateDataTable: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between flex-1 text-sm select-none text-muted-foreground">
+        <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
           {!isLoading && (
             <div className="flex items-center justify-between w-full gap-4">
               <p className="hidden md:block">{pageStatus}</p>
