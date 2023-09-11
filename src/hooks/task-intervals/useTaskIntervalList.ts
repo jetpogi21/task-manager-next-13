@@ -7,22 +7,27 @@ import axiosClient from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-const getTaskIntervals = async () => {
-  const { data } = await axiosClient.get<GetTaskIntervalsResponse>(`task-intervals`, {
-    params: {
-      fetchCount: "false",
-      simpleOnly: "true",
-    } as Partial<TaskIntervalSearchParams>,
-  });
+const getTaskIntervals = async (useName: boolean = false) => {
+  const { data } = await axiosClient.get<GetTaskIntervalsResponse>(
+    `task-intervals`,
+    {
+      params: {
+        fetchCount: "false",
+        simpleOnly: "true",
+      } as Partial<TaskIntervalSearchParams>,
+    }
+  );
 
   return data.rows.map((item) => ({
-    id: item.id,
+    ...item,
+    id: !useName ? item.id : item.name,
     name: item.name,
   }));
 };
 
 interface UseListProps {
   placeholderData?: BasicModel[];
+  useName?: boolean;
 }
 
 const useTaskIntervalList = (prop?: UseListProps) => {
@@ -31,7 +36,7 @@ const useTaskIntervalList = (prop?: UseListProps) => {
 
   const _ = useQuery({
     queryKey: ["taskInterval-list"],
-    queryFn: getTaskIntervals,
+    queryFn: () => getTaskIntervals(prop?.useName),
     enabled: mounted,
     placeholderData: prop?.placeholderData,
   });

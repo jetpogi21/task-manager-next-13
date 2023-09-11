@@ -120,26 +120,13 @@ const TaskIntervalTable: React.FC = () => {
 
   //Tanstacks
   const { refetch } = useInfiniteQuery(["taskIntervals"], getTaskIntervals, {
+    keepPreviousData: true,
     getNextPageParam: (lastPage) => lastPage.cursor ?? undefined,
     onSuccess: (data) => {
       const dataPageLength = data.pages.length;
       const dataLastPageRowCount = data.pages[dataPageLength - 1].count;
 
-      if (dataPageLength > lastPage) {
-        setLastPage(dataPageLength);
-        setPage(dataPageLength);
-        setCurrentData([
-          ...data.pages[dataPageLength - 1].rows.map((item, index) => ({
-            ...item,
-            index,
-            touched: false,
-          })),
-          {
-            ...DEFAULT_TASKINTERVAL,
-            index: data.pages[dataPageLength - 1].rows.length,
-          },
-        ]);
-      } else {
+      if (fetchCount) {
         setLastPage(1);
         setPage(1);
         setCurrentData([
@@ -153,9 +140,39 @@ const TaskIntervalTable: React.FC = () => {
             index: data.pages[dataPageLength - 1].rows.length,
           },
         ]);
+      } else {
+        if (dataPageLength > lastPage) {
+          setLastPage(dataPageLength);
+          setPage(dataPageLength);
+          setCurrentData([
+            ...data.pages[dataPageLength - 1].rows.map((item, index) => ({
+              ...item,
+              index,
+              touched: false,
+            })),
+            {
+              ...DEFAULT_TASKINTERVAL,
+              index: data.pages[dataPageLength - 1].rows.length,
+            },
+          ]);
+        } else {
+          setLastPage(1);
+          setPage(1);
+          setCurrentData([
+            ...data.pages[0].rows.map((item, index) => ({
+              ...item,
+              index,
+              touched: false,
+            })),
+            {
+              ...DEFAULT_TASKINTERVAL,
+              index: data.pages[dataPageLength - 1].rows.length,
+            },
+          ]);
+        }
       }
 
-      if (dataLastPageRowCount) {
+      if (dataLastPageRowCount !== undefined) {
         setFetchCount(false);
         setRecordCount(dataLastPageRowCount);
       }
