@@ -19,13 +19,7 @@ const Sidebar: React.FC = () => {
           className="text-2xl font-bold leading-none"
           href="/"
         >
-          <Image
-            className={cn(!darkMode && "invert")}
-            src="/logo.png"
-            alt="logo"
-            width={200}
-            height={100}
-          />
+          Task Manager
         </Link>
       </div>
       <div className="flex flex-col w-full text-sm">

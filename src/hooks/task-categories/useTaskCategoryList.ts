@@ -7,22 +7,27 @@ import axiosClient from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-const getTaskCategories = async () => {
-  const { data } = await axiosClient.get<GetTaskCategoriesResponse>(`task-categories`, {
-    params: {
-      fetchCount: "false",
-      simpleOnly: "true",
-    } as Partial<TaskCategorySearchParams>,
-  });
+const getTaskCategories = async (useName: boolean = false) => {
+  const { data } = await axiosClient.get<GetTaskCategoriesResponse>(
+    `task-categories`,
+    {
+      params: {
+        fetchCount: "false",
+        simpleOnly: "true",
+      } as Partial<TaskCategorySearchParams>,
+    }
+  );
 
   return data.rows.map((item) => ({
-    id: item.id,
+    ...item,
+    id: !useName ? item.id : item.name,
     name: item.name,
   }));
 };
 
 interface UseListProps {
   placeholderData?: BasicModel[];
+  useName?: boolean;
 }
 
 const useTaskCategoryList = (prop?: UseListProps) => {
@@ -31,7 +36,7 @@ const useTaskCategoryList = (prop?: UseListProps) => {
 
   const _ = useQuery({
     queryKey: ["taskCategory-list"],
-    queryFn: getTaskCategories,
+    queryFn: () => getTaskCategories(prop?.useName),
     enabled: mounted,
     placeholderData: prop?.placeholderData,
   });
