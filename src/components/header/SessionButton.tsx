@@ -19,7 +19,7 @@ const SessionButton: React.FC = async () => {
       asChild
       className="rounded-full"
     >
-      <Link href="/login">Sigin</Link>
+      <Link href="/login">Sign-in</Link>
     </Button>
   );
 };
