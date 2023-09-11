@@ -7,7 +7,7 @@ import axiosClient from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-const getTasks = async () => {
+const getTasks = async (useName: boolean = false) => {
   const { data } = await axiosClient.get<GetTasksResponse>(`tasks`, {
     params: {
       fetchCount: "false",
@@ -16,13 +16,15 @@ const getTasks = async () => {
   });
 
   return data.rows.map((item) => ({
-    id: item.id,
+    ...item,
+    id: !useName ? item.id : item.id.toString(),
     name: item.id.toString(),
   }));
 };
 
 interface UseListProps {
   placeholderData?: BasicModel[];
+  useName?: boolean;
 }
 
 const useTaskList = (prop?: UseListProps) => {
@@ -31,7 +33,7 @@ const useTaskList = (prop?: UseListProps) => {
 
   const _ = useQuery({
     queryKey: ["task-list"],
-    queryFn: getTasks,
+    queryFn: () => getTasks(prop?.useName),
     enabled: mounted,
     placeholderData: prop?.placeholderData,
   });

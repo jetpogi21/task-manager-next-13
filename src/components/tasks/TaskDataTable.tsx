@@ -204,7 +204,7 @@ const TaskDataTable: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col flex-1 gap-4">
         <div className="flex items-center gap-4">
           <div className="text-sm">
             {taskTable.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -300,21 +300,15 @@ const TaskDataTable: React.FC = () => {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between flex-1 text-sm select-none text-muted-foreground">
+        <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
           {!isLoading && (
             <div className="flex items-center justify-between w-full gap-4">
               <p className="hidden md:block">{pageStatus}</p>
               <div className="flex gap-2">
                 <Button
-                  type="submit"
-                  size={"sm"}
-                  isLoading={isUpdating}
-                >
-                  Save Changes
-                </Button>
-                <Button
                   type="button"
                   size="sm"
+                  variant={"secondary"}
                   disabled={!hasPreviousPage}
                   onClick={() => goToPreviousPage()}
                 >
@@ -323,6 +317,7 @@ const TaskDataTable: React.FC = () => {
                 <Button
                   type="button"
                   size="sm"
+                  variant={"secondary"}
                   disabled={!hasNextPage}
                   onClick={() => goToNextPage()}
                   isLoading={isFetching}

@@ -76,7 +76,7 @@ export const Task = sequelize.define<Task>(
         key: "id",
       },
       onUpdate: "CASCADE",
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
     },
     date: {
       type: DataTypes.DATEONLY,

@@ -130,7 +130,10 @@ export const TaskColumns: ColumnDef<TaskModel>[] = [
     ),
     cell: (cell) => {
       return cell.table.options.meta?.editable ? (
-        <EditableTableCell cell={cell} />
+        <EditableTableCell
+          cell={cell}
+          options={cell.table.options.meta?.options?.taskTemplateList || []}
+        />
       ) : (
         //@ts-ignore
         cell.row.original.TaskTemplate.id?.toString()
@@ -159,7 +162,7 @@ export const TaskColumns: ColumnDef<TaskModel>[] = [
       );
     },
     meta: {
-      type: "DatePicker",
+      type: "Date",
       label: "Date",
     },
     enableSorting: true,
@@ -181,7 +184,7 @@ export const TaskColumns: ColumnDef<TaskModel>[] = [
       );
     },
     meta: {
-      type: "DatePicker",
+      type: "Date",
       label: "Target Date",
     },
     enableSorting: true,

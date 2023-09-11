@@ -198,7 +198,7 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
       toggleRow,
       toggleSelectAllRow,
       firstFieldInForm: FIRST_FIELD_IN_FORM,
-      lastFieldInForm: "file",
+      lastFieldInForm: "fileName",
       forwardedRef: ref,
       editable: true,
       options: {},
