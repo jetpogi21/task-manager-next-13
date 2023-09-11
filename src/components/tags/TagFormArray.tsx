@@ -246,140 +246,146 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
 
   return (
     <Form
+      className="flex flex-col flex-1 gap-4"
       autoComplete="off"
       noValidate
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <div className="text-sm">
-            {tagTable.getFilteredSelectedRowModel().rows.length} of{" "}
-            {tagTable.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          {hasSelected && (
-            <Button
-              type="button"
-              size={"sm"}
-              variant={"destructive"}
-              onClick={() => {
-                deleteSelectedRows();
-              }}
-            >
-              Delete Selected
-            </Button>
-          )}
+      <div className="flex items-center gap-4">
+        <div className="text-sm">
+          {tagTable.getFilteredSelectedRowModel().rows.length} of{" "}
+          {tagTable.getFilteredRowModel().rows.length} row(s) selected.
+        </div>
+        {hasSelected && (
           <Button
-            className="ml-auto"
             type="button"
-            size="sm"
-            onClick={focusOnRef}
+            size={"sm"}
+            variant={"destructive"}
+            onClick={() => {
+              deleteSelectedRows();
+            }}
           >
-            <ChevronLast className="w-4 h-4 text-green-800" /> Go to last row
+            Delete Selected
           </Button>
-        </div>
+        )}
+        <Button
+          className="ml-auto"
+          variant={"secondary"}
+          type="button"
+          size="sm"
+          onClick={focusOnRef}
+        >
+          <ChevronLast className="w-4 h-4 text-foreground" /> Go to last row
+        </Button>
+      </div>
 
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              {tagTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    //@ts-ignore
-                    const customWidth = header.column.columnDef.meta?.width;
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className={cn({
-                          "w-[50px]": ["select", "actions"].includes(header.id),
-                        })}
-                        style={{
-                          width: `${customWidth}px`,
-                        }}
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            {tagTable.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  //@ts-ignore
+                  const customWidth = header.column.columnDef.meta?.width;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className={cn({
+                        "w-[50px]": ["select", "actions"].includes(header.id),
+                      })}
+                      style={{
+                        width: `${customWidth}px`,
+                      }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {tagTable.getRowModel().rows?.length ? (
+              tagTable.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="p-2"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {tagTable.getRowModel().rows?.length ? (
-                tagTable.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="p-2"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={TagColumns.length}
-                    className="h-24 text-center"
-                  >
-                    {isLoading ? "Fetching Data..." : "No results."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-between flex-1 text-sm select-none text-muted-foreground">
-          {!isLoading && (
-            <div className="flex items-center justify-between w-full gap-4">
-              <p className="hidden md:block">{pageStatus}</p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={addRow}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={TagColumns.length}
+                  className="h-24 text-center"
                 >
-                  <Plus className="w-4 h-4 text-green-800" /> Add Row
-                </Button>
-                <Button
-                  type="submit"
-                  size={"sm"}
-                  isLoading={isUpdating}
-                >
-                  Save Changes
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={!hasPreviousPage}
-                  onClick={() => goToPreviousPage()}
-                >
-                  Previous
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={!hasNextPage}
-                  onClick={() => goToNextPage()}
-                  isLoading={isFetching}
-                >
-                  Next
-                </Button>
-              </div>
+                  {isLoading ? "Fetching Data..." : "No results."}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
+        {!isLoading && (
+          <div className="flex items-center justify-between w-full gap-4">
+            <p className="hidden md:block">{pageStatus}</p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={"secondary"}
+                onClick={addRow}
+                isLoading={isUpdating}
+              >
+                <Plus className="w-4 h-4 mr-1 text-foreground" />
+                Add Row
+              </Button>
+              <Button
+                type="submit"
+                size={"sm"}
+                isLoading={isUpdating}
+                variant={"secondary"}
+              >
+                Save Changes
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={!hasPreviousPage}
+                onClick={() => goToPreviousPage()}
+                variant={"secondary"}
+              >
+                Previous
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={!hasNextPage}
+                onClick={() => goToNextPage()}
+                isLoading={isFetching}
+                variant={"secondary"}
+              >
+                Next
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <TagMultiCreateDeleteDialog />
     </Form>

@@ -10,7 +10,7 @@ export const metadata = {
 const Tags: React.FC = () => {
   return (
     <div className="flex flex-col flex-1 w-full px-4 mx-auto text-sm lg:px-0 main-height-less-footer">
-      <div className="flex flex-col flex-1 w-full gap-4 p-4 border rounded-sm border-border">
+      <div className="flex flex-col flex-1 w-full max-w-[750px] mx-auto gap-4 p-4 border rounded-sm border-border">
         <h1 className="text-2xl font-bold">Tags</h1>
         <div className="flex">
           <TagFilterForm />
