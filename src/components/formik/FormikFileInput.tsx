@@ -16,6 +16,7 @@ import { generateMimeTypes } from "uploadthing/client";
 interface FormikFileInputProp {
   setArrayTouched?: () => void;
   setHasUpdate?: () => void;
+  label?: string;
   helperText?: string;
   name: string;
   index?: number;
@@ -82,6 +83,7 @@ export const FormikFileInput = ({
   index,
   parent,
   fieldName,
+  label,
 }: FormikFileInputProp) => {
   const { values, setFieldValue } = useFormikContext();
 
@@ -188,6 +190,7 @@ export const FormikFileInput = ({
 
   return (
     <div className="flex flex-col items-center justify-center gap-1">
+      {!!label && <div>{label}</div>}
       <label
         className={cn(
           "flex items-center justify-center rounded-md cursor-pointer",
@@ -203,14 +206,21 @@ export const FormikFileInput = ({
           onChange={handleInputChange}
         />
         <span className="flex gap-1 px-3 py-2 text-white">
-          <Paperclip className="w-4 h-4" />
-          {`Choose File${multiple ? "(s)" : ""}`}
+          {permittedFileInfo ? (
+            <>
+              <Paperclip className="w-4 h-4" />
+              {`Choose File${multiple ? "(s)" : ""}`}
+            </>
+          ) : (
+            "Loading..."
+          )}
         </span>
       </label>
       <div className="h-[1.25rem]">
         {fileTypes && (
           <p className="text-xs leading-5 text-gray-600">
-            {allowedContentTextLabelGenerator(permittedFileInfo?.config)}
+            {permittedFileInfo &&
+              allowedContentTextLabelGenerator(permittedFileInfo?.config)}
           </p>
         )}
       </div>

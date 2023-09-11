@@ -6,7 +6,7 @@ import React from "react";
 const SignOutButton = () => {
   const handleSignOut = () => {
     signOut({
-      callbackUrl: `${window.location.origin}/dashboard/login`,
+      callbackUrl: `${window.location.origin}/login`,
     });
   };
 

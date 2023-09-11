@@ -22,8 +22,8 @@ const Login: React.FC = () => {
 
 const LoginForm: React.FC = () => {
   const initialValues: FormValues = {
-    emailOrUsername: "jet_pradas",
-    password: "Jetpogi_21",
+    emailOrUsername: "",
+    password: "",
   };
 
   const login = async (values: FormValues) => {

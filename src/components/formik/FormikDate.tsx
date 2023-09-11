@@ -32,7 +32,7 @@ export interface FormikDateProps
   setHasUpdate?: () => void;
 }
 
-export const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
+const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
   (
     {
       containerClassNames = "",
@@ -117,3 +117,6 @@ export const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
     );
   }
 );
+
+FormikDate.displayName = "FormikDate";
+export { FormikDate };

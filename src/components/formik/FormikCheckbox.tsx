@@ -20,7 +20,7 @@ export interface FormikCheckboxProps extends ButtonProps {
   setHasUpdate?: () => void;
 }
 
-export const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
+const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
   (
     {
       containerClassNames = "",
@@ -67,7 +67,12 @@ export const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
     }, [inputRef, setFocusOnLoad]);
 
     return (
-      <div className={cn("flex gap-1.5 items-center", containerClassNames)}>
+      <div
+        className={cn(
+          "flex gap-1.5 items-center justify-center",
+          containerClassNames
+        )}
+      >
         <Checkbox
           checked={fieldValue}
           onCheckedChange={handleChange}
@@ -89,3 +94,6 @@ export const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
     );
   }
 );
+
+FormikCheckbox.displayName = "FormikCheckbox";
+export { FormikCheckbox };

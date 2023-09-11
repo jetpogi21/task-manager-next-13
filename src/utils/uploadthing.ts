@@ -34,7 +34,6 @@ const INTERNAL_doFormatting = (config?: Record<string, unknown>): string => {
   const key = allowedTypes[0] as string;
   const formattedKey = formattedTypes[0] as string;
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   //@ts-ignore
   const { maxFileSize, maxFileCount } = config[key]!;
 

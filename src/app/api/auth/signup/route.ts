@@ -116,7 +116,7 @@ export const POST = async (req: Request) => {
     );
 
     // Construct the verification link using your domain name and the token
-    const link = `${process.env.NEXTAUTH_URL}/dashboard/verify/${token}`;
+    const link = `${process.env.NEXTAUTH_URL}/verify/${token}`;
 
     transporter.sendMail({
       from: '"Jonathan Pradas" <flyffonline_26@yahoo.com>',

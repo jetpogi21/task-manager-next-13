@@ -75,12 +75,12 @@ module.exports = {
         createdAt: {
           type: Sequelize.DATE,
           defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-          field: "created_at",
+          field: "createdAt",
         },
         updatedAt: {
           type: Sequelize.DATE,
           defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-          field: "updated_at",
+          field: "updatedAt",
         },
       }
     );

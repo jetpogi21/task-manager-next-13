@@ -1,4 +1,3 @@
-import { SubTaskColumns } from "@/components/sub-tasks/SubTaskColumns";
 import { useFileTable } from "@/components/ui/DataTable/FileTable/useFileTable";
 import {
   Table,
@@ -14,9 +13,10 @@ import { flexRender } from "@tanstack/react-table";
 
 interface FileTableProps {
   files: FileState[];
+  ModelColumns: any;
 }
 
-export const FileTable = ({ files }: FileTableProps) => {
+export const FileTable = ({ files, ModelColumns }: FileTableProps) => {
   const { fileTable } = useFileTable({
     files,
   });
@@ -74,7 +74,7 @@ export const FileTable = ({ files }: FileTableProps) => {
         ) : (
           <TableRow>
             <TableCell
-              colSpan={SubTaskColumns.length}
+              colSpan={ModelColumns.length}
               className="h-24 text-center"
             >
               {"No results."}

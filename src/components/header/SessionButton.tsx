@@ -8,6 +8,7 @@ import React from "react";
 
 const SessionButton: React.FC = async () => {
   const session = await getAuthSession();
+
   //const session = await getAuthSession();
 
   // Use a switch statement instead of multiple if statements
@@ -18,7 +19,7 @@ const SessionButton: React.FC = async () => {
       asChild
       className="rounded-full"
     >
-      <Link href="/login">Login</Link>
+      <Link href="/login">Sigin</Link>
     </Button>
   );
 };

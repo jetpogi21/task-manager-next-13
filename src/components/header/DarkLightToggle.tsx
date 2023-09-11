@@ -16,7 +16,7 @@ const DarkLightToggle: React.FC = () => {
   return (
     <div
       className={cn(
-        "border-[2.5px] border-green-900 rounded-[30px] flex justify-between items-center p-1 relative gap-2 cursor-pointer text-sm select-none"
+        "self-center w-[50px] border-[2.5px] border-green-900 rounded-[30px] flex justify-between items-center p-1 relative gap-2 cursor-pointer text-sm select-none"
       )}
       onClick={toggleTheme}
     >

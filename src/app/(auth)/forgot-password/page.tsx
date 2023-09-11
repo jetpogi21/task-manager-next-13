@@ -55,8 +55,8 @@ const EmailForm: React.FC = () => {
     <div className="flex flex-col items-center flex-1 text-sm w-full max-w-[400px] mx-auto gap-8">
       <h1 className="my-5 text-4xl">Reset your password</h1>
       <p>
-        Enter the email address associated with your account and we'll send you
-        a link to reset your password.
+        Enter the email address associated with your account and we&apos;ll send
+        you a link to reset your password.
       </p>
       <div className="flex flex-col w-full gap-2">
         <Label htmlFor="email">Email</Label>
@@ -76,7 +76,7 @@ const EmailForm: React.FC = () => {
         Continue
       </Button>
       <div>
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <Link
           href="/register"
           className="text-blue-600"

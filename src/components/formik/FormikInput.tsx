@@ -24,9 +24,11 @@ export interface FormikInputProps extends InputProps {
   allowNegative?: boolean;
   disabled?: boolean;
   setHasUpdate?: () => void;
+  currency?: string;
+  nullAllowed?: boolean;
 }
 
-export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
+const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
   (
     {
       containerClassNames = "",
@@ -39,6 +41,7 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
       wholeNumberOnly = true,
       allowNegative = false,
       isNumeric = false,
+      nullAllowed = false,
       setHasUpdate,
       ...props
     },
@@ -97,22 +100,34 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
         setHasUpdate();
 
       if (isNumeric) {
-        if (internalVal.includes("+")) {
+        const internalValStr: string = internalVal
+          ? internalVal.toString()
+          : "";
+
+        if (internalVal && internalValStr.includes("+")) {
           //@ts-ignore
-          const values = internalVal.split("+").map((val) => parseFloat(val));
+          const values = internalValStr
+            .split("+")
+            .map((val) => parseFloat(val));
 
           //@ts-ignore
           const sum = values.reduce((acc, curr) => acc + curr, 0);
 
           setValue(sum.toFixed(2));
-        } else if (isValidCurrency(internalVal)) {
+        } else if (isValidCurrency(internalValStr)) {
           setValue(
             !wholeNumberOnly
-              ? convertStringToFloat(internalVal).toFixed(2)
+              ? convertStringToFloat(internalValStr).toFixed(2)
               : internalVal
           );
         } else {
-          setValue("0.00");
+          nullAllowed
+            ? setValue("")
+            : setValue(
+                !wholeNumberOnly
+                  ? convertStringToFloat(internalValStr).toFixed(2)
+                  : internalVal
+              );
         }
       } else {
         fieldValue !== internalVal && setValue(internalVal);
@@ -201,18 +216,26 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
     return (
       <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
         {!!label && <Label htmlFor={props.name}>{label}</Label>}
-        <Input
-          className={cn({ "text-right pr-2": isNumeric })}
-          type={inputType}
-          ref={ref || inputRef}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          value={internalVal}
-          disabled={props.disabled}
-          id={props.name}
-          {...props}
-        />
+        <div className="relative flex items-center">
+          {props.currency && (
+            <div className="absolute left-4">{props.currency}</div>
+          )}
+          <Input
+            className={cn({
+              "text-right pr-2": isNumeric,
+              "pl-4": props.currency,
+            })}
+            type={inputType}
+            ref={ref || inputRef}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            value={internalVal}
+            disabled={props.disabled}
+            id={props.name}
+            {...props}
+          />
+        </div>
         {helperText && (
           <span className="mt-1 text-xs font-bold text-muted-foreground">
             {helperText}
@@ -223,3 +246,6 @@ export const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
     );
   }
 );
+
+FormikInput.displayName = "FormikInput";
+export { FormikInput };

@@ -24,7 +24,7 @@ export interface FormikDatePickerProps
   setHasUpdate?: () => void;
 }
 
-export const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
+const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
   (
     {
       containerClassNames = "",
@@ -85,3 +85,6 @@ export const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
     );
   }
 );
+
+FormikDatePicker.displayName = "FormikDatePicker";
+export { FormikDatePicker };

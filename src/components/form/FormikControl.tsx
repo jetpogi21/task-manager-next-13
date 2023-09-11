@@ -5,6 +5,7 @@ import { FormikDate } from "@/components/formik/FormikDate";
 import { FormikDateAndTime } from "@/components/formik/FormikDateAndTime";
 import { FormikDatePicker } from "@/components/formik/FormikDatePicker";
 import { FormikFacetedControl } from "@/components/formik/FormikFacetedControl";
+import { FormikFileInput } from "@/components/formik/FormikFileInput";
 import { FormikInput } from "@/components/formik/FormikInput";
 import { FormikSelect } from "@/components/formik/FormikSelect";
 import {
@@ -25,6 +26,7 @@ interface ControlProps {
   disabled?: boolean;
   setHasUpdate?: () => void;
   ref?: RefObject<any> | undefined;
+  nullAllowed?: boolean;
 }
 
 interface TextProps extends ControlProps {
@@ -34,6 +36,19 @@ interface TextProps extends ControlProps {
 
 interface DateProps extends ControlProps {
   type: "Date";
+}
+
+interface FileInputProps extends ControlProps {
+  type: "FileInput";
+}
+
+interface DecimalProps extends ControlProps {
+  type: "Decimal";
+}
+
+interface CurrencyProps extends ControlProps {
+  type: "Currency";
+  currency: string;
 }
 
 interface DateAndTimeProps extends ControlProps {
@@ -91,7 +106,10 @@ type FormikControlProps =
   | CheckboxProps
   | DatePickerProps
   | DateAndTimeProps
-  | DateProps;
+  | DateProps
+  | DecimalProps
+  | CurrencyProps
+  | FileInputProps;
 
 const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
   const {
@@ -166,6 +184,19 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           wholeNumberOnly={true}
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
+          nullAllowed={props.nullAllowed}
+        />
+      );
+    case "Decimal":
+      return (
+        <FormikInput
+          name={name}
+          label={label}
+          isNumeric={true}
+          wholeNumberOnly={false}
+          containerClassNames={containerClassNames}
+          setHasUpdate={props.setHasUpdate}
+          nullAllowed={props.nullAllowed}
         />
       );
     case "Checkbox":
@@ -204,6 +235,27 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           setHasUpdate={props.setHasUpdate}
         />
       );
+    case "Currency":
+      return (
+        <FormikInput
+          name={name}
+          label={label}
+          isNumeric={true}
+          wholeNumberOnly={false}
+          containerClassNames={containerClassNames}
+          setHasUpdate={props.setHasUpdate}
+          currency={props.currency}
+          nullAllowed={props.nullAllowed}
+        />
+      );
+    case "FileInput":
+      return (
+        <FormikFileInput
+          name={name}
+          setHasUpdate={props.setHasUpdate}
+          label={label}
+        />
+      );
     default:
       return (
         <FormikInput
@@ -221,4 +273,5 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
   }
 });
 
+FormikControl.displayName = "FormikControl";
 export default FormikControl;

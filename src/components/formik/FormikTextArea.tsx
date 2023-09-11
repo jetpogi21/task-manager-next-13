@@ -28,7 +28,7 @@ export interface FormikTextAreaProps extends TextareaProps {
   setHasUpdate?: () => void;
 }
 
-export const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
+const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
   (
     {
       containerClassNames = "",
@@ -115,3 +115,6 @@ export const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
     );
   }
 );
+
+FormikTextArea.displayName = "FormikTextArea";
+export { FormikTextArea };
