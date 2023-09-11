@@ -13,7 +13,7 @@ const Sidebar: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const darkMode = !theme || theme === "dark";
   return (
-    <div className="min-w-[250px] py-4 pl-4 pr-2 flex flex-col items-center flex-grow-0">
+    <div className="min-w-[250px] p-4 flex flex-col items-center flex-grow-0">
       <div className="h-[100px] flex items-center">
         <Link
           className="text-2xl font-bold leading-none"
