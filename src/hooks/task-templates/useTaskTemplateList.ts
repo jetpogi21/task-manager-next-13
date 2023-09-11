@@ -7,7 +7,7 @@ import axiosClient from "@/utils/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-const getTaskTemplates = async () => {
+const getTaskTemplates = async (useName: boolean = false) => {
   const { data } = await axiosClient.get<GetTaskTemplatesResponse>(
     `task-templates`,
     {
@@ -19,13 +19,15 @@ const getTaskTemplates = async () => {
   );
 
   return data.rows.map((item) => ({
-    id: item.id,
+    ...item,
+    id: !useName ? item.id : item.id.toString(),
     name: item.id.toString(),
   }));
 };
 
 interface UseListProps {
   placeholderData?: BasicModel[];
+  useName?: boolean;
 }
 
 const useTaskTemplateList = (prop?: UseListProps) => {
@@ -34,7 +36,7 @@ const useTaskTemplateList = (prop?: UseListProps) => {
 
   const _ = useQuery({
     queryKey: ["taskTemplate-list"],
-    queryFn: getTaskTemplates,
+    queryFn: () => getTaskTemplates(prop?.useName),
     enabled: mounted,
     placeholderData: prop?.placeholderData,
   });

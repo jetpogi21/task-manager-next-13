@@ -189,6 +189,9 @@ const TaskTemplateDataTable: React.FC = () => {
     manualFiltering: true,
     manualSorting: true,
     enableMultiRowSelection: true,
+    initialState: {
+      columnVisibility: {},
+    },
     meta: {
       name: PLURALIZED_MODEL_NAME,
       deleteRow,
@@ -303,15 +306,9 @@ const TaskTemplateDataTable: React.FC = () => {
               <p className="hidden md:block">{pageStatus}</p>
               <div className="flex gap-2">
                 <Button
-                  type="submit"
-                  size={"sm"}
-                  isLoading={isUpdating}
-                >
-                  Save Changes
-                </Button>
-                <Button
                   type="button"
                   size="sm"
+                  variant={"secondary"}
                   disabled={!hasPreviousPage}
                   onClick={() => goToPreviousPage()}
                 >
@@ -320,6 +317,7 @@ const TaskTemplateDataTable: React.FC = () => {
                 <Button
                   type="button"
                   size="sm"
+                  variant={"secondary"}
                   disabled={!hasNextPage}
                   onClick={() => goToNextPage()}
                   isLoading={isFetching}
