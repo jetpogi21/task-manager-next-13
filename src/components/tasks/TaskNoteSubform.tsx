@@ -187,6 +187,7 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
     initialState: {
       columnVisibility: {
         taskID: false,
+        file: false,
       },
     },
     meta: {
