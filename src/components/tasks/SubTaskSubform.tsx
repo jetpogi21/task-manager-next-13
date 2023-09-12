@@ -240,7 +240,7 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
           size="sm"
           onClick={focusOnRef}
         >
-          <ChevronLast className="w-4 h-4 text-green-800" />
+          <ChevronLast className="w-4 h-4 text-foreground" />
           Go to last row
         </Button>
       </div>
@@ -322,7 +322,7 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
                 variant={"secondary"}
                 onClick={addRow}
               >
-                <Plus className="w-4 h-4 text-green-800" /> Add Row
+                <Plus className="w-4 h-4 text-foreground" /> Add Row
               </Button>
             </div>
           </div>

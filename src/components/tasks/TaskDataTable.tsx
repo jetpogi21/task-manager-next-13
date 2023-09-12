@@ -32,6 +32,7 @@ import {
   flexRender,
   SortingState,
 } from "@tanstack/react-table";
+import { Trash } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -218,8 +219,10 @@ const TaskDataTable: React.FC = () => {
               onClick={() => {
                 deleteSelectedRows();
               }}
+              className="flex items-center justify-center gap-2"
             >
               Delete Selected
+              <Trash className="w-4 h-4 text-foreground" />
             </Button>
           )}
           <Link
