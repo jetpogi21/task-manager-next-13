@@ -22,6 +22,7 @@ interface FormikFileInputProp {
   index?: number;
   parent?: string;
   fieldName?: string;
+  onChange?: (newValue: unknown) => void;
 }
 
 interface AttachmentProps {
@@ -84,6 +85,7 @@ export const FormikFileInput = ({
   parent,
   fieldName,
   label,
+  onChange,
 }: FormikFileInputProp) => {
   const { values, setFieldValue } = useFormikContext();
 
@@ -142,6 +144,7 @@ export const FormikFileInput = ({
 
     setArrayTouched && setArrayTouched();
     setHasUpdate && setHasUpdate();
+    onChange && onChange(e.target.files);
   };
 
   const { startUpload, isUploading, permittedFileInfo } = useUploadThing(

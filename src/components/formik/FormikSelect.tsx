@@ -32,6 +32,7 @@ export interface FormikSelectProps extends ButtonProps {
   showLabel: boolean;
   allowBlank: boolean;
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
 }
 
 export const FormikSelect: React.FC<FormikSelectProps> = ({
@@ -46,6 +47,8 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
   options,
   showLabel = true,
   allowBlank = false,
+  onChange,
+
   ...props
 }) => {
   const { submitForm } = useFormikContext();
@@ -61,6 +64,8 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
   const handleChange = (newValue: string) => {
     setValue(newValue);
     setArrayTouched && setArrayTouched();
+    onChange && onChange(newValue);
+
     props.setHasUpdate && props.setHasUpdate();
     submitOnChange && submitForm();
   };

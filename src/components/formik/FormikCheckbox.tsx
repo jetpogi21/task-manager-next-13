@@ -18,6 +18,7 @@ export interface FormikCheckboxProps extends ButtonProps {
   submitOnChange?: boolean;
   containerClassNames?: ClassValue[];
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
 }
 
 const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
@@ -31,6 +32,7 @@ const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
       helperText,
       submitOnChange = false,
       setHasUpdate,
+      onChange,
       ...props
     },
     ref
@@ -49,6 +51,7 @@ const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
       setArrayTouched && setArrayTouched();
       setHasUpdate && setHasUpdate();
       setValue(checked);
+      onChange && onChange(checked);
       if (submitOnChange) {
         submitForm();
       }

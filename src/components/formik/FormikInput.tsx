@@ -26,6 +26,7 @@ export interface FormikInputProps extends InputProps {
   setHasUpdate?: () => void;
   currency?: string;
   nullAllowed?: boolean;
+  onChange?: (newValue: unknown) => void;
 }
 
 const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
@@ -43,6 +44,7 @@ const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
       isNumeric = false,
       nullAllowed = false,
       setHasUpdate,
+      onChange,
       ...props
     },
     ref
@@ -87,6 +89,8 @@ const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
       if (submitOnChange) {
         setValue(targetValue);
       }
+
+      onChange && onChange(targetValue);
     };
 
     const handleBlur = () => {

@@ -22,6 +22,7 @@ export interface FormikDatePickerProps
   containerClassNames?: ClassValue[];
   showLabel?: boolean;
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
 }
 
 const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
@@ -37,6 +38,7 @@ const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
       submitOnChange = false,
       showLabel = true,
       format,
+      onChange,
       ...props
     },
     ref
@@ -59,6 +61,7 @@ const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
       setArrayTouched && setArrayTouched();
       props.setHasUpdate && props.setHasUpdate();
       submitOnChange && submitForm();
+      onChange && onChange(newValue);
     };
 
     useEffect(() => {

@@ -27,6 +27,7 @@ interface ControlProps {
   setHasUpdate?: () => void;
   ref?: RefObject<any> | undefined;
   nullAllowed?: boolean;
+  onChange?: (newValue: unknown) => void;
 }
 
 interface TextProps extends ControlProps {
@@ -130,6 +131,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           containerClassNames={containerClassNames}
           size={props.size || undefined}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "FacetedControl":
@@ -141,6 +143,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           containerClassNames={containerClassNames}
           limit={props.limit || 4}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "ComboBox":
@@ -152,6 +155,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           containerClassNames={containerClassNames}
           showLabel={props.showLabel}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "Select":
@@ -164,6 +168,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           showLabel={props.showLabel}
           allowBlank={props.allowBlank || false}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "Textarea":
@@ -173,6 +178,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           label={label}
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "WholeNumber":
@@ -185,6 +191,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
           nullAllowed={props.nullAllowed}
+          onChange={props.onChange}
         />
       );
     case "Decimal":
@@ -197,6 +204,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
           nullAllowed={props.nullAllowed}
+          onChange={props.onChange}
         />
       );
     case "Checkbox":
@@ -206,6 +214,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           label={label}
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "DatePicker":
@@ -215,6 +224,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           label={label}
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "DateAndTime":
@@ -224,6 +234,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           label={label}
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "Date":
@@ -233,6 +244,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           label={label}
           containerClassNames={containerClassNames}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
     case "Currency":
@@ -246,6 +258,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           setHasUpdate={props.setHasUpdate}
           currency={props.currency}
           nullAllowed={props.nullAllowed}
+          onChange={props.onChange}
         />
       );
     case "FileInput":
@@ -254,6 +267,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           name={name}
           setHasUpdate={props.setHasUpdate}
           label={label}
+          onChange={props.onChange}
         />
       );
     default:
@@ -268,6 +282,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           setFocusOnLoad={props.setFocusOnLoad}
           disabled={props.disabled}
           setHasUpdate={props.setHasUpdate}
+          onChange={props.onChange}
         />
       );
   }

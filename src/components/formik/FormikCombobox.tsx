@@ -18,6 +18,8 @@ export interface FormikComboboxProp {
   containerClassNames?: ClassValue[];
   showLabel: boolean;
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
+
   [key: string]: unknown;
 }
 
@@ -32,6 +34,8 @@ export const FormikCombobox = ({
   helperText,
   containerClassNames,
   showLabel = true,
+  onChange,
+
   ...props
 }: FormikComboboxProp) => {
   const [field, meta, { setValue }] = useField(props);
@@ -48,6 +52,7 @@ export const FormikCombobox = ({
           setValue(value);
           setArrayTouched && setArrayTouched();
           props.setHasUpdate && props.setHasUpdate();
+          onChange && onChange(value);
         }}
         list={items}
         caption={label}

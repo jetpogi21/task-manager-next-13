@@ -26,6 +26,7 @@ export interface FormikTextAreaProps extends TextareaProps {
   containerClassNames?: ClassValue[];
   helperText?: string;
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
 }
 
 const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
@@ -39,6 +40,7 @@ const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
       onKeyDown,
       helperText,
       setHasUpdate,
+      onChange,
       ...props
     },
     ref
@@ -54,6 +56,7 @@ const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
     const handleChange: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
       const targetValue = e.target.value;
       setInternalVal(targetValue);
+      onChange && onChange(targetValue);
     };
 
     const handleBlur: FocusEventHandler<HTMLTextAreaElement> = () => {

@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/Input";
 import { toValidDateTime } from "@/utils/utilities";
 
 export interface FormikDateAndTimeProps
-  extends ButtonProps,
+  extends Omit<ButtonProps, "onChange">,
     Pick<DatePickerProps, "format"> {
   label?: string;
   name: string;
@@ -29,6 +29,7 @@ export interface FormikDateAndTimeProps
   containerClassNames?: ClassValue[];
   showLabel?: boolean;
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
 }
 
 const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
@@ -43,15 +44,17 @@ const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
       submitOnChange = false,
       showLabel = true,
       format,
+      onChange,
       ...props
     },
     ref
   ) => {
     const { submitForm } = useFormikContext();
     const [field, meta, { setValue }] = useField(props.name);
+
     const fieldValue = field.value
       ? toValidDateTime(new Date(field.value))
-      : undefined;
+      : "";
 
     const [internal, setInternal] = useState(fieldValue);
 
@@ -60,7 +63,9 @@ const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
     const hasError = meta.touched && meta.error;
 
     const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-      setInternal(e.currentTarget.value);
+      const newValue = e.currentTarget.value;
+      setInternal(newValue);
+      onChange && onChange(newValue);
       submitOnChange && submitForm();
     };
 
@@ -89,6 +94,10 @@ const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
     };
 
     useEffect(() => {
+      setInternal(fieldValue);
+    }, [fieldValue]);
+
+    useEffect(() => {
       if (inputRef && setFocusOnLoad) {
         inputRef.current?.focus();
       }
@@ -99,7 +108,7 @@ const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
         {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
         <Input
           type="datetime-local"
-          value={fieldValue}
+          value={internal}
           onChange={handleChange}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}

@@ -30,6 +30,7 @@ export interface FormikDateProps
   containerClassNames?: ClassValue[];
   showLabel?: boolean;
   setHasUpdate?: () => void;
+  onChange?: (newValue: unknown) => void;
 }
 
 const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
@@ -44,6 +45,7 @@ const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
       submitOnChange = false,
       showLabel = true,
       format,
+      onChange,
       ...props
     },
     ref
@@ -52,7 +54,7 @@ const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
     const [field, meta, { setValue }] = useField(props.name);
     const fieldValue = field.value
       ? convertDateStringToYYYYMMDD(field.value)
-      : undefined;
+      : "";
 
     const [internal, setInternal] = useState(fieldValue);
 
@@ -61,7 +63,9 @@ const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
     const hasError = meta.touched && meta.error;
 
     const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-      setInternal(e.currentTarget.value);
+      const newValue = e.currentTarget.value;
+      setInternal(newValue);
+      onChange && onChange(newValue);
       submitOnChange && submitForm();
     };
 
