@@ -23,7 +23,7 @@ import {
   PLURALIZED_MODEL_NAME,
 } from "@/utils/constants/SubTaskConstants";
 import { sortData } from "@/utils/sort";
-import { getSorting } from "@/utils/utilities";
+import { getSorting, replaceHighestOrder } from "@/utils/utilities";
 import { removeItemsByIndexes } from "@/utils/utils";
 import {
   useReactTable,
@@ -35,6 +35,8 @@ import { FormikProps } from "formik";
 import { ChevronLast, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
+import { DraggableRow } from "@/components/ui/DataTable/DraggableRow";
+import Decimal from "decimal.js";
 
 interface SubTaskSubformProps {
   formik: FormikProps<TaskFormFormikInitialValues>;
@@ -91,7 +93,12 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
   const addRow = () => {
     formik.setFieldValue(`SubTasks`, [
       ...formik.values.SubTasks.map((item) => ({ ...item })),
-      { ...DEFAULT_SUBTASK, taskID: formik.values.id },
+      {
+        ...DEFAULT_SUBTASK,
+        taskID: formik.values.id,
+        //@ts-ignore
+        priority: replaceHighestOrder(formik.values.SubTasks, "priority"),
+      },
     ]);
     setWillFocus(true);
   };
@@ -146,6 +153,41 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
     }
   };
 
+  const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
+    const { values, setFieldValue } = formik;
+    const { SubTasks } = values;
+
+    // Clone the SubTasks array
+    const newArray = [
+      ...SubTasks.map((item, idx) => ({
+        ...item,
+        touched:
+          idx === targetRowIndex || idx === draggedRowIndex
+            ? true
+            : item.touched,
+      })),
+    ];
+
+    const rowOrder = SubTasks[targetRowIndex].priority;
+    // Remove the item from its original position
+    const [draggedItem] = newArray.splice(draggedRowIndex, 1);
+
+    const draggedItemOrder = new Decimal(rowOrder).minus(new Decimal("0.01"));
+    draggedItem.priority = draggedItemOrder.toString();
+
+    // Insert the item at the target position
+    newArray.splice(targetRowIndex, 0, draggedItem);
+
+    // Update the priority field based on the index
+    const updatedArray = newArray.map((item, idx) => ({
+      ...item,
+    }));
+
+    // Update the formik field value
+    setFieldValue("SubTasks", updatedArray);
+    setHasUpdate(true);
+  };
+
   const handleSortChange = (sortingState: SortingState) => {
     const sortParams = sortingState
       .map((item) => {
@@ -187,6 +229,7 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
     initialState: {
       columnVisibility: {
         taskID: false,
+        priority: false,
       },
     },
     meta: {
@@ -250,18 +293,18 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
           <TableHeader>
             {subTaskTable.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
+                <TableHead className="w-[50px]"></TableHead>
                 {headerGroup.headers.map((header) => {
                   //@ts-ignore
                   const customWidth = header.column.columnDef.meta?.width;
                   return (
                     <TableHead
                       key={header.id}
-                      className={cn(
-                        {
-                          "w-[50px]": ["select", "actions"].includes(header.id),
-                        },
-                        "p-2"
-                      )}
+                      className={cn({
+                        "w-[50px] p-0": ["select", "actions"].includes(
+                          header.id
+                        ),
+                      })}
                       style={{
                         width: `${customWidth}px`,
                       }}
@@ -281,22 +324,11 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
           <TableBody>
             {subTaskTable.getRowModel().rows?.length ? (
               subTaskTable.getRowModel().rows.map((row) => (
-                <TableRow
+                <DraggableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                  row={row}
+                  reorderRow={reorderRow}
+                />
               ))
             ) : (
               <TableRow>

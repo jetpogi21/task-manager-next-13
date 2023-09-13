@@ -627,11 +627,6 @@ function getTagSQL(
   const q = query.q as string;
 
   if (q && !dontFilter) {
-    const fields: string[] = ["name"];
-    replacements["q"] = `%${q}%`;
-    filters.push(
-      `(${fields.map((field) => `(${table}.${field} LIKE :q)`).join(" OR ")})`
-    );
   }
 
   /*INSERT JOINS HERE*/

@@ -11,6 +11,7 @@ import {
 import { NextRouter } from "next/router";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
 import { encodeParams } from "@/utils/utils";
+import Decimal from "decimal.js";
 
 //expected: year,month or -year,-month
 export const getSortedBy = (
@@ -480,4 +481,33 @@ export function formatFileSize(size: number): string {
   }
 
   return `${size.toFixed(2)} ${units[unitIndex]}`;
+}
+
+export function getHighestOrder<T extends Record<string, unknown>>(
+  list: T[],
+  field: keyof T
+) {
+  return list.reduce<Decimal | null>((highest, item) => {
+    const fieldValue = item[field];
+
+    // Handle null, undefined, and NaN values by setting them to 0
+    const numericValue =
+      fieldValue != null && !Number.isNaN(fieldValue) ? fieldValue : 0;
+
+    const orderAsNumber = new Decimal(numericValue as number);
+
+    if (highest === null || orderAsNumber.greaterThan(highest)) {
+      return orderAsNumber;
+    } else {
+      return highest;
+    }
+  }, null);
+}
+
+export function replaceHighestOrder<T extends Record<string, unknown>>(
+  list: T[],
+  field: keyof T
+) {
+  const highestOrder = getHighestOrder(list, field) || 0;
+  return new Decimal(highestOrder).add("0.01");
 }
