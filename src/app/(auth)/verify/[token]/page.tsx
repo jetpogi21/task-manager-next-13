@@ -39,6 +39,7 @@ const VerifyToken: React.FC<VerifyTokenProps> = ({ params }) => {
     if (success) {
       setTimeout(() => {
         router.replace("/");
+        router.refresh();
       }, 1000);
     } else {
       signInUsingToken();
