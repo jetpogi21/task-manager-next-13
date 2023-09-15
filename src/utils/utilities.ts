@@ -511,3 +511,21 @@ export function replaceHighestOrder<T extends Record<string, unknown>>(
   const highestOrder = getHighestOrder(list, field) || 0;
   return new Decimal(highestOrder).add("0.01");
 }
+
+export function forceCastToNumber(input: number | string): number | null {
+  // Remove any commas from the string and trim whitespace
+  const cleanedInput =
+    typeof input === "string"
+      ? input.replace(/,/g, "").trim()
+      : input.toString();
+
+  // Parse the cleaned input as a number
+  const result = parseFloat(cleanedInput);
+
+  // Check if the result is a valid number (not NaN)
+  if (!isNaN(result)) {
+    return result;
+  } else {
+    return null; // Return null for invalid input
+  }
+}
