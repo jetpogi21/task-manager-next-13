@@ -19,7 +19,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { TaskDeletePayload } from "@/interfaces/TaskInterfaces";
 import axiosClient from "@/utils/api";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 
 interface TaskDeleteDialogProps {
@@ -29,6 +29,8 @@ interface TaskDeleteDialogProps {
 
 export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
+
   const [
     isDialogLoading,
     recordsToDelete,
@@ -40,6 +42,9 @@ export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
     state.setRecordsToDelete,
     state.setIsDialogLoading,
   ]);
+
+  const page = useTaskStore((state) => state.page);
+  const queryResponse = useTaskStore((state) => state.queryResponse);
 
   const [currentData, resetRowSelection, setCurrentData] = useTaskStore(
     (state) => [
@@ -65,6 +70,8 @@ export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
       setIsDialogLoading(true);
     },
     onSuccess: () => {
+      const { data } = queryResponse!;
+
       setCurrentData(
         currentData.filter(
           (item) => !recordsToDelete.includes(item.id.toString())

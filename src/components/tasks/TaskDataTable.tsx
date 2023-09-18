@@ -2,14 +2,8 @@
 import { TaskColumns } from "@/components/tasks/TaskColumns";
 import { TaskDeleteDialog } from "@/components/tasks/TaskDeleteDialog";
 import { Button, buttonVariants } from "@/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/Table";
+import { DataTable } from "@/components/ui/DataTable";
+import { useImportTaskFromTemplate } from "@/hooks/tasks/useImportTaskFromTemplate";
 import { useTaskDeleteDialog } from "@/hooks/tasks/useTaskDeleteDialog";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import { useURL } from "@/hooks/useURL";
@@ -55,6 +49,7 @@ const TaskDataTable: React.FC = () => {
     setCurrentData,
     lastPage,
     currentData,
+    queryResponse,
   } = useTaskStore((state) => ({
     resetRowSelection: state.resetRowSelection,
     rowSelection: state.rowSelection,
@@ -67,6 +62,7 @@ const TaskDataTable: React.FC = () => {
     setCurrentData: state.setCurrentData,
     lastPage: state.lastPage,
     currentData: state.currentData,
+    queryResponse: state.queryResponse,
   }));
   const { setRecordsToDelete } = useTaskDeleteDialog();
 
@@ -78,7 +74,13 @@ const TaskDataTable: React.FC = () => {
     isLoading,
     isFetching,
     fetchNextPage,
-  } = useInfiniteQuery<GetTasksResponse>(["tasks"], { enabled: false });
+  } = queryResponse!;
+
+  const {
+    mutate: mutateImportTaskLoading,
+    isLoading: isImportTaskLoading,
+    isError: isImportTaskError,
+  } = useImportTaskFromTemplate(() => {});
 
   //Transformations
   const sorting = getSorting(sort);
@@ -145,12 +147,10 @@ const TaskDataTable: React.FC = () => {
   const goToNextPage = () => {
     if (taskData) {
       const newPage = page + 1;
-      if (newPage <= lastPage) {
-        setPage(newPage);
-        setCurrentData(getCurrentData(newPage));
-      } else {
+      if (newPage > lastPage) {
         fetchNextPage();
       }
+      setPage(newPage);
       resetRowSelection();
     }
   };
@@ -169,7 +169,7 @@ const TaskDataTable: React.FC = () => {
     const params = { ...query, sort: sortParams };
     const newURL = `${pathname}?${encodeParams(params)}`;
     router.push(newURL);
-
+    setPage(1);
     resetRowSelection();
   };
 
@@ -234,74 +234,23 @@ const TaskDataTable: React.FC = () => {
           >
             Add New
           </Link>
+          <Button
+            isLoading={isImportTaskLoading}
+            variant={"secondary"}
+            size="sm"
+            onClick={() => {
+              mutateImportTaskLoading();
+            }}
+          >
+            Add From Templates
+          </Button>
         </div>
 
         <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              {taskTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    //@ts-ignore
-                    const customWidth = header.column.columnDef.meta?.width;
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className={cn({
-                          "w-[50px]": ["select", "actions"].includes(header.id),
-                        })}
-                        style={{
-                          width: `${customWidth}px`,
-                        }}
-                        align={
-                          (header.column.columnDef.meta as any)?.alignment ||
-                          "left"
-                        }
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {taskTable.getRowModel().rows?.length ? (
-                taskTable.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        align={(cell.column.columnDef.meta as any)?.alignment}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={TaskColumns.length}
-                    className="h-24 text-center"
-                  >
-                    {isLoading ? "Fetching Data..." : "No results."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            table={taskTable}
+            isLoading={isLoading}
+          />
         </div>
         <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
           {!isLoading && (
