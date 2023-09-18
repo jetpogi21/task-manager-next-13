@@ -529,3 +529,32 @@ export function forceCastToNumber(input: number | string): number | null {
     return null; // Return null for invalid input
   }
 }
+
+export function chunkArray<T>(array: T[], chunkSize: number) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+export const getCursor = (
+  data: any[],
+  sortField: string,
+  primaryKey: string
+) => {
+  if (data && data.length > 0) {
+    //The cursor will have 2 items since there will be 2 cursors to be made
+    if (sortField !== primaryKey) {
+      if (data[data.length - 1][sortField] === null) {
+        return `-${data[data.length - 1][primaryKey].toString()}`;
+      } else {
+        return `${data[data.length - 1][sortField].toString()}-${data[
+          data.length - 1
+        ][primaryKey].toString()}`;
+      }
+    } else {
+      return `${data[data.length - 1][sortField].toString()}`;
+    }
+  }
+};

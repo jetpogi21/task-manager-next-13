@@ -50,6 +50,7 @@ const TaskDataTable: React.FC = () => {
     lastPage,
     currentData,
     queryResponse,
+    setLastPage,
   } = useTaskStore((state) => ({
     resetRowSelection: state.resetRowSelection,
     rowSelection: state.rowSelection,
@@ -63,6 +64,7 @@ const TaskDataTable: React.FC = () => {
     lastPage: state.lastPage,
     currentData: state.currentData,
     queryResponse: state.queryResponse,
+    setLastPage: state.setLastPage,
   }));
   const { setRecordsToDelete } = useTaskDeleteDialog();
 
@@ -149,6 +151,7 @@ const TaskDataTable: React.FC = () => {
       const newPage = page + 1;
       if (newPage > lastPage) {
         fetchNextPage();
+        setLastPage(newPage);
       }
       setPage(newPage);
       resetRowSelection();

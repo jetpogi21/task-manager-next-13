@@ -19,7 +19,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { TaskDeletePayload } from "@/interfaces/TaskInterfaces";
 import axiosClient from "@/utils/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 
 interface TaskDeleteDialogProps {
@@ -29,8 +29,6 @@ interface TaskDeleteDialogProps {
 
 export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
   const [mounted, setMounted] = useState(false);
-  const queryClient = useQueryClient();
-
   const [
     isDialogLoading,
     recordsToDelete,
@@ -43,8 +41,22 @@ export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
     state.setIsDialogLoading,
   ]);
 
-  const page = useTaskStore((state) => state.page);
+  const { fetchCount, setFetchCount } = useTaskStore((state) => ({
+    fetchCount: state.fetchCount,
+    setFetchCount: state.setFetchCount,
+  }));
+
+  const { page, setPage } = useTaskStore((state) => ({
+    page: state.page,
+    setPage: state.setPage,
+  }));
+
   const queryResponse = useTaskStore((state) => state.queryResponse);
+  const refetchQuery = useTaskStore((state) => state.refetchQuery);
+  const { recordCount, setRecordCount } = useTaskStore((state) => ({
+    recordCount: state.recordCount,
+    setRecordCount: state.setRecordCount,
+  }));
 
   const [currentData, resetRowSelection, setCurrentData] = useTaskStore(
     (state) => [
@@ -70,13 +82,16 @@ export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
       setIsDialogLoading(true);
     },
     onSuccess: () => {
-      const { data } = queryResponse!;
-
-      setCurrentData(
-        currentData.filter(
-          (item) => !recordsToDelete.includes(item.id.toString())
-        )
+      setRecordCount(
+        recordCount -
+          currentData.filter((item) =>
+            recordsToDelete.includes(item.id.toString())
+          ).length
       );
+      resetRowSelection();
+      currentData.filter((item) => recordsToDelete.includes(item.id.toString()))
+        .length;
+      refetchQuery && refetchQuery(page);
       props.onSuccess && props.onSuccess();
     },
     onSettled: () => {

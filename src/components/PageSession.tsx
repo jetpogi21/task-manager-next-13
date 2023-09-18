@@ -13,8 +13,6 @@ const PageSession = () => {
   }));
 
   useEffect(() => {
-    console.log(url);
-
     setListURL(url);
   }, [url]);
 
