@@ -87,8 +87,6 @@ const TaskDataTable: React.FC = () => {
     isError: isImportTaskError,
     error: importTaskError,
   } = useImportTaskFromTemplate(() => {
-    console.log(refetchQuery);
-
     refetchQuery && refetchQuery(0);
   });
 
@@ -160,6 +158,8 @@ const TaskDataTable: React.FC = () => {
       if (newPage > lastPage) {
         fetchNextPage();
         setLastPage(newPage);
+      } else {
+        setCurrentData(getCurrentData(newPage));
       }
       setPage(newPage);
       resetRowSelection();
