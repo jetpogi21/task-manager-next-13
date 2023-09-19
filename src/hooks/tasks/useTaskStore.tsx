@@ -6,7 +6,7 @@ import { RowSelectionState } from "@tanstack/react-table";
 import { create } from "zustand";
 
 type State = {
-  queryResponse?: UseInfiniteQueryResult<GetTasksResponse, unknown>;
+  queryResponse?: () => UseInfiniteQueryResult<GetTasksResponse, unknown>;
   recordCount: number;
   page: number;
   cursor: string;
@@ -33,9 +33,7 @@ type Actions = {
   setIsUpdating: (isUpdating: boolean) => void;
   setSort: (sort: string) => void;
   setHasUpdate: (hasUpdate: boolean) => void;
-  setQueryResponse: (
-    queryResponse: UseInfiniteQueryResult<GetTasksResponse, unknown>
-  ) => void;
+  setQueryResponse: (queryResponse: State["queryResponse"]) => void;
   setRefetchQuery: (refetchQuery: State["refetchQuery"]) => void;
 };
 

@@ -51,6 +51,7 @@ const TaskDataTable: React.FC = () => {
     currentData,
     queryResponse,
     setLastPage,
+    refetchQuery,
   } = useTaskStore((state) => ({
     resetRowSelection: state.resetRowSelection,
     rowSelection: state.rowSelection,
@@ -65,24 +66,31 @@ const TaskDataTable: React.FC = () => {
     currentData: state.currentData,
     queryResponse: state.queryResponse,
     setLastPage: state.setLastPage,
+    refetchQuery: state.refetchQuery,
   }));
   const { setRecordsToDelete } = useTaskDeleteDialog();
 
   //Page Constants
 
   //Tanstacks
+
   const {
     data: taskData,
     isLoading,
     isFetching,
     fetchNextPage,
-  } = queryResponse!;
+  } = queryResponse!();
 
   const {
-    mutate: mutateImportTaskLoading,
+    mutate: mutateImportTask,
     isLoading: isImportTaskLoading,
     isError: isImportTaskError,
-  } = useImportTaskFromTemplate(() => {});
+    error: importTaskError,
+  } = useImportTaskFromTemplate(() => {
+    console.log(refetchQuery);
+
+    refetchQuery && refetchQuery(0);
+  });
 
   //Transformations
   const sorting = getSorting(sort);
@@ -242,7 +250,7 @@ const TaskDataTable: React.FC = () => {
             variant={"secondary"}
             size="sm"
             onClick={() => {
-              mutateImportTaskLoading();
+              mutateImportTask();
             }}
           >
             Add From Templates
