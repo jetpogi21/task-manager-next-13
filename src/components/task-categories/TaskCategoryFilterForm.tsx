@@ -61,6 +61,8 @@ const TaskCategoryFilterForm: React.FC = () => {
     const newURL = `${pathname}?${encodeParams(params)}`;
     router.push(newURL);
     setFetchCount(true);
+    setPage(1);
+    setLastPage(1);
     resetRowSelection();
   };
 

@@ -4,9 +4,12 @@ import { TaskCategory } from "@/models/TaskCategoryModel";
 import { Op } from "sequelize";
 import { Transaction } from "sequelize";
 
+interface ITaskCategory
+  extends Omit<TaskCategoryFormikShape, "touched" | "index" | "id"> {}
+
 //Reusable functions
 export const createTaskCategory = async (
-  taskCategory: Omit<TaskCategoryFormikShape, "touched" | "index" | "id">,
+  taskCategory: ITaskCategory,
   t: Transaction
 ) => {
   return await TaskCategory.create(
@@ -19,8 +22,8 @@ export const createTaskCategory = async (
 };
 
 export const updateTaskCategory = async (
-  taskCategory: Omit<TaskCategoryFormikShape, "touched" | "index">,
-  primaryKey: keyof Omit<TaskCategoryFormikShape, "touched" | "index">,
+  taskCategory: ITaskCategory,
+  primaryKey: keyof ITaskCategory,
   t: Transaction,
   primaryKeyValue?: string | number
 ) => {
