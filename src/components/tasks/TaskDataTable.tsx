@@ -5,6 +5,7 @@ import { Button, buttonVariants } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
 import { useImportTaskFromTemplate } from "@/hooks/tasks/useImportTaskFromTemplate";
 import { useTaskDeleteDialog } from "@/hooks/tasks/useTaskDeleteDialog";
+import { useTaskPageParams } from "@/hooks/tasks/useTaskPageParams";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import { useURL } from "@/hooks/useURL";
 import {
@@ -31,9 +32,8 @@ import Link from "next/link";
 import React from "react";
 
 const TaskDataTable: React.FC = () => {
-  //URL States
-  const { router, query, pathname } = useURL<TaskSearchParams>();
-  const sort = query["sort"] || DEFAULT_SORT_BY;
+  const { pathname, router, params: pageParams } = useTaskPageParams();
+  const { sort, limit } = pageParams;
 
   //Local states
 
@@ -44,13 +44,11 @@ const TaskDataTable: React.FC = () => {
     setRowSelectionToAll,
     page,
     recordCount,
-    isUpdating,
     setPage,
-    setCurrentData,
-    lastPage,
+    lastFetchedPage,
     currentData,
     queryResponse,
-    setLastPage,
+    setLastFetchedPage,
     refetchQuery,
   } = useTaskStore((state) => ({
     resetRowSelection: state.resetRowSelection,
@@ -59,13 +57,11 @@ const TaskDataTable: React.FC = () => {
     setRowSelectionToAll: state.setRowSelectionToAll,
     page: state.page,
     recordCount: state.recordCount,
-    isUpdating: state.isUpdating,
     setPage: state.setPage,
-    setCurrentData: state.setCurrentData,
-    lastPage: state.lastPage,
+    lastFetchedPage: state.lastFetchedPage,
     currentData: state.currentData,
     queryResponse: state.queryResponse,
-    setLastPage: state.setLastPage,
+    setLastFetchedPage: state.setLastFetchedPage,
     refetchQuery: state.refetchQuery,
   }));
   const { setRecordsToDelete } = useTaskDeleteDialog();
@@ -94,22 +90,11 @@ const TaskDataTable: React.FC = () => {
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
   const dataRowCount = taskData
-    ? taskData.pages
-        .slice(0, page)
-        .reduce((prev, curr) => prev + curr.rows.length, 0)
+    ? currentData.length + (page - 1) * parseInt(limit)
     : 0;
   const pageStatus = `Showing ${dataRowCount} of ${recordCount} record(s)`;
   const hasPreviousPage = page > 1;
   const hasNextPage = dataRowCount < recordCount;
-
-  //Utility Functions
-  const getCurrentData = (page: number) => {
-    return [
-      ...taskData!.pages[page - 1].rows.map((item) => ({
-        ...item,
-      })),
-    ];
-  };
 
   //Client Actions
   const deleteRow = (idx: number) => {
@@ -147,7 +132,6 @@ const TaskDataTable: React.FC = () => {
     if (taskData) {
       const newPage = page - 1;
       setPage(newPage);
-      setCurrentData(getCurrentData(newPage));
       resetRowSelection();
     }
   };
@@ -155,12 +139,12 @@ const TaskDataTable: React.FC = () => {
   const goToNextPage = () => {
     if (taskData) {
       const newPage = page + 1;
-      if (newPage > lastPage) {
+
+      if (newPage > lastFetchedPage) {
         fetchNextPage();
-        setLastPage(newPage);
-      } else {
-        setCurrentData(getCurrentData(newPage));
+        setLastFetchedPage(newPage);
       }
+
       setPage(newPage);
       resetRowSelection();
     }
@@ -177,11 +161,12 @@ const TaskDataTable: React.FC = () => {
       })
       .join(",");
 
-    const params = { ...query, sort: sortParams };
+    setPage(1);
+    setLastFetchedPage(1);
+    resetRowSelection();
+    const params = { ...pageParams, sort: sortParams };
     const newURL = `${pathname}?${encodeParams(params)}`;
     router.push(newURL);
-    setPage(1);
-    resetRowSelection();
   };
 
   const taskTable = useReactTable<TaskModel>({
