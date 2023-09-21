@@ -35,19 +35,6 @@ type Response = {
   TaskTemplates: IndexAndID[];
 };
 
-const updateTaskCategory = async (
-  payload: TaskCategoryFormUpdatePayload,
-  id: string | number
-) => {
-  const { data } = await axiosClient({
-    url: MODEL_PATH + "/" + id,
-    method: "put",
-    data: payload,
-  });
-
-  return data as Response;
-};
-
 export const updateTaskCategories = async (
   payload: TaskCategoryUpdatePayload
 ) => {
@@ -70,6 +57,19 @@ export const deleteTaskCategories = async (
   })) as { data: { recordsDeleted: number } };
 
   return data;
+};
+
+const updateTaskCategory = async (
+  payload: TaskCategoryFormUpdatePayload,
+  id: string | number
+) => {
+  const { data } = await axiosClient({
+    url: MODEL_PATH + "/" + id,
+    method: "put",
+    data: payload,
+  });
+
+  return data as Response;
 };
 
 const addTaskCategory = async (payload: TaskCategoryFormUpdatePayload) => {
