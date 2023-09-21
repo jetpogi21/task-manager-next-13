@@ -29,6 +29,7 @@ interface TaskDeleteDialogProps {
 
 export function TaskDeleteDialog(props: TaskDeleteDialogProps) {
   const [mounted, setMounted] = useState(false);
+
   const [
     isDialogLoading,
     recordsToDelete,
