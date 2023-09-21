@@ -2,15 +2,9 @@
 import { TaskTemplateColumns } from "@/components/task-templates/TaskTemplateColumns";
 import { TaskTemplateDeleteDialog } from "@/components/task-templates/TaskTemplateDeleteDialog";
 import { Button, buttonVariants } from "@/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/Table";
+import { DataTable } from "@/components/ui/DataTable";
 import { useTaskTemplateDeleteDialog } from "@/hooks/task-templates/useTaskTemplateDeleteDialog";
+import { useTaskTemplatePageParams } from "@/hooks/task-templates/useTaskTemplatePageParams";
 import { useTaskTemplateStore } from "@/hooks/task-templates/useTaskTemplateStore";
 import { useURL } from "@/hooks/useURL";
 import {
@@ -32,15 +26,13 @@ import {
   flexRender,
   SortingState,
 } from "@tanstack/react-table";
+import { Trash } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
 const TaskTemplateDataTable: React.FC = () => {
-  //URL States
-  const { router, query, pathname } = useURL<TaskTemplateSearchParams>();
-  const sort = query["sort"] || DEFAULT_SORT_BY;
-
-  //Local states
+  const { pathname, router, params: pageParams } = useTaskTemplatePageParams();
+  const { sort, limit } = pageParams;
 
   const {
     resetRowSelection,
@@ -49,11 +41,12 @@ const TaskTemplateDataTable: React.FC = () => {
     setRowSelectionToAll,
     page,
     recordCount,
-    isUpdating,
     setPage,
-    setCurrentData,
-    lastPage,
+    lastFetchedPage,
     currentData,
+    queryResponse,
+    setLastFetchedPage,
+    refetchQuery,
   } = useTaskTemplateStore((state) => ({
     resetRowSelection: state.resetRowSelection,
     rowSelection: state.rowSelection,
@@ -61,11 +54,12 @@ const TaskTemplateDataTable: React.FC = () => {
     setRowSelectionToAll: state.setRowSelectionToAll,
     page: state.page,
     recordCount: state.recordCount,
-    isUpdating: state.isUpdating,
     setPage: state.setPage,
-    setCurrentData: state.setCurrentData,
-    lastPage: state.lastPage,
+    lastFetchedPage: state.lastFetchedPage,
     currentData: state.currentData,
+    queryResponse: state.queryResponse,
+    setLastFetchedPage: state.setLastFetchedPage,
+    refetchQuery: state.refetchQuery,
   }));
   const { setRecordsToDelete } = useTaskTemplateDeleteDialog();
 
@@ -77,30 +71,19 @@ const TaskTemplateDataTable: React.FC = () => {
     isLoading,
     isFetching,
     fetchNextPage,
-  } = useInfiniteQuery<GetTaskTemplatesResponse>(["taskTemplates"], {
-    enabled: false,
-  });
+  } = queryResponse!();
 
   //Transformations
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
   const dataRowCount = taskTemplateData
-    ? taskTemplateData.pages
-        .slice(0, page)
-        .reduce((prev, curr) => prev + curr.rows.length, 0)
+    ? currentData.length + (page - 1) * parseInt(limit)
     : 0;
   const pageStatus = `Showing ${dataRowCount} of ${recordCount} record(s)`;
   const hasPreviousPage = page > 1;
   const hasNextPage = dataRowCount < recordCount;
 
   //Utility Functions
-  const getCurrentData = (page: number) => {
-    return [
-      ...taskTemplateData!.pages[page - 1].rows.map((item) => ({
-        ...item,
-      })),
-    ];
-  };
 
   //Client Actions
   const deleteRow = (idx: number) => {
@@ -138,7 +121,6 @@ const TaskTemplateDataTable: React.FC = () => {
     if (taskTemplateData) {
       const newPage = page - 1;
       setPage(newPage);
-      setCurrentData(getCurrentData(newPage));
       resetRowSelection();
     }
   };
@@ -146,12 +128,13 @@ const TaskTemplateDataTable: React.FC = () => {
   const goToNextPage = () => {
     if (taskTemplateData) {
       const newPage = page + 1;
-      if (newPage <= lastPage) {
-        setPage(newPage);
-        setCurrentData(getCurrentData(newPage));
-      } else {
+
+      if (newPage > lastFetchedPage) {
         fetchNextPage();
+        setLastFetchedPage(newPage);
       }
+
+      setPage(newPage);
       resetRowSelection();
     }
   };
@@ -167,11 +150,12 @@ const TaskTemplateDataTable: React.FC = () => {
       })
       .join(",");
 
-    const params = { ...query, sort: sortParams };
+    setPage(1);
+    setLastFetchedPage(1);
+    resetRowSelection();
+    const params = { ...pageParams, sort: sortParams };
     const newURL = `${pathname}?${encodeParams(params)}`;
     router.push(newURL);
-
-    resetRowSelection();
   };
 
   const taskTemplateTable = useReactTable<TaskTemplateModel>({
@@ -218,8 +202,10 @@ const TaskTemplateDataTable: React.FC = () => {
               onClick={() => {
                 deleteSelectedRows();
               }}
+              className="flex items-center justify-center gap-2"
             >
               Delete Selected
+              <Trash className="w-4 h-4 text-foreground" />
             </Button>
           )}
           <Link
@@ -234,71 +220,10 @@ const TaskTemplateDataTable: React.FC = () => {
         </div>
 
         <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              {taskTemplateTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    //@ts-ignore
-                    const customWidth = header.column.columnDef.meta?.width;
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className={cn({
-                          "w-[50px]": ["select", "actions"].includes(header.id),
-                        })}
-                        style={{
-                          width: `${customWidth}px`,
-                        }}
-                        align={
-                          (header.column.columnDef.meta as any)?.alignment ||
-                          "left"
-                        }
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {taskTemplateTable.getRowModel().rows?.length ? (
-                taskTemplateTable.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        align={(cell.column.columnDef.meta as any)?.alignment}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={TaskTemplateColumns.length}
-                    className="h-24 text-center"
-                  >
-                    {isLoading ? "Fetching Data..." : "No results."}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <DataTable
+            table={taskTemplateTable}
+            isLoading={isLoading}
+          />
         </div>
         <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
           {!isLoading && (

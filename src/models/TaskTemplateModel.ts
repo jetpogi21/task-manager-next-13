@@ -22,7 +22,7 @@ export default interface TaskTemplate
   > {
   id: CreationOptional<number>;
   description: string;
-  isSuspended: boolean;
+  isSuspended?: boolean;
   taskCategoryID: number;
   taskIntervalID: number;
 }
@@ -66,6 +66,7 @@ export const TaskTemplate = sequelize.define<TaskTemplate>(
     },
     isSuspended: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
       field: "is_suspended",
     },
   },

@@ -468,6 +468,7 @@ function getTaskSQL(
       ["target_date", "targetDate"],
       ["finish_date_time", "finishDateTime"],
       ["is_finished", "isFinished"],
+      ["sub_task_imported", "subTaskImported"],
     ];
   const fieldAliases: string[] = [];
   const modelName = "Task";

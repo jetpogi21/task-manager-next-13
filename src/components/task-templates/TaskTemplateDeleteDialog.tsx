@@ -29,6 +29,7 @@ interface TaskTemplateDeleteDialogProps {
 
 export function TaskTemplateDeleteDialog(props: TaskTemplateDeleteDialogProps) {
   const [mounted, setMounted] = useState(false);
+
   const [
     isDialogLoading,
     recordsToDelete,
@@ -40,6 +41,23 @@ export function TaskTemplateDeleteDialog(props: TaskTemplateDeleteDialogProps) {
     state.setRecordsToDelete,
     state.setIsDialogLoading,
   ]);
+
+  const { fetchCount, setFetchCount } = useTaskTemplateStore((state) => ({
+    fetchCount: state.fetchCount,
+    setFetchCount: state.setFetchCount,
+  }));
+
+  const { page, setPage } = useTaskTemplateStore((state) => ({
+    page: state.page,
+    setPage: state.setPage,
+  }));
+
+  const queryResponse = useTaskTemplateStore((state) => state.queryResponse);
+  const refetchQuery = useTaskTemplateStore((state) => state.refetchQuery);
+  const { recordCount, setRecordCount } = useTaskTemplateStore((state) => ({
+    recordCount: state.recordCount,
+    setRecordCount: state.setRecordCount,
+  }));
 
   const [currentData, resetRowSelection, setCurrentData] = useTaskTemplateStore(
     (state) => [
@@ -65,11 +83,16 @@ export function TaskTemplateDeleteDialog(props: TaskTemplateDeleteDialogProps) {
       setIsDialogLoading(true);
     },
     onSuccess: () => {
-      setCurrentData(
-        currentData.filter(
-          (item) => !recordsToDelete.includes(item.id.toString())
-        )
+      setRecordCount(
+        recordCount -
+          currentData.filter((item) =>
+            recordsToDelete.includes(item.id.toString())
+          ).length
       );
+      resetRowSelection();
+      currentData.filter((item) => recordsToDelete.includes(item.id.toString()))
+        .length;
+      refetchQuery && refetchQuery(page);
       props.onSuccess && props.onSuccess();
     },
     onSettled: () => {

@@ -17,7 +17,7 @@ const TaskTemplateSchema = Yup.object().shape({
           ? schema.required("Description is a required field.")
           : schema.notRequired()
       ),
-      priority: Yup.string().when("touched", ([touched], schema) =>
+      priority: Yup.number().when("touched", ([touched], schema) =>
         touched
           ? schema.required("Priority is a required field.")
           : schema.notRequired()
