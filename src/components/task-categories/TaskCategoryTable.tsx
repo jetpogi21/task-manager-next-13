@@ -63,6 +63,8 @@ const TaskCategoryTable: React.FC = () => {
       state.setMutate,
     ]);
 
+  //API Functions
+
   //Tanstacks
   const taskCategoryQuery = () =>
     useTaskCategoriesQuery({

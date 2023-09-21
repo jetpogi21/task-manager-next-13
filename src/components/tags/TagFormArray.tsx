@@ -2,41 +2,26 @@
 import { TagColumns } from "@/components/tags/TagColumns";
 import { TagMultiCreateDeleteDialog } from "@/components/tags/TagMultiCreateDeleteDialog";
 import { Button } from "@/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/Table";
+import { DataTable } from "@/components/ui/DataTable";
 import { useTagDeleteDialog } from "@/hooks/tags/useTagDeleteDialog";
+import { useTagPageParams } from "@/hooks/tags/useTagPageParams";
 import { useTagStore } from "@/hooks/tags/useTagStore";
-import { useURL } from "@/hooks/useURL";
-import {
-  TagFormikShape,
-  TagSearchParams,
-  GetTagsResponse,
-} from "@/interfaces/TagInterfaces";
-import { cn } from "@/lib/utils";
+import { TagFormikShape } from "@/interfaces/TagInterfaces";
 import {
   DEFAULT_FORM_VALUE,
-  DEFAULT_SORT_BY,
   FIRST_FIELD_IN_FORM,
   LAST_FIELD_IN_FORM,
   PLURALIZED_MODEL_NAME,
 } from "@/utils/constants/TagConstants";
 import { getSorting } from "@/utils/utilities";
 import { encodeParams, removeItemsByIndexes } from "@/utils/utils";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   SortingState,
 } from "@tanstack/react-table";
 import { Form, FormikProps } from "formik";
-import { ChevronLast, Plus } from "lucide-react";
+import { ChevronLast, Plus, Trash } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 interface TagFormArrayProps {
@@ -44,27 +29,30 @@ interface TagFormArrayProps {
 }
 
 const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
-  //URL States
-  const { router, query, pathname } = useURL<TagSearchParams>();
-  const sort = query["sort"] || DEFAULT_SORT_BY;
+  const { query, router, pathname, params } = useTagPageParams();
+  const { sort, limit } = params;
 
   //Local states
   const [willFocus, setWillFocus] = useState(false);
   const ref: React.RefObject<HTMLElement> = useRef(null); //to be attached to the last row in form, first control in that row
 
-  const {
-    resetRowSelection,
-    rowSelection,
-    setRowSelection,
-    setRowSelectionToAll,
-    page,
-    recordCount,
-    isUpdating,
-    setPage,
-    setCurrentData,
-    lastPage,
-  } = useTagStore();
-  const { setRecordsToDelete } = useTagDeleteDialog();
+  const currentData = useTagStore((state) => state.currentData);
+  const queryResponse = useTagStore((state) => state.queryResponse);
+  const resetRowSelection = useTagStore((state) => state.resetRowSelection);
+  const rowSelection = useTagStore((state) => state.rowSelection);
+  const setRowSelection = useTagStore((state) => state.setRowSelection);
+  const setRowSelectionToAll = useTagStore(
+    (state) => state.setRowSelectionToAll
+  );
+  const page = useTagStore((state) => state.page);
+  const recordCount = useTagStore((state) => state.recordCount);
+  const isUpdating = useTagStore((state) => state.isUpdating);
+  const setPage = useTagStore((state) => state.setPage);
+  const lastFetchedPage = useTagStore((state) => state.lastFetchedPage);
+
+  const setRecordsToDelete = useTagDeleteDialog(
+    (state) => state.setRecordsToDelete
+  );
 
   //Page Constants
   const DEFAULT_TAG = DEFAULT_FORM_VALUE;
@@ -75,34 +63,17 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
     isLoading,
     isFetching,
     fetchNextPage,
-  } = useInfiniteQuery<GetTagsResponse>(["tags"], { enabled: false });
+  } = queryResponse!();
 
   //Transformations
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
   const dataRowCount = tagData
-    ? tagData.pages
-        .slice(0, page)
-        .reduce((prev, curr) => prev + curr.rows.length, 0)
+    ? currentData.length + (page - 1) * parseInt(limit)
     : 0;
   const pageStatus = `Showing ${dataRowCount} of ${recordCount} record(s)`;
   const hasPreviousPage = page > 1;
   const hasNextPage = dataRowCount < recordCount;
-
-  //Utility Functions
-  const getCurrentData = (page: number) => {
-    return [
-      ...tagData!.pages[page - 1].rows.map((item, index) => ({
-        ...item,
-        index,
-        touched: false,
-      })),
-      {
-        ...DEFAULT_TAG,
-        index: tagData!.pages[page - 1].rows.length,
-      },
-    ];
-  };
 
   //Client Actions
   const focusOnRef = () => {
@@ -171,7 +142,6 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
     if (tagData) {
       const newPage = page - 1;
       setPage(newPage);
-      setCurrentData(getCurrentData(newPage));
       resetRowSelection();
     }
   };
@@ -179,10 +149,10 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
   const goToNextPage = () => {
     if (tagData) {
       const newPage = page + 1;
-      if (newPage <= lastPage) {
+      if (newPage <= lastFetchedPage) {
         setPage(newPage);
-        setCurrentData(getCurrentData(newPage));
       } else {
+        setPage(newPage);
         fetchNextPage();
       }
       resetRowSelection();
@@ -263,8 +233,10 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
             onClick={() => {
               deleteSelectedRows();
             }}
+            className="flex items-center justify-center gap-2"
           >
             Delete Selected
+            <Trash className="w-4 h-4 text-foreground" />
           </Button>
         )}
         <Button
@@ -279,67 +251,10 @@ const TagFormArray: React.FC<TagFormArrayProps> = ({ formik }) => {
       </div>
 
       <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            {tagTable.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  //@ts-ignore
-                  const customWidth = header.column.columnDef.meta?.width;
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn({
-                        "w-[50px]": ["select", "actions"].includes(header.id),
-                      })}
-                      style={{
-                        width: `${customWidth}px`,
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {tagTable.getRowModel().rows?.length ? (
-              tagTable.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={TagColumns.length}
-                  className="h-24 text-center"
-                >
-                  {isLoading ? "Fetching Data..." : "No results."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          isLoading={isLoading}
+          table={tagTable}
+        />
       </div>
       <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
         {!isLoading && (
