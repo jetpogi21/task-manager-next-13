@@ -2,41 +2,26 @@
 import { TaskIntervalColumns } from "@/components/task-intervals/TaskIntervalColumns";
 import { TaskIntervalMultiCreateDeleteDialog } from "@/components/task-intervals/TaskIntervalMultiCreateDeleteDialog";
 import { Button } from "@/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/Table";
+import { DataTable } from "@/components/ui/DataTable";
 import { useTaskIntervalDeleteDialog } from "@/hooks/task-intervals/useTaskIntervalDeleteDialog";
+import { useTaskIntervalPageParams } from "@/hooks/task-intervals/useTaskIntervalPageParams";
 import { useTaskIntervalStore } from "@/hooks/task-intervals/useTaskIntervalStore";
-import { useURL } from "@/hooks/useURL";
-import {
-  TaskIntervalFormikShape,
-  TaskIntervalSearchParams,
-  GetTaskIntervalsResponse,
-} from "@/interfaces/TaskIntervalInterfaces";
-import { cn } from "@/lib/utils";
+import { TaskIntervalFormikShape } from "@/interfaces/TaskIntervalInterfaces";
 import {
   DEFAULT_FORM_VALUE,
-  DEFAULT_SORT_BY,
   FIRST_FIELD_IN_FORM,
   LAST_FIELD_IN_FORM,
   PLURALIZED_MODEL_NAME,
 } from "@/utils/constants/TaskIntervalConstants";
 import { getSorting } from "@/utils/utilities";
 import { encodeParams, removeItemsByIndexes } from "@/utils/utils";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   SortingState,
 } from "@tanstack/react-table";
 import { Form, FormikProps } from "formik";
-import { ChevronLast, Plus } from "lucide-react";
+import { ChevronLast, Plus, Trash } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 interface TaskIntervalFormArrayProps {
@@ -46,27 +31,36 @@ interface TaskIntervalFormArrayProps {
 const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
   formik,
 }) => {
-  //URL States
-  const { router, query, pathname } = useURL<TaskIntervalSearchParams>();
-  const sort = query["sort"] || DEFAULT_SORT_BY;
+  const { query, router, pathname, params } = useTaskIntervalPageParams();
+  const { sort, limit } = params;
 
   //Local states
   const [willFocus, setWillFocus] = useState(false);
   const ref: React.RefObject<HTMLElement> = useRef(null); //to be attached to the last row in form, first control in that row
 
-  const {
-    resetRowSelection,
-    rowSelection,
-    setRowSelection,
-    setRowSelectionToAll,
-    page,
-    recordCount,
-    isUpdating,
-    setPage,
-    setCurrentData,
-    lastPage,
-  } = useTaskIntervalStore();
-  const { setRecordsToDelete } = useTaskIntervalDeleteDialog();
+  const currentData = useTaskIntervalStore((state) => state.currentData);
+  const queryResponse = useTaskIntervalStore((state) => state.queryResponse);
+  const resetRowSelection = useTaskIntervalStore(
+    (state) => state.resetRowSelection
+  );
+  const rowSelection = useTaskIntervalStore((state) => state.rowSelection);
+  const setRowSelection = useTaskIntervalStore(
+    (state) => state.setRowSelection
+  );
+  const setRowSelectionToAll = useTaskIntervalStore(
+    (state) => state.setRowSelectionToAll
+  );
+  const page = useTaskIntervalStore((state) => state.page);
+  const recordCount = useTaskIntervalStore((state) => state.recordCount);
+  const isUpdating = useTaskIntervalStore((state) => state.isUpdating);
+  const setPage = useTaskIntervalStore((state) => state.setPage);
+  const lastFetchedPage = useTaskIntervalStore(
+    (state) => state.lastFetchedPage
+  );
+
+  const setRecordsToDelete = useTaskIntervalDeleteDialog(
+    (state) => state.setRecordsToDelete
+  );
 
   //Page Constants
   const DEFAULT_TASKINTERVAL = DEFAULT_FORM_VALUE;
@@ -77,36 +71,17 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
     isLoading,
     isFetching,
     fetchNextPage,
-  } = useInfiniteQuery<GetTaskIntervalsResponse>(["taskIntervals"], {
-    enabled: false,
-  });
+  } = queryResponse!();
 
   //Transformations
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
   const dataRowCount = taskIntervalData
-    ? taskIntervalData.pages
-        .slice(0, page)
-        .reduce((prev, curr) => prev + curr.rows.length, 0)
+    ? currentData.length + (page - 1) * parseInt(limit)
     : 0;
   const pageStatus = `Showing ${dataRowCount} of ${recordCount} record(s)`;
   const hasPreviousPage = page > 1;
   const hasNextPage = dataRowCount < recordCount;
-
-  //Utility Functions
-  const getCurrentData = (page: number) => {
-    return [
-      ...taskIntervalData!.pages[page - 1].rows.map((item, index) => ({
-        ...item,
-        index,
-        touched: false,
-      })),
-      {
-        ...DEFAULT_TASKINTERVAL,
-        index: taskIntervalData!.pages[page - 1].rows.length,
-      },
-    ];
-  };
 
   //Client Actions
   const focusOnRef = () => {
@@ -177,7 +152,6 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
     if (taskIntervalData) {
       const newPage = page - 1;
       setPage(newPage);
-      setCurrentData(getCurrentData(newPage));
       resetRowSelection();
     }
   };
@@ -185,10 +159,10 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
   const goToNextPage = () => {
     if (taskIntervalData) {
       const newPage = page + 1;
-      if (newPage <= lastPage) {
+      if (newPage <= lastFetchedPage) {
         setPage(newPage);
-        setCurrentData(getCurrentData(newPage));
       } else {
+        setPage(newPage);
         fetchNextPage();
       }
       resetRowSelection();
@@ -269,8 +243,10 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
             onClick={() => {
               deleteSelectedRows();
             }}
+            className="flex items-center justify-center gap-2"
           >
             Delete Selected
+            <Trash className="w-4 h-4 text-foreground" />
           </Button>
         )}
         <Button
@@ -285,67 +261,10 @@ const TaskIntervalFormArray: React.FC<TaskIntervalFormArrayProps> = ({
       </div>
 
       <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            {taskIntervalTable.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  //@ts-ignore
-                  const customWidth = header.column.columnDef.meta?.width;
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn({
-                        "w-[50px]": ["select", "actions"].includes(header.id),
-                      })}
-                      style={{
-                        width: `${customWidth}px`,
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {taskIntervalTable.getRowModel().rows?.length ? (
-              taskIntervalTable.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={TaskIntervalColumns.length}
-                  className="h-24 text-center"
-                >
-                  {isLoading ? "Fetching Data..." : "No results."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          isLoading={isLoading}
+          table={taskIntervalTable}
+        />
       </div>
       <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
         {!isLoading && (

@@ -5,7 +5,7 @@ import { Op } from "sequelize";
 import { Transaction } from "sequelize";
 
 interface ITaskCategory
-  extends Omit<TaskCategoryFormikShape, "touched" | "index" | "id"> {}
+  extends Omit<TaskCategoryFormikShape, "touched" | "index"> {}
 
 //Reusable functions
 export const createTaskCategory = async (
