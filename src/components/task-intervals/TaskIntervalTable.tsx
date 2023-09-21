@@ -64,7 +64,7 @@ const TaskIntervalTable: React.FC = () => {
     ]);
 
   //API Functions
-  
+
   //Tanstacks
   const taskIntervalQuery = () =>
     useTaskIntervalsQuery({
@@ -180,7 +180,9 @@ const TaskIntervalTable: React.FC = () => {
   //Client Actions
   const handleSubmit = async (values: TaskIntervalFormikInitialValues) => {
     //The reference is the index of the row
-    const TaskIntervalsToBeSubmitted = values.TaskIntervals.filter((item) => item.touched);
+    const TaskIntervalsToBeSubmitted = values.TaskIntervals.filter(
+      (item) => item.touched
+    );
 
     if (TaskIntervalsToBeSubmitted.length > 0) {
       const payload: TaskIntervalUpdatePayload = {
@@ -216,7 +218,6 @@ const TaskIntervalTable: React.FC = () => {
         {(formik) => <TaskIntervalFormArray formik={formik} />}
       </Formik>
     )
-  );
   );
 };
 
