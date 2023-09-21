@@ -15,8 +15,7 @@ type State = {
   >;
   recordCount: number;
   page: number;
-  cursor: string;
-  lastPage: number;
+  lastFetchedPage: number;
   fetchCount: boolean;
   rowSelection: RowSelectionState;
   currentData: TaskCategoryFormikShape[];
@@ -29,8 +28,7 @@ type State = {
 type Actions = {
   setRecordCount: (recordCount: number) => void;
   setPage: (page: number) => void;
-  setCursor: (cursor: string) => void;
-  setLastPage: (lastPage: number) => void;
+  setLastFetchedPage: (lastFetchedPage: number) => void;
   setFetchCount: (fetchCount: boolean) => void;
   setRowSelection: (idx: number) => void;
   resetRowSelection: () => void;
@@ -46,9 +44,8 @@ type Actions = {
 // Create your store, which includes both state and (optionally) actions
 const useTaskCategoryStore = create<State & Actions>((set) => ({
   recordCount: 0,
-  page: 0,
-  cursor: "",
-  lastPage: 0,
+  page: 1,
+  lastFetchedPage: 1,
   fetchCount: true,
   rowSelection: {},
   deletedRows: [],
@@ -59,8 +56,7 @@ const useTaskCategoryStore = create<State & Actions>((set) => ({
   hasUpdate: false,
   setRecordCount: (recordCount) => set({ recordCount }),
   setPage: (page) => set({ page }),
-  setCursor: (cursor) => set({ cursor }),
-  setLastPage: (lastPage) => set({ lastPage }),
+  setLastFetchedPage: (lastFetchedPage) => set({ lastFetchedPage }),
   setFetchCount: (fetchCount) => set({ fetchCount }),
   setRowSelection: (idx: number) =>
     set((state) => ({

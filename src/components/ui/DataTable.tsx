@@ -53,7 +53,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
         ))}
       </TableHeader>
       <TableBody>
-        {table.getRowModel().rows?.length ? (
+        {!isLoading ? (
           table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}

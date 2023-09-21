@@ -188,6 +188,7 @@ const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
       if (e.key === "Enter") {
         //@ts-ignore
         setValue(e.target.value);
+        setArrayTouched && setArrayTouched();
       }
 
       if (isNumeric && !isNumericInput(e, wholeNumberOnly, allowNegative)) {

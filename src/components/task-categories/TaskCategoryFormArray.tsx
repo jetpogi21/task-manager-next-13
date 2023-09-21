@@ -2,41 +2,26 @@
 import { TaskCategoryColumns } from "@/components/task-categories/TaskCategoryColumns";
 import { TaskCategoryMultiCreateDeleteDialog } from "@/components/task-categories/TaskCategoryMultiCreateDeleteDialog";
 import { Button } from "@/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/Table";
+import { DataTable } from "@/components/ui/DataTable";
 import { useTaskCategoryDeleteDialog } from "@/hooks/task-categories/useTaskCategoryDeleteDialog";
+import { useTaskCategoryPageParams } from "@/hooks/task-categories/useTaskCategoryPageParams";
 import { useTaskCategoryStore } from "@/hooks/task-categories/useTaskCategoryStore";
-import { useURL } from "@/hooks/useURL";
-import {
-  TaskCategoryFormikShape,
-  TaskCategorySearchParams,
-  GetTaskCategoriesResponse,
-} from "@/interfaces/TaskCategoryInterfaces";
-import { cn } from "@/lib/utils";
+import { TaskCategoryFormikShape } from "@/interfaces/TaskCategoryInterfaces";
 import {
   DEFAULT_FORM_VALUE,
-  DEFAULT_SORT_BY,
   FIRST_FIELD_IN_FORM,
   LAST_FIELD_IN_FORM,
   PLURALIZED_MODEL_NAME,
 } from "@/utils/constants/TaskCategoryConstants";
 import { getSorting } from "@/utils/utilities";
 import { encodeParams, removeItemsByIndexes } from "@/utils/utils";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   SortingState,
 } from "@tanstack/react-table";
 import { Form, FormikProps } from "formik";
-import { ChevronLast, Plus } from "lucide-react";
+import { ChevronLast, Plus, Trash } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 interface TaskCategoryFormArrayProps {
@@ -46,27 +31,36 @@ interface TaskCategoryFormArrayProps {
 const TaskCategoryFormArray: React.FC<TaskCategoryFormArrayProps> = ({
   formik,
 }) => {
-  //URL States
-  const { router, query, pathname } = useURL<TaskCategorySearchParams>();
-  const sort = query["sort"] || DEFAULT_SORT_BY;
+  const { query, router, pathname, params } = useTaskCategoryPageParams();
+  const { sort, limit } = params;
 
   //Local states
   const [willFocus, setWillFocus] = useState(false);
   const ref: React.RefObject<HTMLElement> = useRef(null); //to be attached to the last row in form, first control in that row
 
-  const {
-    resetRowSelection,
-    rowSelection,
-    setRowSelection,
-    setRowSelectionToAll,
-    page,
-    recordCount,
-    isUpdating,
-    setPage,
-    setCurrentData,
-    lastPage,
-  } = useTaskCategoryStore();
-  const { setRecordsToDelete } = useTaskCategoryDeleteDialog();
+  const currentData = useTaskCategoryStore((state) => state.currentData);
+  const queryResponse = useTaskCategoryStore((state) => state.queryResponse);
+  const resetRowSelection = useTaskCategoryStore(
+    (state) => state.resetRowSelection
+  );
+  const rowSelection = useTaskCategoryStore((state) => state.rowSelection);
+  const setRowSelection = useTaskCategoryStore(
+    (state) => state.setRowSelection
+  );
+  const setRowSelectionToAll = useTaskCategoryStore(
+    (state) => state.setRowSelectionToAll
+  );
+  const page = useTaskCategoryStore((state) => state.page);
+  const recordCount = useTaskCategoryStore((state) => state.recordCount);
+  const isUpdating = useTaskCategoryStore((state) => state.isUpdating);
+  const setPage = useTaskCategoryStore((state) => state.setPage);
+  const lastFetchedPage = useTaskCategoryStore(
+    (state) => state.lastFetchedPage
+  );
+
+  const setRecordsToDelete = useTaskCategoryDeleteDialog(
+    (state) => state.setRecordsToDelete
+  );
 
   //Page Constants
   const DEFAULT_TASKCATEGORY = DEFAULT_FORM_VALUE;
@@ -77,36 +71,17 @@ const TaskCategoryFormArray: React.FC<TaskCategoryFormArrayProps> = ({
     isLoading,
     isFetching,
     fetchNextPage,
-  } = useInfiniteQuery<GetTaskCategoriesResponse>(["taskCategories"], {
-    enabled: false,
-  });
+  } = queryResponse!();
 
   //Transformations
   const sorting = getSorting(sort);
   const hasSelected = Object.values(rowSelection).some((val) => val);
   const dataRowCount = taskCategoryData
-    ? taskCategoryData.pages
-        .slice(0, page)
-        .reduce((prev, curr) => prev + curr.rows.length, 0)
+    ? currentData.length + (page - 1) * parseInt(limit)
     : 0;
   const pageStatus = `Showing ${dataRowCount} of ${recordCount} record(s)`;
   const hasPreviousPage = page > 1;
   const hasNextPage = dataRowCount < recordCount;
-
-  //Utility Functions
-  const getCurrentData = (page: number) => {
-    return [
-      ...taskCategoryData!.pages[page - 1].rows.map((item, index) => ({
-        ...item,
-        index,
-        touched: false,
-      })),
-      {
-        ...DEFAULT_TASKCATEGORY,
-        index: taskCategoryData!.pages[page - 1].rows.length,
-      },
-    ];
-  };
 
   //Client Actions
   const focusOnRef = () => {
@@ -177,7 +152,6 @@ const TaskCategoryFormArray: React.FC<TaskCategoryFormArrayProps> = ({
     if (taskCategoryData) {
       const newPage = page - 1;
       setPage(newPage);
-      setCurrentData(getCurrentData(newPage));
       resetRowSelection();
     }
   };
@@ -185,10 +159,10 @@ const TaskCategoryFormArray: React.FC<TaskCategoryFormArrayProps> = ({
   const goToNextPage = () => {
     if (taskCategoryData) {
       const newPage = page + 1;
-      if (newPage <= lastPage) {
+      if (newPage <= lastFetchedPage) {
         setPage(newPage);
-        setCurrentData(getCurrentData(newPage));
       } else {
+        setPage(newPage);
         fetchNextPage();
       }
       resetRowSelection();
@@ -269,8 +243,10 @@ const TaskCategoryFormArray: React.FC<TaskCategoryFormArrayProps> = ({
             onClick={() => {
               deleteSelectedRows();
             }}
+            className="flex items-center justify-center gap-2"
           >
             Delete Selected
+            <Trash className="w-4 h-4 text-foreground" />
           </Button>
         )}
         <Button
@@ -285,67 +261,10 @@ const TaskCategoryFormArray: React.FC<TaskCategoryFormArrayProps> = ({
       </div>
 
       <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            {taskCategoryTable.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  //@ts-ignore
-                  const customWidth = header.column.columnDef.meta?.width;
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn({
-                        "w-[50px]": ["select", "actions"].includes(header.id),
-                      })}
-                      style={{
-                        width: `${customWidth}px`,
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {taskCategoryTable.getRowModel().rows?.length ? (
-              taskCategoryTable.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={TaskCategoryColumns.length}
-                  className="h-24 text-center"
-                >
-                  {isLoading ? "Fetching Data..." : "No results."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          isLoading={isLoading}
+          table={taskCategoryTable}
+        />
       </div>
       <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
         {!isLoading && (
