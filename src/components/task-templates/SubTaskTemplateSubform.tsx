@@ -23,7 +23,7 @@ import {
   PLURALIZED_MODEL_NAME,
 } from "@/utils/constants/SubTaskTemplateConstants";
 import { sortData } from "@/utils/sort";
-import { getSorting } from "@/utils/utilities";
+import { getSorting, replaceHighestOrder } from "@/utils/utilities";
 import { removeItemsByIndexes } from "@/utils/utils";
 import {
   useReactTable,
@@ -247,7 +247,7 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
           size="sm"
           onClick={focusOnRef}
         >
-          <ChevronLast className="w-4 h-4 text-green-800" />
+          <ChevronLast className="w-4 h-4 text-foreground" />
           Go to last row
         </Button>
       </div>
@@ -263,12 +263,11 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
                   return (
                     <TableHead
                       key={header.id}
-                      className={cn(
-                        {
-                          "w-[50px]": ["select", "actions"].includes(header.id),
-                        },
-                        "p-2"
-                      )}
+                      className={cn({
+                        "w-[50px] p-0": ["select", "actions"].includes(
+                          header.id
+                        ),
+                      })}
                       style={{
                         width: `${customWidth}px`,
                       }}
@@ -329,7 +328,7 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
                 variant={"secondary"}
                 onClick={addRow}
               >
-                <Plus className="w-4 h-4 text-green-800" /> Add Row
+                <Plus className="w-4 h-4 text-foreground" /> Add Row
               </Button>
             </div>
           </div>

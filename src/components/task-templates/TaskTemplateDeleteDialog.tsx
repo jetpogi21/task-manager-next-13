@@ -90,9 +90,7 @@ export function TaskTemplateDeleteDialog(props: TaskTemplateDeleteDialogProps) {
           ).length
       );
       resetRowSelection();
-      currentData.filter((item) => recordsToDelete.includes(item.id.toString()))
-        .length;
-      refetchQuery && refetchQuery(page);
+      refetchQuery && refetchQuery(page - 1);
       props.onSuccess && props.onSuccess();
     },
     onSettled: () => {
