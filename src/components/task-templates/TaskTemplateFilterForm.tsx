@@ -62,12 +62,12 @@ const TaskTemplateFilterForm: React.FC = () => {
       ) as Partial<TaskTemplateSearchParams>),
     };
 
-    const newURL = `${pathname}?${encodeParams(params)}`;
-    router.push(newURL);
     setFetchCount(true);
     setPage(1);
     setLastFetchedPage(1);
     resetRowSelection();
+    const newURL = `${pathname}?${encodeParams(params)}`;
+    router.push(newURL);
   };
 
   const handleLimitChange = (value: string) => {

@@ -74,6 +74,7 @@ const findOptions: FindOptions<typeof Task> = {
     "targetDate",
     "finishDateTime",
     "isFinished",
+    "subTaskImported",
   ],
 };
 
@@ -116,6 +117,7 @@ function getTaskSQL(
       ["target_date", "targetDate"],
       ["finish_date_time", "finishDateTime"],
       ["is_finished", "isFinished"],
+      ["sub_task_imported", "subTaskImported"],
     ];
 
   //This will be used to store the fields to be used from the joins

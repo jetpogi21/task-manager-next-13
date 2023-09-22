@@ -20,7 +20,7 @@ import {
 } from "@/utils/constants/TaskConstants";
 import { getSorting } from "@/utils/utilities";
 import { encodeParams } from "@/utils/utils";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { UseInfiniteQueryResult } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,7 +31,11 @@ import { Trash } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-const TaskDataTable: React.FC = () => {
+interface TaskDataTableProps {
+  taskQuery: () => UseInfiniteQueryResult<GetTasksResponse, unknown>;
+}
+
+const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
   const { pathname, router, params: pageParams } = useTaskPageParams();
   const { sort, limit } = pageParams;
 
@@ -45,7 +49,6 @@ const TaskDataTable: React.FC = () => {
     setPage,
     lastFetchedPage,
     currentData,
-    queryResponse,
     setLastFetchedPage,
     refetchQuery,
   } = useTaskStore((state) => ({
@@ -58,7 +61,6 @@ const TaskDataTable: React.FC = () => {
     setPage: state.setPage,
     lastFetchedPage: state.lastFetchedPage,
     currentData: state.currentData,
-    queryResponse: state.queryResponse,
     setLastFetchedPage: state.setLastFetchedPage,
     refetchQuery: state.refetchQuery,
   }));
@@ -67,12 +69,7 @@ const TaskDataTable: React.FC = () => {
   //Page Constants
 
   //Tanstacks
-  const {
-    data: taskData,
-    isLoading,
-    isFetching,
-    fetchNextPage,
-  } = queryResponse!();
+  const { data: taskData, isLoading, isFetching, fetchNextPage } = taskQuery();
 
   const {
     mutate: mutateImportTask,
@@ -80,6 +77,8 @@ const TaskDataTable: React.FC = () => {
     isError: isImportTaskError,
     error: importTaskError,
   } = useImportTaskFromTemplate(() => {
+    setPage(1);
+    setLastFetchedPage(1);
     refetchQuery && refetchQuery(0);
   });
 
