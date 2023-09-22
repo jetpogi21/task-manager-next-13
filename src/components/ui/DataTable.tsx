@@ -19,6 +19,7 @@ interface DataTableProps<T> {
 
 export function DataTable<T>(props: DataTableProps<T>) {
   const { table, isLoading } = props;
+  const rowData = table.getRowModel().rows;
   return (
     <Table>
       <TableHeader>
@@ -53,8 +54,17 @@ export function DataTable<T>(props: DataTableProps<T>) {
         ))}
       </TableHeader>
       <TableBody>
-        {!isLoading ? (
-          table.getRowModel().rows.map((row) => (
+        {isLoading ? (
+          <TableRow>
+            <TableCell
+              colSpan={table.getVisibleFlatColumns().length}
+              className="h-24 text-center"
+            >
+              Fetching data.
+            </TableCell>
+          </TableRow>
+        ) : rowData.length > 0 ? (
+          rowData.map((row) => (
             <TableRow
               key={row.id}
               data-state={row.getIsSelected() && "selected"}
@@ -75,7 +85,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
               colSpan={table.getVisibleFlatColumns().length}
               className="h-24 text-center"
             >
-              {isLoading ? "Fetching Data..." : "No results."}
+              No results.
             </TableCell>
           </TableRow>
         )}
