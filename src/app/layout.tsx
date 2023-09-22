@@ -2,16 +2,16 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/header/Header";
 import "./globals.css";
-import { Roboto } from "next/font/google";
+import { Roboto_Flex } from "next/font/google";
 import ClientProviders from "@/components/ClientProviders";
 import SessionButton from "@/components/header/SessionButton";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Sidebar from "@/components/sidebar/Sidebar";
 import DarkLightToggle from "@/components/header/DarkLightToggle";
 
-const inter = Roboto({
+const inter = Roboto_Flex({
   subsets: ["latin"],
-  weight: ["100", "300", "400", "500", "700", "900"],
+  display: "swap",
   fallback: ["system-ui", "arial"],
 });
 

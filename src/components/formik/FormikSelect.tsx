@@ -110,7 +110,7 @@ export const FormikSelect: React.FC<FormikSelectProps> = ({
               </>
             ) : (
               <>
-                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="text-muted-foreground">{label}</span>
                 <SelectPrimitive.Icon asChild>
                   <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
                 </SelectPrimitive.Icon>
