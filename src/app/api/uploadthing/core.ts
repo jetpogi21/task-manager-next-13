@@ -27,11 +27,11 @@ export const ourFileRouter = {
     }),
 
   fileUploader: f({
-    image: { maxFileSize: "8MB", maxFileCount: 1 },
+    /* image: { maxFileSize: "8MB", maxFileCount: 1 },
     text: { maxFileSize: "8MB", maxFileCount: 1 },
     video: { maxFileSize: "8MB", maxFileCount: 1 },
     audio: { maxFileSize: "8MB", maxFileCount: 1 },
-    pdf: { maxFileSize: "8MB", maxFileCount: 1 },
+    pdf: { maxFileSize: "8MB", maxFileCount: 1 }, */
     blob: { maxFileSize: "8MB", maxFileCount: 1 },
   })
     // Set permissions and file types for this FileRoute

@@ -5,6 +5,8 @@ import { FormikDateAndTime } from "@/components/formik/FormikDateAndTime";
 import { FormikDatePicker } from "@/components/formik/FormikDatePicker";
 import { FormikFileInput } from "@/components/formik/FormikFileInput";
 import { FormikInput } from "@/components/formik/FormikInput";
+import { FormikLocalFileInput } from "@/components/formik/FormikLocalFileInput";
+
 import { FormikSelect } from "@/components/formik/FormikSelect";
 import { FormikTextArea } from "@/components/formik/FormikTextArea";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
@@ -23,7 +25,8 @@ type ColumnDefMeta = {
     | "DateAndTime"
     | "DatePicker"
     | "Date"
-    | "FileInput";
+    | "FileInput"
+    | "LocalFileInput";
   options: BasicModel[];
   isNumeric: boolean;
   isWholeNumber: boolean;
@@ -180,6 +183,15 @@ export const EditableTableCell = <TData, TValue>({
     case "FileInput":
       return (
         <FormikFileInput
+          {...commonProps}
+          index={row.index}
+          parent={name}
+          fieldName={column.id}
+        />
+      );
+    case "LocalFileInput":
+      return (
+        <FormikLocalFileInput
           {...commonProps}
           index={row.index}
           parent={name}

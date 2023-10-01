@@ -109,11 +109,11 @@ export const TaskNoteColumns: ColumnDef<TaskNoteFormikShape>[] = [
       );
     },
     meta: {
-      type: "FileInput",
+      type: "LocalFileInput",
       label: "File",
       width: 300,
     },
-    enableSorting: false,
+    enableSorting: true,
   },
   {
     id: "actions",

@@ -73,3 +73,15 @@ export interface FileValues {
   fileSize: number | null;
   file: string | null;
 }
+
+type TSuccess = {
+  status: "success";
+  fileURL: string;
+};
+
+type TError = {
+  status: "error";
+  errorMsg: string;
+};
+
+export type LocalFileInputAPIResponse = TSuccess | TError;

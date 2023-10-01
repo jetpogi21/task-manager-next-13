@@ -241,7 +241,7 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
           size="sm"
           onClick={focusOnRef}
         >
-          <ChevronLast className="w-4 h-4 text-green-800" />
+          <ChevronLast className="w-4 h-4 text-foreground" />
           Go to last row
         </Button>
       </div>
@@ -257,12 +257,11 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
                   return (
                     <TableHead
                       key={header.id}
-                      className={cn(
-                        {
-                          "w-[50px]": ["select", "actions"].includes(header.id),
-                        },
-                        "p-2"
-                      )}
+                      className={cn({
+                        "w-[50px] p-0": ["select", "actions"].includes(
+                          header.id
+                        ),
+                      })}
                       style={{
                         width: `${customWidth}px`,
                       }}
@@ -323,7 +322,7 @@ const TaskNoteSubform: React.FC<TaskNoteSubformProps> = ({ formik }) => {
                 variant={"secondary"}
                 onClick={addRow}
               >
-                <Plus className="w-4 h-4 text-green-800" /> Add Row
+                <Plus className="w-4 h-4 text-foreground" /> Add Row
               </Button>
             </div>
           </div>

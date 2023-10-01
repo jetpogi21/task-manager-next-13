@@ -265,7 +265,7 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
                   type="button"
                   size="sm"
                   variant={"secondary"}
-                  disabled={!hasNextPage}
+                  disabled={!hasNextPage || isFetching}
                   onClick={() => goToNextPage()}
                   isLoading={isFetching}
                 >
