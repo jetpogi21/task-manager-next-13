@@ -14,7 +14,7 @@ import { SortingState } from "@tanstack/react-table";
 import { FormikProps } from "formik";
 import React, { useEffect, useRef, useState } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
-import { FormikDropZone } from "@/components/formik/FormikDropZone";
+import { FormikLocalDropZone } from "@/components/formik/FormikLocalDropZone";
 import { useTaskNoteFileDeleteDialog } from "@/hooks/task-notes/useTaskNoteFileDeleteDialog";
 import { TaskNoteFileDeleteDialog } from "@/components/task-notes/TaskNoteFileDeleteDialog";
 
@@ -156,7 +156,7 @@ const TaskNoteFileDropzone: React.FC<TaskNoteFileDropzoneProps> = ({
 
   return (
     <>
-      <FormikDropZone
+      <FormikLocalDropZone
         setHasUpdate={() => setHasUpdate(true)}
         fieldName="file"
         parent="TaskNoteFiles"

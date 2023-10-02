@@ -1,6 +1,9 @@
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import { FileValues } from "@/interfaces/GeneralInterfaces";
+import {
+  FileValues,
+  LocalDropZoneAPIResponse,
+} from "@/interfaces/GeneralInterfaces";
 import { cn } from "@/lib/utils";
 import {
   allowedContentTextLabelGenerator,
@@ -10,20 +13,22 @@ import {
 import { formatFileSize } from "@/utils/utilities";
 import { useFormikContext } from "formik";
 import { X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FileWithPath } from "react-dropzone";
 import { generateClientDropzoneAccept } from "uploadthing/client";
 import { useDropzone } from "react-dropzone";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardDescription, CardHeader } from "@/components/ui/Card";
 import { Icons } from "@/components/Icons";
+import axiosClient from "@/utils/api";
+import { UseMutationOptions, useMutation } from "@tanstack/react-query";
 
-interface FormikDropZoneDeleteProps {
+interface FormikLocalDropZoneDeleteProps {
   deleteRow: (idx: number) => void;
   pkField: string;
 }
 
-interface FormikDropZone extends FormikDropZoneDeleteProps {
+interface FormikLocalDropZone extends FormikLocalDropZoneDeleteProps {
   setHasUpdate?: () => void;
   parent: string;
   fieldName: string;
@@ -42,7 +47,8 @@ const Attachment = ({ fileValues, clearFileName }: AttachmentProps) => {
       <a
         target="_blank"
         className="text-blue-500"
-        href={file || "/"}
+        href={process.env.NEXT_PUBLIC_DOMAIN! + "/tmp/" + file || "/"}
+        download={fileName || "No File.JPEG"}
         rel="noopener noreferrer"
       >
         {fileName || "No File.JPEG"}
@@ -81,16 +87,60 @@ const Uploading = ({ fileValues, progress }: UploadingProps) => {
   );
 };
 
+interface UploadFilesPayload {
+  files: File[];
+}
+
+const sendFileToServer = async (
+  filePayload: UploadFilesPayload,
+  onUploadProgress: (progress: number) => void
+) => {
+  const formData = new FormData();
+
+  for (let i = 0; i < filePayload.files.length; i++) {
+    formData.append(`file[${i}]`, filePayload.files[i]);
+  }
+
+  const { data } = (await axiosClient({
+    url: `multi-upload`,
+    method: "post",
+    data: formData,
+    onUploadProgress: (progressEvent) => {
+      const progress =
+        progressEvent && progressEvent.total
+          ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          : 0;
+
+      onUploadProgress(progress);
+    },
+  })) as { data: LocalDropZoneAPIResponse };
+
+  return data;
+};
+
+const useFileUploadMutation = (
+  options: UseMutationOptions<unknown, Error, UploadFilesPayload>,
+  setUploadProgress: React.Dispatch<React.SetStateAction<number>>
+) => {
+  const fileUploadMutation = useMutation<unknown, Error, UploadFilesPayload>(
+    (filePayload: UploadFilesPayload) =>
+      sendFileToServer(filePayload, setUploadProgress),
+    options
+  );
+
+  return { fileUploadMutation };
+};
+
 const getFormikValuePath = (parent: string, index: number, fieldName: string) =>
   `${parent}[${index}]${fieldName}`;
 
-export const FormikDropZone = ({
+export const FormikLocalDropZone = ({
   setHasUpdate,
   parent,
   fieldName,
   deleteRow,
   pkField,
-}: FormikDropZone) => {
+}: FormikLocalDropZone) => {
   const { values, setFieldValue } = useFormikContext();
   //@ts-ignore
   const fieldValues = values[parent] as any[];
@@ -99,9 +149,60 @@ export const FormikDropZone = ({
 
   const [files, setFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fileName_n = fieldName.replace("file", "fileName");
   const fileSize_n = fieldName.replace("file", "fileSize");
+
+  //Mutation
+  const { fileUploadMutation } = useFileUploadMutation(
+    {
+      onSuccess: (response) => {
+        const localResponse = response as LocalDropZoneAPIResponse;
+        if (localResponse.status === "success") {
+          let i = 0;
+          const newFiles = [];
+          for (const url of localResponse.fileURLs) {
+            newFiles.push({
+              [pkField]: "",
+              [fieldName]: url,
+              [fileName_n]: files[i].name,
+              [fileSize_n]: files[i].size,
+              touched: true,
+            });
+            i++;
+          }
+
+          setFieldValue(parent, [
+            //@ts-ignore
+            ...values[parent].map((item) => ({ ...item })),
+            ...newFiles.map((item) => ({ ...item })),
+          ]);
+
+          setHasUpdate && setHasUpdate();
+          setFiles([]);
+          toast({
+            variant: "success",
+            description: "File successfully uploaded.",
+          });
+          /* setFieldValue(filePath, localResponse.fileURL);
+          setFieldValue(fileNamePath, fileName);
+          setFieldValue(fileSizePath, fileSize); */
+        } else {
+          alert(`ERROR! ${localResponse.errorMsg}`);
+        }
+        setIsUploading(false);
+        setProgress(0);
+      },
+      onError: (error) => {
+        setIsUploading(false);
+        setProgress(0);
+        // Do something with the error.
+        alert(`ERROR! ${error.message}`);
+      },
+    },
+    setProgress
+  );
 
   const calculatedTotalSize = files.reduce((acc, file) => acc + file.size, 0);
   const totalUploadedFileSize = calculatedTotalSize * (progress / 100); //convert to percentage
@@ -129,60 +230,18 @@ export const FormikDropZone = ({
     deleteRow(index);
   };
 
-  const { startUpload, isUploading, permittedFileInfo } = useUploadThing(
-    "multiFileUploader",
-    {
-      onClientUploadComplete: (res) => {
-        if (res) {
-          let i = 0;
-          const newFiles = [];
-          for (const file of res) {
-            newFiles.push({
-              [pkField]: "",
-              [fieldName]: file.url,
-              [fileName_n]: file.name,
-              [fileSize_n]: file.size,
-              touched: true,
-            });
-            i++;
-          }
-
-          setFieldValue(parent, [
-            //@ts-ignore
-            ...values[parent].map((item) => ({ ...item })),
-            ...newFiles.map((item) => ({ ...item })),
-          ]);
-
-          setHasUpdate && setHasUpdate();
-          setFiles([]);
-          setProgress(0);
-          toast({
-            variant: "success",
-            description: "File successfully uploaded.",
-          });
-        }
-      },
-      onUploadProgress: (progress) => {
-        setProgress(progress);
-      },
-      onUploadError: (error: Error) => {
-        // Do something with the error.
-        alert(`ERROR! ${error.message}`);
-      },
-    }
+  const onDrop = useCallback(
+    (acceptedFiles: FileWithPath[]) => {
+      setFiles(acceptedFiles);
+      setIsUploading(true);
+      fileUploadMutation.mutate({ files: acceptedFiles });
+    },
+    [fileUploadMutation]
   );
-  const { fileTypes, multiple } = generatePermittedFileTypes(
-    permittedFileInfo?.config
-  );
-
-  const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
-    setFiles(acceptedFiles);
-  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: fileTypes ? generateClientDropzoneAccept(fileTypes) : undefined,
-    disabled: isUploading || !fileTypes,
+    disabled: isUploading,
   });
 
   return (
@@ -213,12 +272,7 @@ export const FormikDropZone = ({
             </label>
             <p className="pl-1">{`or drag and drop`}</p>
           </div>
-          <div className="h-[1.25rem]">
-            <p className="text-xs leading-5 text-gray-600">
-              {allowedContentTextLabelGenerator(permittedFileInfo?.config)}
-            </p>
-          </div>
-          {files.length > 0 && (
+          {/* {files.length > 0 && (
             <div className="flex items-center justify-center mt-4">
               <Button
                 className={cn(
@@ -232,7 +286,7 @@ export const FormikDropZone = ({
                   e.stopPropagation();
                   if (!files) return;
 
-                  void startUpload(files);
+                  //void startUpload(files);
                 }}
               >
                 <span className="px-3 py-2 text-white">
@@ -244,7 +298,7 @@ export const FormikDropZone = ({
                 </span>
               </Button>
             </div>
-          )}
+          )} */}
         </div>
         {/* Upload/File list */}
       </div>

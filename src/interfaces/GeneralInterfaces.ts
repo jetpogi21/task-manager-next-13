@@ -74,14 +74,22 @@ export interface FileValues {
   file: string | null;
 }
 
-type TSuccess = {
-  status: "success";
-  fileURL: string;
-};
+export type LocalFileInputAPIResponse =
+  | {
+      status: "success";
+      fileURL: string;
+    }
+  | {
+      status: "error";
+      errorMsg: string;
+    };
 
-type TError = {
-  status: "error";
-  errorMsg: string;
-};
-
-export type LocalFileInputAPIResponse = TSuccess | TError;
+export type LocalDropZoneAPIResponse =
+  | {
+      status: "success";
+      fileURLs: string[];
+    }
+  | {
+      status: "error";
+      errorMsg: string;
+    };
