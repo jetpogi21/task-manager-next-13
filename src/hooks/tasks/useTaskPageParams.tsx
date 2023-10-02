@@ -12,6 +12,7 @@ export const useTaskPageParams = () => {
   const taskCategory = query["taskCategory"] || "";
   const taskInterval = query["taskInterval"] || "";
   const isFinished = query["isFinished"] || "";
+  const hasFile = query["hasFile"] || "";
   const sort = query["sort"] || DEFAULT_SORT_BY;
   const limit = query["limit"] || DEFAULT_LIMIT;
 
@@ -25,6 +26,7 @@ export const useTaskPageParams = () => {
       taskCategory,
       taskInterval,
       isFinished,
+      hasFile,
       sort,
       limit,
     },
