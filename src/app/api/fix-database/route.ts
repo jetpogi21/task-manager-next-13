@@ -16,6 +16,18 @@ export const POST = async (req: Request) => {
       { where: { isFinished: true, finishDateTime: null }, transaction: t }
     );
 
+    await Task.update(
+      { isFinished: true },
+      {
+        where: {
+          finishDateTime: {
+            [Op.ne]: null,
+          },
+        },
+        transaction: t,
+      }
+    );
+
     await TaskNote.update(
       { file: null },
       { where: { file: "" }, transaction: t }

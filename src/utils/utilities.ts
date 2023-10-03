@@ -512,7 +512,7 @@ export function replaceHighestOrder<T extends Record<string, unknown>>(
   return new Decimal(highestOrder).add("0.01");
 }
 
-export function forceCastToNumber(input: number | string): number | null {
+export function forceCastToNumber(input: number | string): number {
   // Remove any commas from the string and trim whitespace
   const cleanedInput =
     typeof input === "string"
@@ -526,7 +526,7 @@ export function forceCastToNumber(input: number | string): number | null {
   if (!isNaN(result)) {
     return result;
   } else {
-    return null; // Return null for invalid input
+    throw new Error("An error has occurred");
   }
 }
 

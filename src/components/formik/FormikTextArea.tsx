@@ -27,6 +27,7 @@ export interface FormikTextAreaProps extends TextareaProps {
   helperText?: string;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  nullAllowed?: boolean;
 }
 
 const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
@@ -41,6 +42,7 @@ const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
       helperText,
       setHasUpdate,
       onChange,
+      nullAllowed,
       ...props
     },
     ref

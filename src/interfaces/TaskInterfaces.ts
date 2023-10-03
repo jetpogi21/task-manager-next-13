@@ -94,6 +94,14 @@ export interface TaskDeletePayload {
   deletedTasks: string[] | number[];
 }
 
+export interface TaskSelectedPayload {
+  selectedTasks: string[] | number[];
+}
+
+export interface FinishTasksPayload extends TaskSelectedPayload {
+  finishDateTime: string;
+}
+
 //Use for single form (with children)
 //The Related Models will be replaced by the Payload version
 export interface TaskFormUpdatePayload

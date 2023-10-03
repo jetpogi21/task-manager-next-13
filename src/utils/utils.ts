@@ -193,8 +193,8 @@ export const convertToArray = (value: string[] | string): number[] => {
   }
 };
 
-export const returnJSONResponse = (jsonResponse: JSONResponse) => {
-  if (jsonResponse.errorCode && jsonResponse.error) {
+export const returnJSONResponse = <T>(jsonResponse: JSONResponse<T>) => {
+  if (jsonResponse.status === "error") {
     return NextResponse.json(jsonResponse, {
       status: jsonResponse.errorCode,
       statusText: jsonResponse.error,
@@ -285,6 +285,7 @@ export function validateRequiredFields(
       return returnJSONResponse({
         status: "error",
         error: `${requiredFields[key]} is a required field..`,
+        errorCode: 404,
       });
     }
   }

@@ -1,11 +1,17 @@
-export interface JSONResponse {
-  status: "error" | "success";
-  data?: any;
-  error?: string;
-  errorCode?: number;
+export interface SuccessResponse<T = undefined> {
+  status: "success";
+  data?: T;
+}
+
+export interface ErrorResponse {
+  status: "error";
+  error: string;
+  errorCode: number;
   sqlMessage?: string;
   targetField?: string;
 }
+
+export type JSONResponse<T> = SuccessResponse<T> | ErrorResponse;
 
 export interface SQLField {
   name: string;
