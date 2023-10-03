@@ -12,7 +12,10 @@ import {
   FormikSwitch,
   FormikSwitchProps,
 } from "@/components/formik/FormikSwitch";
-import { FormikTextArea } from "@/components/formik/FormikTextArea";
+import {
+  FormikTextArea,
+  FormikTextAreaProps,
+} from "@/components/formik/FormikTextArea";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ClassValue } from "clsx";
 import React, { RefObject, forwardRef } from "react";
@@ -25,7 +28,6 @@ interface ControlProps {
   containerClassNames?: ClassValue[];
   disabled?: boolean;
   setHasUpdate?: () => void;
-  ref?: RefObject<any> | undefined;
   nullAllowed?: boolean;
   onChange?: (newValue: unknown) => void;
 }
@@ -56,8 +58,10 @@ interface DateAndTimeProps extends ControlProps {
   type: "DateAndTime";
 }
 
-interface TextareaProps extends ControlProps {
+interface TextareaProps extends FormikTextAreaProps {
   type: "Textarea";
+  setFocusOnLoad: boolean;
+  nullAllowed: boolean;
 }
 
 interface DatePickerProps extends ControlProps {
@@ -117,17 +121,21 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
     type,
     name,
     label = "",
-    submitOnChange,
     containerClassNames,
+    disabled,
+    setHasUpdate,
     placeholder,
+    onChange,
+    ...otherProps
   } = props;
+
   switch (type) {
     case "Switch":
       return (
         <FormikSwitch
           name={name}
           label={label}
-          submitOnChange={submitOnChange}
+          submitOnChange={props.submitOnChange}
           containerClassNames={containerClassNames}
           size={props.size || undefined}
           setHasUpdate={props.setHasUpdate}
@@ -177,8 +185,10 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           name={name}
           label={label}
           containerClassNames={containerClassNames}
-          setHasUpdate={props.setHasUpdate}
-          onChange={props.onChange}
+          setHasUpdate={setHasUpdate}
+          onChange={onChange}
+          setFocusOnLoad={props.setFocusOnLoad}
+          {...otherProps}
         />
       );
     case "WholeNumber":
@@ -275,7 +285,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
         <FormikInput
           name={name}
           label={label}
-          submitOnChange={submitOnChange}
+          submitOnChange={props.submitOnChange}
           placeholder={placeholder}
           containerClassNames={containerClassNames}
           ref={ref}
