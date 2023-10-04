@@ -433,6 +433,8 @@ const TaskForm: React.FC<TaskFormProps> = (prop) => {
           });
 
           setIsUpdating(false);
+
+          router.replace(prevURL);
         })
         .catch((err) => {
           console.log(err);
