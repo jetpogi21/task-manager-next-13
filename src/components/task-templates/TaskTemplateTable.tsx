@@ -33,13 +33,13 @@ const TaskTemplateTable: React.FC = () => {
 
   const queryParams = params;
 
-  const taskTemplateQuery = () =>
+  const useTaskTemplateSearchQuery = () =>
     useTaskTemplatesQuery({
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching, isLoading } = taskTemplateQuery();
+  const { data, refetch, isFetching, isLoading } = useTaskTemplateSearchQuery();
 
   const currentPageData: GetTaskTemplatesResponse | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
@@ -68,7 +68,7 @@ const TaskTemplateTable: React.FC = () => {
   };
 
   useEffect(() => {
-    setQueryResponse(taskTemplateQuery);
+    setQueryResponse(useTaskTemplateSearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }
@@ -77,7 +77,9 @@ const TaskTemplateTable: React.FC = () => {
     setRefetchQuery(refetchQuery);
   }, [currentPageData?.count, data, page]);
 
-  return <TaskTemplateDataTable taskTemplateQuery={taskTemplateQuery} />;
+  return (
+    <TaskTemplateDataTable taskTemplateQuery={useTaskTemplateSearchQuery} />
+  );
 };
 
 export default TaskTemplateTable;

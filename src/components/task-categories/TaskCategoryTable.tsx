@@ -66,13 +66,13 @@ const TaskCategoryTable: React.FC = () => {
   //API Functions
 
   //Tanstacks
-  const taskCategoryQuery = () =>
+  const useTaskCategorySearchQuery = () =>
     useTaskCategoriesQuery({
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching } = taskCategoryQuery();
+  const { data, refetch, isFetching } = useTaskCategorySearchQuery();
 
   const currentPageData: GetTaskCategoriesResponse | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
@@ -195,7 +195,7 @@ const TaskCategoryTable: React.FC = () => {
 
   useEffect(() => {
     setMutate(deleteTaskCategoryMutation);
-    setQueryResponse(taskCategoryQuery);
+    setQueryResponse(useTaskCategorySearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }

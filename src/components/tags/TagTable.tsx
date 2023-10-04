@@ -56,13 +56,13 @@ const TagTable: React.FC = () => {
   //API Functions
 
   //Tanstacks
-  const tagQuery = () =>
+  const useTagSearchQuery = () =>
     useTagsQuery({
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching } = tagQuery();
+  const { data, refetch, isFetching } = useTagSearchQuery();
 
   const currentPageData: GetTagsResponse | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
@@ -183,7 +183,7 @@ const TagTable: React.FC = () => {
 
   useEffect(() => {
     setMutate(deleteTagMutation);
-    setQueryResponse(tagQuery);
+    setQueryResponse(useTagSearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }

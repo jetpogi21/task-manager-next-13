@@ -19,8 +19,7 @@ function handleSequelizeError(error: any) {
     return returnJSONResponse({
       status: "error",
       error: error.parent.sqlMessage,
-      data: error.sql,
-      sqlMessage: error.original,
+      sqlMessage: error.sql,
       errorCode: 500,
     });
   } else {

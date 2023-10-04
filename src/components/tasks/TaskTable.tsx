@@ -26,13 +26,13 @@ const TaskTable: React.FC = () => {
 
   const queryParams = params;
 
-  const taskQuery = () =>
+  const useTaskSearchQuery = () =>
     useTasksQuery({
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching, isLoading } = taskQuery();
+  const { data, refetch, isFetching, isLoading } = useTaskSearchQuery();
 
   const currentPageData: GetTasksResponse | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
@@ -61,7 +61,7 @@ const TaskTable: React.FC = () => {
   };
 
   useEffect(() => {
-    setQueryResponse(taskQuery);
+    setQueryResponse(useTaskSearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }
@@ -70,7 +70,7 @@ const TaskTable: React.FC = () => {
     setRefetchQuery(refetchQuery);
   }, [currentPageData?.count, data, page]);
 
-  return <TaskDataTable taskQuery={taskQuery} />;
+  return <TaskDataTable taskQuery={useTaskSearchQuery} />;
 };
 
 export default TaskTable;
