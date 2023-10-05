@@ -32,11 +32,12 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { FormikProps } from "formik";
-import { ChevronLast, Plus } from "lucide-react";
+import { CheckCircle, ChevronLast, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import { DraggableRow } from "@/components/ui/DataTable/DraggableRow";
 import Decimal from "decimal.js";
+import { DataTable } from "@/components/ui/DataTable";
 
 interface SubTaskSubformProps {
   formik: FormikProps<TaskFormFormikInitialValues>;
@@ -88,6 +89,30 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
   //Client Actions
   const focusOnRef = () => {
     ref && ref.current?.focus();
+  };
+
+  const toggleSubTaskFinishDateTime = (idx: number) => {
+    const { SubTasks } = formik.values;
+    const currentFinishDateTime = SubTasks[idx].finishDateTime;
+
+    formik.setFieldValue(
+      `SubTasks[${idx}].finishDateTime`,
+      currentFinishDateTime ? null : new Date()
+    );
+    setTouchedRows(idx);
+    setHasUpdate(true);
+  };
+
+  const finishSelectedRows = () => {
+    Object.keys(rowSelection)
+      .map((item) => parseInt(item))
+      .forEach((i) => {
+        if (formik.values.SubTasks[i].finishDateTime) {
+          formik.setFieldValue(`SubTasks[${i}].finishDateTime`, new Date());
+          setTouchedRows(i);
+        }
+      });
+    setHasUpdate(true);
   };
 
   const addRow = () => {
@@ -230,6 +255,7 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
       columnVisibility: {
         taskID: false,
         priority: false,
+        finishDateTime: false,
       },
     },
     meta: {
@@ -245,6 +271,9 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
       forwardedRef: ref,
       editable: true,
       options: {},
+      rowActions: {
+        toggleSubTaskFinishDateTime,
+      },
     },
   });
 
@@ -256,26 +285,63 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
     }
   }, [formik.values.SubTasks]);
 
+  const toolRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+
+    if (toolRef.current) {
+      observer.observe(toolRef.current);
+    }
+
+    return () => {
+      if (toolRef.current) {
+        observer.unobserve(toolRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-xl font-bold">Sub Tasks</h3>
-      <div className="flex items-center gap-4">
-        <div className="text-sm">
-          {subTaskTable.getFilteredSelectedRowModel().rows.length} of{" "}
-          {subTaskTable.getFilteredRowModel().rows.length} row(s) selected.
+      <div
+        className="flex items-center gap-4"
+        ref={toolRef}
+      >
+        <div className="flex items-center gap-4">
+          <div className="text-sm">
+            {subTaskTable.getFilteredSelectedRowModel().rows.length} of{" "}
+            {subTaskTable.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+          {hasSelected && (
+            <>
+              <Button
+                type="button"
+                size={"sm"}
+                variant={"destructive"}
+                onClick={deleteSelectedRows}
+                className="flex items-center justify-center gap-1"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected
+              </Button>
+              <Button
+                type="button"
+                size={"sm"}
+                variant={"secondary"}
+                onClick={finishSelectedRows}
+                className="flex items-center justify-center gap-1"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Finish sub-tasks
+              </Button>
+            </>
+          )}
         </div>
-        {hasSelected && (
-          <Button
-            type="button"
-            size={"sm"}
-            variant={"destructive"}
-            onClick={() => {
-              deleteSelectedRows();
-            }}
-          >
-            Delete Selected
-          </Button>
-        )}
         <Button
           className="ml-auto"
           variant={"secondary"}

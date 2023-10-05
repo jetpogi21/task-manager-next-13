@@ -60,7 +60,7 @@ const DraggableRow = <T,>(props: DraggableRowProps<T>) => {
           ref={dragRef}
           className={"bg-transparent hover:bg-accent p-2 h-auto"}
         >
-          <ArrowUpDown className="w-3 h-3 text-white" />
+          <ArrowUpDown className="w-3 h-3 text-slate-500 dark:text-white" />
         </Button>
       </TableCell>
       {row.getVisibleCells().map((cell) => (

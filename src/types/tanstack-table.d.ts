@@ -17,5 +17,8 @@ declare module "@tanstack/table-core" {
     options?: {
       [key: string]: BasicModel[];
     };
+    rowActions?: {
+      [key: string]: (idx: number) => void;
+    };
   }
 }
