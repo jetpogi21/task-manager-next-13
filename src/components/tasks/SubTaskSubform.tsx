@@ -312,13 +312,31 @@ const SubTaskSubform: React.FC<SubTaskSubformProps> = ({ formik }) => {
         className="flex items-center gap-4"
         ref={toolRef}
       >
-        <div className="flex items-center gap-4">
+        <div
+          className={cn(
+            "flex items-center gap-4",
+            !isVisible &&
+              hasSelected &&
+              "fixed left-0 right-0 m-auto bottom-5 border-2 border-border w-3/4 bg-background h-[50px] p-4 z-10 rounded-lg shadow-sm"
+          )}
+        >
           <div className="text-sm">
             {subTaskTable.getFilteredSelectedRowModel().rows.length} of{" "}
             {subTaskTable.getFilteredRowModel().rows.length} row(s) selected.
           </div>
           {hasSelected && (
             <>
+              {!isVisible && (
+                <Button
+                  type="button"
+                  size={"sm"}
+                  variant={"secondary"}
+                  onClick={resetRowSelection}
+                  className="flex items-center justify-center gap-1"
+                >
+                  Clear Selection
+                </Button>
+              )}
               <Button
                 type="button"
                 size={"sm"}
