@@ -4,6 +4,10 @@ import { FormikCombobox } from "@/components/formik/FormikCombobox";
 import { FormikDate } from "@/components/formik/FormikDate";
 import { FormikDateAndTime } from "@/components/formik/FormikDateAndTime";
 import { FormikDatePicker } from "@/components/formik/FormikDatePicker";
+import {
+  FormikDateRangePicker,
+  FormikDateRangePickerProps,
+} from "@/components/formik/FormikDateRangePicker";
 import { FormikFacetedControl } from "@/components/formik/FormikFacetedControl";
 import { FormikFileInput } from "@/components/formik/FormikFileInput";
 import { FormikInput } from "@/components/formik/FormikInput";
@@ -18,7 +22,7 @@ import {
 } from "@/components/formik/FormikTextArea";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ClassValue } from "clsx";
-import React, { RefObject, forwardRef } from "react";
+import React, { forwardRef } from "react";
 
 interface ControlProps {
   name: string;
@@ -58,12 +62,6 @@ interface DateAndTimeProps extends ControlProps {
   type: "DateAndTime";
 }
 
-interface TextareaProps extends FormikTextAreaProps {
-  type: "Textarea";
-  setFocusOnLoad: boolean;
-  nullAllowed: boolean;
-}
-
 interface DatePickerProps extends ControlProps {
   type: "DatePicker";
 }
@@ -100,6 +98,17 @@ interface CheckboxProps extends ControlProps {
   type: "Checkbox";
 }
 
+interface TextareaProps extends FormikTextAreaProps {
+  type: "Textarea";
+  setFocusOnLoad: boolean;
+  nullAllowed: boolean;
+}
+
+interface DateRangePickerProps
+  extends Omit<FormikDateRangePickerProps, "type"> {
+  type: "DateRangePicker";
+}
+
 type FormikControlProps =
   | FacetedControlProps
   | TextProps
@@ -114,7 +123,8 @@ type FormikControlProps =
   | DateProps
   | DecimalProps
   | CurrencyProps
-  | FileInputProps;
+  | FileInputProps
+  | DateRangePickerProps;
 
 const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
   const {
@@ -181,6 +191,7 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
       );
     case "Textarea":
       return (
+        //@ts-ignore
         <FormikTextArea
           name={name}
           label={label}
@@ -188,6 +199,19 @@ const FormikControl = forwardRef<any, FormikControlProps>((props, ref) => {
           setHasUpdate={setHasUpdate}
           onChange={onChange}
           setFocusOnLoad={props.setFocusOnLoad}
+          rows={props.rows}
+          {...otherProps}
+        />
+      );
+    case "DateRangePicker":
+      return (
+        //@ts-ignore
+        <FormikDateRangePicker
+          name={name}
+          label={label}
+          containerClassNames={containerClassNames}
+          setHasUpdate={setHasUpdate}
+          onChange={onChange}
           {...otherProps}
         />
       );

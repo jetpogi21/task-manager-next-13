@@ -22,7 +22,6 @@ export interface FormikTextAreaProps extends TextareaProps {
   setFocusOnLoad?: boolean;
   setArrayTouched?: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  inputRef?: RefObject<HTMLTextAreaElement> | undefined;
   containerClassNames?: ClassValue[];
   helperText?: string;
   setHasUpdate?: () => void;
@@ -37,7 +36,6 @@ const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
       label = "",
       setArrayTouched,
       setFocusOnLoad = false,
-      inputRef: propInputRef,
       onKeyDown,
       helperText,
       setHasUpdate,
