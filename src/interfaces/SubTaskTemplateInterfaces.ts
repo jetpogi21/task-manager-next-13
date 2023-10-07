@@ -43,6 +43,10 @@ export interface SubTaskTemplateDeletePayload {
   deletedSubTaskTemplates: string[] | number[];
 }
 
+export interface SubTaskTemplateSelectedPayload {
+  selectedSubTaskTemplates: string[] | number[];
+}
+
 //Use for single form (with children)
 //The Related Models will be replaced by the Payload version
 export interface SubTaskTemplateFormUpdatePayload

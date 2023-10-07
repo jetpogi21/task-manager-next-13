@@ -32,9 +32,12 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { FormikProps } from "formik";
-import { ChevronLast, Plus } from "lucide-react";
+import { CheckCircle, ChevronLast, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useTaskTemplateStore } from "@/hooks/task-templates/useTaskTemplateStore";
+
+import { DraggableRow } from "@/components/ui/DataTable/DraggableRow";
+import Decimal from "decimal.js";
 
 interface SubTaskTemplateSubformProps {
   formik: FormikProps<TaskTemplateFormFormikInitialValues>;
@@ -95,7 +98,15 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
   const addRow = () => {
     formik.setFieldValue(`SubTaskTemplates`, [
       ...formik.values.SubTaskTemplates.map((item) => ({ ...item })),
-      { ...DEFAULT_SUBTASKTEMPLATE, taskTemplateID: formik.values.id },
+      {
+        ...DEFAULT_SUBTASKTEMPLATE,
+        taskTemplateID: formik.values.id,
+        priority: replaceHighestOrder(
+          //@ts-ignore
+          formik.values.SubTaskTemplates,
+          "priority"
+        ),
+      },
     ]);
     setWillFocus(true);
   };
@@ -152,6 +163,41 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
     }
   };
 
+  const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
+    const { values, setFieldValue } = formik;
+    const { SubTaskTemplates } = values;
+
+    // Clone the SubTaskTemplates array
+    const newArray = [
+      ...SubTaskTemplates.map((item, idx) => ({
+        ...item,
+        touched:
+          idx === targetRowIndex || idx === draggedRowIndex
+            ? true
+            : item.touched,
+      })),
+    ];
+
+    const rowOrder = SubTaskTemplates[targetRowIndex].priority;
+    // Remove the item from its original position
+    const [draggedItem] = newArray.splice(draggedRowIndex, 1);
+
+    const draggedItemOrder = new Decimal(rowOrder).minus(new Decimal("0.01"));
+    draggedItem.priority = draggedItemOrder.toString();
+
+    // Insert the item at the target position
+    newArray.splice(targetRowIndex, 0, draggedItem);
+
+    // Update the priority field based on the index
+    const updatedArray = newArray.map((item, idx) => ({
+      ...item,
+    }));
+
+    // Update the formik field value
+    setFieldValue("SubTaskTemplates", updatedArray);
+    setHasUpdate(true);
+  };
+
   const handleSortChange = (sortingState: SortingState) => {
     const sortParams = sortingState
       .map((item) => {
@@ -193,6 +239,7 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
     initialState: {
       columnVisibility: {
         taskTemplateID: false,
+        priority: false,
       },
     },
     meta: {
@@ -208,6 +255,7 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
       forwardedRef: ref,
       editable: true,
       options: {},
+      rowActions: {},
     },
   });
 
@@ -219,27 +267,72 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
     }
   }, [formik.values.SubTaskTemplates]);
 
+  const toolRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+
+    if (toolRef.current) {
+      observer.observe(toolRef.current);
+    }
+
+    return () => {
+      if (toolRef.current) {
+        observer.unobserve(toolRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-xl font-bold">Sub Task Templates</h3>
-      <div className="flex items-center gap-4">
-        <div className="text-sm">
-          {subTaskTemplateTable.getFilteredSelectedRowModel().rows.length} of{" "}
-          {subTaskTemplateTable.getFilteredRowModel().rows.length} row(s)
-          selected.
+      <div
+        className="flex items-center gap-4"
+        ref={toolRef}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-4",
+            !isVisible &&
+              hasSelected &&
+              "fixed left-0 right-0 m-auto bottom-5 border-2 border-border w-3/4 bg-background h-[50px] p-4 z-10 rounded-lg shadow-sm"
+          )}
+        >
+          <div className="text-sm">
+            {subTaskTemplateTable.getFilteredSelectedRowModel().rows.length} of{" "}
+            {subTaskTemplateTable.getFilteredRowModel().rows.length} row(s)
+            selected.
+          </div>
+          {hasSelected && (
+            <>
+              {!isVisible && (
+                <Button
+                  type="button"
+                  size={"sm"}
+                  variant={"secondary"}
+                  onClick={resetRowSelection}
+                  className="flex items-center justify-center gap-1"
+                >
+                  Clear Selection
+                </Button>
+              )}
+              <Button
+                type="button"
+                size={"sm"}
+                variant={"destructive"}
+                onClick={deleteSelectedRows}
+                className="flex items-center justify-center gap-1"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected
+              </Button>
+            </>
+          )}
         </div>
-        {hasSelected && (
-          <Button
-            type="button"
-            size={"sm"}
-            variant={"destructive"}
-            onClick={() => {
-              deleteSelectedRows();
-            }}
-          >
-            Delete Selected
-          </Button>
-        )}
         <Button
           className="ml-auto"
           variant={"secondary"}
@@ -257,6 +350,7 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
           <TableHeader>
             {subTaskTemplateTable.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
+                <TableHead className="w-[50px]"></TableHead>
                 {headerGroup.headers.map((header) => {
                   //@ts-ignore
                   const customWidth = header.column.columnDef.meta?.width;
@@ -287,22 +381,11 @@ const SubTaskTemplateSubform: React.FC<SubTaskTemplateSubformProps> = ({
           <TableBody>
             {subTaskTemplateTable.getRowModel().rows?.length ? (
               subTaskTemplateTable.getRowModel().rows.map((row) => (
-                <TableRow
+                <DraggableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                  row={row}
+                  reorderRow={reorderRow}
+                />
               ))
             ) : (
               <TableRow>
