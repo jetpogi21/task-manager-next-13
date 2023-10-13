@@ -4,16 +4,17 @@ import React, { useEffect } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import TaskDataTable from "@/components/tasks/TaskDataTable";
 import { useTaskPageParams } from "@/hooks/tasks/useTaskPageParams";
-import { TaskModel } from "@/interfaces/TaskInterfaces";
+import { TaskModel, TaskSearchParams } from "@/interfaces/TaskInterfaces";
 import { useQueryClient, InfiniteData } from "@tanstack/react-query";
 import { useModelsQuery } from "@/hooks/useModelQuery";
 import { TaskConfig } from "@/utils/config/TaskConfig";
 import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
 
 const TaskTable: React.FC = () => {
-  const { params } = useTaskPageParams();
-  const queryClient = useQueryClient();
   const config = TaskConfig;
+  const { params } = useModelPageParams<TaskSearchParams>(config);
+  const queryClient = useQueryClient();
 
   const [mounted, setMounted] = React.useState(false);
 

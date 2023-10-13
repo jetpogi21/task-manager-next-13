@@ -637,3 +637,18 @@ export const getDefaultFilters = <T>(filters: ModelConfig["filters"]) => {
 
   return defaultFilters;
 };
+
+export const isValidSortField = (
+  sortField: string,
+  config: ModelConfig
+): boolean => {
+  return config.sorts.some(({ seqModelFieldID }) => {
+    const fieldName = findConfigItem(
+      config.fields,
+      "seqModelFieldID",
+      seqModelFieldID,
+      "fieldName"
+    );
+    return fieldName === sortField;
+  });
+};

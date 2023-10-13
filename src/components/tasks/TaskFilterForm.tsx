@@ -32,11 +32,14 @@ import FilterControls from "@/components/FilterControls";
 import FilterDialog from "@/components/FilterDialog";
 import { AppConfig } from "@/lib/app-config";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
 
 const TaskFilterForm: React.FC = () => {
-  const { query, router, pathname, params } = useTaskPageParams();
-  const { limit } = params;
   const config = TaskConfig;
+  const { pathname, router, params, query } =
+    useModelPageParams<TaskSearchParams>(config);
+
+  const { limit } = params;
 
   const defaultFilters = getDefaultFilters(config.filters);
 

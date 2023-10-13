@@ -9,6 +9,7 @@ import { useImportTaskFromTemplate } from "@/hooks/tasks/useImportTaskFromTempla
 import { useTaskDeleteDialog } from "@/hooks/tasks/useTaskDeleteDialog";
 import { useTaskPageParams } from "@/hooks/tasks/useTaskPageParams";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
 import useScreenSize from "@/hooks/useScreenSize";
 import { useURL } from "@/hooks/useURL";
 import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
@@ -39,9 +40,13 @@ interface TaskDataTableProps {
 }
 
 const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
-  const { pathname, router, params: pageParams } = useTaskPageParams();
-  const { sort, limit } = pageParams;
   const config = TaskConfig;
+  const {
+    pathname,
+    router,
+    params: pageParams,
+  } = useModelPageParams<TaskSearchParams>(config);
+  const { sort, limit } = pageParams;
 
   const [finishTaskDialogOpen, setFinishTaskDialogOpen] = useState(false);
   const isLarge = useScreenSize("lg");
