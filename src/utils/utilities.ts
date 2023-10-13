@@ -2,7 +2,9 @@
 import { ParsedUrlQuery, ParsedUrlQueryInput } from "querystring";
 import {
   BasicModel,
+  ColumnAttrs,
   ControlChoice,
+  SortItem,
   SortObject,
   SortOptions,
   SortOptionsAsString,
@@ -12,6 +14,8 @@ import { NextRouter } from "next/router";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
 import { encodeParams } from "@/utils/utils";
 import Decimal from "decimal.js";
+import { DataType, ModelConfig } from "@/interfaces/ModelConfig";
+import { AppConfig } from "@/lib/app-config";
 
 //expected: year,month or -year,-month
 export const getSortedBy = (
@@ -557,4 +561,79 @@ export const getCursor = (
       return `${data[data.length - 1][sortField].toString()}`;
     }
   }
+};
+
+export const getSortItems = <T extends ModelConfig>(config: T): SortItem[] =>
+  config.sorts
+    .filter(({ modelSortOrder }) => modelSortOrder)
+    .sort(
+      ({ modelSortOrder: sortOrderA }, { modelSortOrder: sortOrderB }) =>
+        sortOrderA - sortOrderB
+    )
+    .map(({ modelFieldCaption, seqModelFieldID }) => {
+      const fieldName = findConfigItem(
+        config.fields,
+        "seqModelFieldID",
+        seqModelFieldID,
+        "fieldName"
+      ) as string;
+
+      return {
+        caption: modelFieldCaption,
+        value: fieldName,
+      };
+    });
+
+export const findConfigItem = <T, K extends keyof T>(
+  configField: T[],
+  key: K,
+  valueToMatch: T[K],
+  fieldToFetch: K
+): T[K] | undefined => {
+  const found = configField.find((fld) => fld[key] === valueToMatch);
+
+  if (!found) {
+    return undefined;
+  }
+
+  return found[fieldToFetch];
+};
+
+export const getColumnAlignment = (
+  dataType: DataType,
+  relatedModelID: number | null,
+  dataTypeInterface: string
+) => {
+  if (dataType === "BOOLEAN") {
+    return "center";
+  }
+
+  if (dataTypeInterface === "number" && !relatedModelID) {
+    return "right";
+  }
+
+  return "left";
+};
+
+export const getDefaultFilters = <T>(filters: ModelConfig["filters"]) => {
+  const defaultFilters: Partial<T> = {};
+  filters
+    .filter((item) => item.filterOrder)
+    .sort((item_A, item_B) => item_A.filterOrder - item_B.filterOrder)
+    .forEach((item) => {
+      if (item.controlType === "DateRangePicker") {
+        //@ts-ignore
+        defaultFilters[item.filterQueryName + "From"] = "";
+        //@ts-ignore
+        defaultFilters[item.filterQueryName + "To"] = "";
+      } else if (item.controlType === "Switch") {
+        //@ts-ignore
+        defaultFilters[item.filterQueryName] = false;
+      } else {
+        //@ts-ignore
+        defaultFilters[item.filterQueryName] = "";
+      }
+    });
+
+  return defaultFilters;
 };

@@ -2,7 +2,7 @@
 import { usePathname } from "next/navigation";
 import { links } from "@/lib/header-links";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import useScreenSize from "@/hooks/useScreenSize";
 import {
@@ -13,13 +13,11 @@ import {
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const size = useScreenSize();
-  const isMedium = size === "sm" || size === "md";
+
   return (
     <div
       className={cn(
-        "min-w-[250px] p-4 flex flex-col items-center flex-grow-0",
-        isMedium && "min-w-[50px] pl-4 pr-0"
+        "lg:min-w-[250px] p-4 flex flex-col items-center flex-grow-0 border-r border-border"
       )}
     >
       <div className={cn("h-[100px] flex items-center")}>
@@ -27,7 +25,8 @@ const Sidebar: React.FC = () => {
           className="text-2xl font-bold leading-none"
           href="/"
         >
-          {isMedium ? "TM" : "Task Manager"}
+          <span className="lg:hidden">TM</span>
+          <span className="hidden lg:block">Task Manager</span>
         </Link>
       </div>
       <div className="flex flex-col w-full text-sm">
@@ -47,12 +46,15 @@ const Sidebar: React.FC = () => {
                 )}
               >
                 <link.icon className="w-4 h-4" />
-                {!isMedium && link.name}
+                <span className="hidden lg:block">{link.name}</span>
               </Link>
             </TooltipTrigger>
-            {isMedium && (
-              <TooltipContent side="right">{link.name}</TooltipContent>
-            )}
+            <TooltipContent
+              side="right"
+              className="lg:hidden"
+            >
+              {link.name}
+            </TooltipContent>
           </Tooltip>
         ))}
       </div>

@@ -21,7 +21,7 @@ const LimitSelector: React.FC<LimitSelectorProps> = ({
   value,
 }) => {
   return (
-    <div>
+    <div className="self-end">
       <SelectGroup className="flex items-center gap-2">
         <Label htmlFor="limit">Limit</Label>
         <Select

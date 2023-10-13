@@ -4,15 +4,18 @@ import React, { useEffect } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import TaskDataTable from "@/components/tasks/TaskDataTable";
 import { useTaskPageParams } from "@/hooks/tasks/useTaskPageParams";
-import { useTasksQuery } from "@/hooks/tasks/useTaskQuery";
-import { GetTasksResponse, TaskModel } from "@/interfaces/TaskInterfaces";
-import { VARIABLE_PLURAL_NAME } from "@/utils/constants/TagConstants";
+import { TaskModel } from "@/interfaces/TaskInterfaces";
 import { useQueryClient, InfiniteData } from "@tanstack/react-query";
-import _ from "lodash";
+import { useModelsQuery } from "@/hooks/useModelQuery";
+import { TaskConfig } from "@/utils/config/TaskConfig";
+import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
 
 const TaskTable: React.FC = () => {
   const { params } = useTaskPageParams();
   const queryClient = useQueryClient();
+  const config = TaskConfig;
+
+  const [mounted, setMounted] = React.useState(false);
 
   //Store Variables
   const page = useTaskStore((state) => state.page);
@@ -27,14 +30,15 @@ const TaskTable: React.FC = () => {
   const queryParams = params;
 
   const useTaskSearchQuery = () =>
-    useTasksQuery({
+    //@ts-ignore
+    useModelsQuery<TaskModel>(config, {
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
 
   const { data, refetch, isFetching, isLoading } = useTaskSearchQuery();
 
-  const currentPageData: GetTasksResponse | null = data
+  const currentPageData: GetModelsResponse<TaskModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
   const currentData: TaskModel[] =
@@ -43,8 +47,8 @@ const TaskTable: React.FC = () => {
   //Client functions
   const refetchQuery = (idx: number) => {
     queryClient.setQueryData(
-      [VARIABLE_PLURAL_NAME, { ...queryParams }],
-      (data: InfiniteData<GetTasksResponse> | undefined) => {
+      [config.modelPath, { ...queryParams }],
+      (data: InfiniteData<GetModelsResponse<TaskModel>> | undefined) => {
         return data
           ? {
               pages: data.pages.slice(0, idx + 1),
@@ -54,11 +58,18 @@ const TaskTable: React.FC = () => {
       }
     );
     refetch({
-      refetchPage(lastPage, index) {
+      refetchPage(_, index) {
         return index === idx;
       },
     });
   };
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      setMounted(false);
+    };
+  }, []);
 
   useEffect(() => {
     setQueryResponse(useTaskSearchQuery);
@@ -70,7 +81,7 @@ const TaskTable: React.FC = () => {
     setRefetchQuery(refetchQuery);
   }, [currentPageData?.count, data, page]);
 
-  return <TaskDataTable taskQuery={useTaskSearchQuery} />;
+  return mounted && <TaskDataTable taskQuery={useTaskSearchQuery} />;
 };
 
 export default TaskTable;

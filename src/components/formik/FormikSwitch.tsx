@@ -22,7 +22,7 @@ export interface FormikSwitchProps extends SwitchProps {
   inputRef?: RefObject<HTMLButtonElement> | undefined;
   helperText?: string;
   submitOnChange?: boolean;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
 }
@@ -85,7 +85,14 @@ export const FormikSwitch: React.FC<FormikSwitchProps> = ({
         id={props.name}
         {...props}
       />
-      {!!label && <Label htmlFor={props.name}>{label}</Label>}
+      {!!label && (
+        <Label
+          htmlFor={props.name}
+          className="whitespace-nowrap"
+        >
+          {label}
+        </Label>
+      )}
       {helperText && (
         <span className="mt-1 text-xs font-bold text-muted-foreground">
           {helperText}

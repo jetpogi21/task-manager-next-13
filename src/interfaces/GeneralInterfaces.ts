@@ -93,3 +93,22 @@ export type LocalDropZoneAPIResponse =
       status: "error";
       errorMsg: string;
     };
+
+export interface ColumnAttrs {
+  type: string;
+  db_name: string;
+  sortOrder: number;
+  verboseFieldName: string;
+  verboseSortFieldName?: string;
+}
+
+export interface SortItem {
+  caption: string;
+  value: string;
+}
+
+export interface GetModelsResponse<TModel> {
+  count: number;
+  rows: TModel[];
+  cursor: string;
+}

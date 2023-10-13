@@ -2,16 +2,20 @@ import { useState, useEffect } from "react";
 
 type Size = "sm" | "md" | "lg" | "xl" | "2xl";
 
-function useScreenSize(): Size {
+function useScreenSize(inputSize: Size): boolean {
   const [size, setSize] = useState<Size>(getSize);
+  const [mounted, setMounted] = useState(false);
 
   function getSize(): Size {
-    const width = window.innerWidth;
-    if (width < 640) return "sm";
-    if (width < 768) return "md";
-    if (width < 1024) return "lg";
-    if (width < 1280) return "xl";
-    return "2xl";
+    if (typeof window !== "undefined") {
+      const width = window.innerWidth;
+      if (width < 640) return "sm";
+      if (width < 768) return "md";
+      if (width < 1024) return "lg";
+      if (width < 1280) return "xl";
+      return "2xl";
+    }
+    return "sm"; // or return a default size
   }
 
   const throttle = (func: () => void, limit: number) => {
@@ -26,12 +30,18 @@ function useScreenSize(): Size {
 
   useEffect(() => {
     const handleWindowResize = throttle(() => setSize(getSize()), 0);
-    window.addEventListener("resize", handleWindowResize);
+    if (mounted) {
+      window.addEventListener("resize", handleWindowResize);
+    } else {
+      setMounted(true);
+    }
     // Return a function from the effect that removes the event listener
-    return () => window.removeEventListener("resize", handleWindowResize);
-  }, []);
+    return () =>
+      window && window.removeEventListener("resize", handleWindowResize);
+  }, [mounted]);
 
-  return size;
+  const sizeOrder: Size[] = ["sm", "md", "lg", "xl", "2xl"];
+  return sizeOrder.indexOf(size) <= sizeOrder.indexOf(inputSize);
 }
 
 export default useScreenSize;

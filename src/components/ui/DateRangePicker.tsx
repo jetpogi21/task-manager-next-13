@@ -35,8 +35,6 @@ export function DateRangePicker({
   open,
   setOpen,
 }: DateRangePickerProps) {
-  console.log(value);
-
   const handleSelect: SelectRangeEventHandler = (
     range,
     selectedDay,

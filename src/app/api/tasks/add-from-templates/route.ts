@@ -44,10 +44,16 @@ function getStartAndEndOfMonth(month: number, year: number) {
 
 function getStartAndEndOfSemimonth(semimonthOfYear: number, year: number) {
   const month = Math.ceil(semimonthOfYear / 2) - 1;
-  const isFirstHalf = semimonthOfYear % 2 === 0;
 
-  const startDate = new Date(year, month, isFirstHalf ? 1 : 15);
-  const endDate = new Date(year, month + 1, isFirstHalf ? 14 : 0);
+  const isFirstHalf = semimonthOfYear % 2 !== 0;
+
+  const startDate = new Date(year, month, isFirstHalf ? 1 : 16);
+
+  const endDate = new Date(
+    year,
+    isFirstHalf ? month : month + 1,
+    isFirstHalf ? 15 : 0
+  );
 
   return { startDate, endDate };
 }
@@ -101,7 +107,9 @@ export const POST = async (req: Request) => {
             break;
           case "Semi-monthly":
             const currentSemiMonth = getSemimonthOfYear(date);
+
             dates = getStartAndEndOfSemimonth(currentSemiMonth, currentYear);
+
             break;
         }
         const { startDate, endDate } = dates!;
