@@ -1,18 +1,33 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { links } from "@/lib/header-links";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
-import useScreenSize from "@/hooks/useScreenSize";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
+import { AppConfig } from "@/lib/app-config";
+import { getInitials } from "@/utils/utilities";
+import { ModelConfig } from "@/interfaces/ModelConfig";
+import { Home } from "lucide-react";
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const { appTitle } = AppConfig;
+  const homeItem: Partial<ModelConfig> = {
+    modelName: "home",
+    modelPath: "/",
+    navItemIcon: Home, // Assuming this is the type based on provided context
+    navItemOrder: 1,
+    pluralizedVerboseModelName: "Home",
+  };
+
+  const AppConfigCopy = {
+    ...AppConfig,
+    models: [homeItem, ...AppConfig.models],
+  };
 
   return (
     <div
@@ -25,38 +40,55 @@ const Sidebar: React.FC = () => {
           className="text-2xl font-bold leading-none"
           href="/"
         >
-          <span className="lg:hidden">TM</span>
-          <span className="hidden lg:block">Task Manager</span>
+          <span className="lg:hidden">{getInitials(appTitle)}</span>
+          <span className="hidden lg:block">{AppConfig.appTitle}</span>
         </Link>
       </div>
       <div className="flex flex-col w-full text-sm">
-        {links.map((link) => (
-          <Tooltip key={link.id}>
-            <TooltipTrigger>
-              <Link
-                href={link.href}
-                className={cn(
-                  "p-2 rounded-sm hover:bg-accent flex gap-4 items-center",
-                  {
-                    "bg-accent":
-                      link.href === "/"
-                        ? pathname === link.href
-                        : pathname.includes(link.href),
-                  }
-                )}
-              >
-                <link.icon className="w-4 h-4" />
-                <span className="hidden lg:block">{link.name}</span>
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent
-              side="right"
-              className="lg:hidden"
-            >
-              {link.name}
-            </TooltipContent>
-          </Tooltip>
-        ))}
+        {AppConfigCopy.models
+          .filter((model) => model.navItemOrder)
+          .sort(
+            ({ navItemOrder: sortA }, { navItemOrder: sortB }) =>
+              sortA! - sortB!
+          )
+          .map(
+            ({
+              modelName,
+              modelPath,
+              navItemIcon: NavItemIcon,
+              pluralizedVerboseModelName,
+            }) => (
+              <Tooltip key={modelName}>
+                <TooltipTrigger>
+                  <Link
+                    href={modelPath!}
+                    className={cn(
+                      "p-2 rounded-sm hover:bg-accent flex gap-4 items-center",
+                      {
+                        "bg-accent":
+                          modelPath === "/"
+                            ? pathname === modelPath
+                            : pathname.includes(modelPath!),
+                      }
+                    )}
+                  >
+                    {NavItemIcon ? (
+                      <NavItemIcon className="w-3.5 h-3.5" />
+                    ) : null}
+                    <span className="hidden lg:block">
+                      {pluralizedVerboseModelName}
+                    </span>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  className="lg:hidden"
+                >
+                  {pluralizedVerboseModelName}
+                </TooltipContent>
+              </Tooltip>
+            )
+          )}
       </div>
     </div>
   );

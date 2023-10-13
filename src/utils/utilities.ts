@@ -652,3 +652,10 @@ export const isValidSortField = (
     return fieldName === sortField;
   });
 };
+
+export function getInitials(input: string): string {
+  return input
+    .split(" ")
+    .map((word) => word[0].toUpperCase())
+    .join("");
+}
