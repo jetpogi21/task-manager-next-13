@@ -36,6 +36,7 @@ import { useModelPageParams } from "@/hooks/useModelPageParams";
 
 const TaskFilterForm: React.FC = () => {
   const config = TaskConfig;
+
   const { pathname, router, params, query } =
     useModelPageParams<TaskSearchParams>(config);
 

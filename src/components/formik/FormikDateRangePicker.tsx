@@ -125,6 +125,11 @@ const FormikDateRangePicker = forwardRef<any, FormikDateRangePickerProps>(
     };
 
     useEffect(() => {
+      setLocalDateFrom(dateFrom || "");
+      setLocalDateTo(dateTo || "");
+    }, [dateFrom, dateTo]);
+
+    useEffect(() => {
       if (ref && typeof ref !== "function" && setFocusOnLoad) {
         ref.current?.focus();
       }
