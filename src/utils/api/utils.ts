@@ -1,16 +1,34 @@
+import { ModelConfig } from "@/interfaces/ModelConfig";
+import { AppConfig } from "@/lib/app-config";
+import { ModelSchema } from "@/schema/ModelSchema";
+import { createModel, deleteModels, updateModel } from "@/utils/api/ModelLibs";
+import clsJoin from "@/utils/clsJoin";
 import clsSQL from "@/utils/clsSQL";
-import { splitWordByLastHyphen } from "@/utils/utils";
-import { Op } from "sequelize";
+import {
+  findConfigItem,
+  findConfigItemObject,
+  findFielToBeInsertedField,
+  findLeftForeignKeyField,
+  findModelPrimaryKeyField,
+  findRelationshipModelConfig,
+  forceCastToNumber,
+} from "@/utils/utilities";
+import {
+  getSort,
+  removeDuplicates,
+  splitWordByLastHyphen,
+} from "@/utils/utils";
+import { Op, Transaction } from "sequelize";
 
 export function getSortedValue(
   sort: string | undefined,
-  deckAttributes: string[],
+  modelAttributes: string[],
   DEFAULT_SORT_BY: string
 ): string {
   if (sort) {
     const isSortValid =
-      deckAttributes.includes(sort) ||
-      deckAttributes.includes(sort.substring(1));
+      modelAttributes.includes(sort) ||
+      modelAttributes.includes(sort.substring(1));
 
     return isSortValid ? sort : DEFAULT_SORT_BY;
   } else {
@@ -302,6 +320,18 @@ export function getDatabaseFieldName(key: string, COLUMNS: any): string {
   return sortField;
 }
 
+export function getDatabaseFieldNameConfig(
+  key: string,
+  config: ModelConfig
+): string {
+  let sortField = key.includes("-") ? key.substring(1) : key;
+  const column = config.fields.find(
+    (field) => field.fieldName === sortField
+  )?.databaseFieldName;
+
+  return column!;
+}
+
 export function getColumnKeyByDbName(fieldName: string, COLUMNS: any) {
   for (const key in COLUMNS) {
     if (COLUMNS[key].db_name === fieldName) {
@@ -326,3 +356,735 @@ export function getMappedKeys(columns: {
 
   return mappedKeys;
 }
+
+export const generateFieldsForSQL = (
+  config: ModelConfig
+): ([string, string] | string)[] => {
+  return config.fields
+    .sort((a, b) => a.fieldOrder - b.fieldOrder)
+    .map(({ fieldName, databaseFieldName }) => {
+      if (fieldName === databaseFieldName) {
+        return fieldName;
+      } else {
+        return [databaseFieldName, fieldName];
+      }
+    });
+};
+
+export const generateQFields = (config: ModelConfig) => {
+  return config.filters
+    .filter(
+      ({ filterQueryName, seqModelFieldID }) =>
+        filterQueryName === "q" && seqModelFieldID
+    )
+    .map(({ seqModelFieldID }) =>
+      findConfigItem(
+        config.fields,
+        "seqModelFieldID",
+        seqModelFieldID!,
+        "databaseFieldName"
+      )
+    ) as string[];
+};
+
+export const getSortedValueSimplified = (
+  sortQuery: string | undefined,
+  config: ModelConfig
+): string => {
+  let sort: string | undefined = config.sortString;
+
+  if (sortQuery) {
+    const sortField = sortQuery.startsWith("-")
+      ? sortQuery.slice(1)
+      : sortQuery;
+
+    const sortFieldObject = findConfigItemObject(
+      config.fields,
+      "fieldName",
+      sortField
+    );
+    const sortObject =
+      sortFieldObject &&
+      findConfigItemObject(
+        config.sorts,
+        "seqModelFieldID",
+        sortFieldObject.seqModelFieldID
+      );
+
+    if (sortFieldObject && sortObject) {
+      sort =
+        (sortQuery.startsWith("-") ? "-" : "") +
+        getDatabaseFieldNameConfig(sortQuery, config);
+    }
+  }
+
+  const modelFields = config.fields.map((field) => field.fieldName);
+  return getSortedValue(sort, modelFields, config.sortString);
+};
+
+export const processQueryFilters = (
+  sql: clsSQL,
+  filters: string[],
+  query: Record<string, string>,
+  modelConfig: ModelConfig,
+  replacements: Record<string, string>
+) => {
+  const table = modelConfig.tableName;
+  const q = query.q;
+  if (q) {
+    const fields: string[] = generateQFields(modelConfig);
+    replacements["q"] = `%${q}%`;
+    filters.push(
+      `(${fields.map((field) => `(${table}.${field} LIKE :q)`).join(" OR ")})`
+    );
+  }
+
+  modelConfig.filters
+    .filter(({ filterQueryName }) => filterQueryName !== "q")
+    .sort((a, b) => a.filterOrder - b.filterOrder)
+    .forEach(
+      ({
+        filterQueryName,
+        filterOperator,
+        seqModelFieldID,
+        seqModelRelationshipID,
+        options,
+      }) => {
+        const queryValue = query[filterQueryName];
+
+        const field = seqModelFieldID
+          ? findConfigItemObject(
+              modelConfig.fields,
+              "seqModelFieldID",
+              seqModelFieldID
+            )
+          : undefined;
+        /* const field = modelConfig.fields.find(
+          (field) => field.seqModelFieldID === seqModelFieldID
+        )!; */
+        const databaseFieldName = field?.databaseFieldName;
+        const dataType = field?.dataType;
+
+        if (queryValue) {
+          if (filterOperator === "Equal" && dataType === "BOOLEAN" && options) {
+            if (queryValue === options[0].fieldValue) {
+              filters.push(`${table}.${databaseFieldName}`);
+            } else {
+              filters.push(`NOT ${table}.${databaseFieldName}`);
+            }
+
+            return;
+          }
+
+          if (filterOperator === "Equal") {
+            filters.push(`${table}.${databaseFieldName} = :${filterQueryName}`);
+            replacements[filterQueryName] = queryValue;
+            return;
+          }
+
+          if (filterOperator === "Between" && dataType === "DATEONLY") {
+            const dateFromName = `${filterQueryName}From`;
+            const dateToName = `${filterQueryName}To`;
+            const dateFrom = query[dateFromName];
+            const dateTo = query[dateToName];
+
+            if (dateFrom && dateTo) {
+              filters.push(
+                `${filterQueryName} BETWEEN :${dateFromName} AND :${dateToName}`
+              );
+              replacements[dateFromName] = dateFrom;
+              replacements[dateToName] = dateTo;
+            }
+
+            return;
+          }
+
+          if (filterOperator === "Not is Null") {
+            filters.push(`NOT ${table}.${databaseFieldName} IS NULL`);
+            return;
+          }
+
+          if (filterOperator === "Is Null") {
+            filters.push(`${table}.${databaseFieldName} IS NULL`);
+            return;
+          }
+
+          if (
+            filterOperator === "isPresent" &&
+            queryValue === "true" &&
+            seqModelRelationshipID
+          ) {
+            const modelRelationship = findConfigItemObject(
+              AppConfig.relationships,
+              "seqModelRelationshipID",
+              seqModelRelationshipID
+            );
+
+            const relatedModelConfig = findRelationshipModelConfig(
+              seqModelRelationshipID,
+              "LEFT"
+            );
+
+            const leftForeignKeyField = findLeftForeignKeyField(
+              seqModelRelationshipID
+            );
+
+            const relatedModelSQL = getChildModelSQL(
+              query,
+              false,
+              relatedModelConfig
+            );
+
+            const relatedModelJoin = new clsJoin(
+              relatedModelSQL.sql.sql(),
+              modelRelationship.rightForeignKey,
+              `\`${relatedModelSQL.modelName}.${leftForeignKeyField.fieldName}\``,
+              `temp${relatedModelSQL.modelName}FilterQuery`,
+              "INNER"
+            );
+
+            sql.joins = [relatedModelJoin];
+            return;
+          }
+        }
+      }
+    );
+};
+
+const processLeftModelRelationships = (
+  query: Record<string, string>,
+  dontFilter: boolean,
+  modelConfig: ModelConfig,
+  replacements: Record<string, unknown>,
+  joinFields: string[],
+  sql: clsSQL,
+  leftJoins: clsJoin[]
+) => {
+  const leftModelRelationships = AppConfig.relationships.filter(
+    (relationship) =>
+      relationship.leftModelID === modelConfig.seqModelID &&
+      !relationship.excludeInTable
+  );
+
+  leftModelRelationships.forEach((relationship) => {
+    const rightModelConfig = findRelationshipModelConfig(
+      relationship.seqModelRelationshipID,
+      "RIGHT"
+    );
+
+    const {
+      sql: childSQL,
+      fieldAliases,
+      replacements: rightModelReplacements,
+      subqueryAlias,
+      modelName,
+      filtered,
+    } = getChildModelSQL(query, dontFilter, rightModelConfig);
+
+    replacements = { ...replacements, ...rightModelReplacements };
+
+    fieldAliases.forEach((field) => {
+      joinFields.push(`${subqueryAlias}.${field}`);
+    });
+
+    const join = createJoin(
+      childSQL.sql(),
+      relationship.leftForeignKey,
+      `\`${modelName}.${relationship.rightForeignKey}\``,
+      subqueryAlias,
+      "INNER"
+    );
+
+    if (filtered) {
+      sql.joins.push(join);
+    }
+
+    const leftSQL = getChildModelSQL(query, true, rightModelConfig).sql;
+    const leftJoin = createJoin(
+      leftSQL.sql(),
+      relationship.leftForeignKey,
+      `\`${modelName}.${relationship.rightForeignKey}\``,
+      subqueryAlias,
+      "LEFT"
+    );
+
+    leftJoins.push(leftJoin);
+  });
+};
+
+const processRightModelRelationships = (
+  query: Record<string, string>,
+  dontFilter: boolean,
+  modelConfig: ModelConfig,
+  replacements: Record<string, unknown>,
+  joinFields: string[],
+  sql: clsSQL,
+  leftJoins: clsJoin[]
+) => {
+  const rightModelRelationships = AppConfig.relationships.filter(
+    (relationship) =>
+      relationship.rightModelID === modelConfig.seqModelID &&
+      !relationship.excludeInTable
+  );
+
+  rightModelRelationships.forEach((relationship) => {
+    const leftModelConfig = findRelationshipModelConfig(
+      relationship.seqModelRelationshipID,
+      "LEFT"
+    );
+
+    const leftModelField = findLeftForeignKeyField(
+      relationship.seqModelRelationshipID
+    );
+
+    const {
+      sql: childSQL,
+      fieldAliases,
+      replacements: leftModelReplacements,
+      subqueryAlias,
+      modelName,
+      filtered,
+    } = getChildModelSQL(query, dontFilter, leftModelConfig);
+
+    replacements = { ...replacements, ...leftModelReplacements };
+
+    fieldAliases.forEach((field) => {
+      joinFields.push(`${subqueryAlias}.${field}`);
+    });
+
+    const join = createJoin(
+      childSQL.sql(),
+      relationship.rightForeignKey,
+      `\`${modelName}.${leftModelField.fieldName}\``,
+      subqueryAlias,
+      "INNER"
+    );
+
+    if (filtered) {
+      sql.joins.push(join);
+    }
+
+    const leftSQL = getChildModelSQL(query, true, leftModelConfig).sql;
+    const leftJoin = createJoin(
+      leftSQL.sql(),
+      relationship.rightForeignKey,
+      `\`${modelName}.${leftModelField.fieldName}\``,
+      subqueryAlias,
+      "LEFT"
+    );
+
+    leftJoins.push(leftJoin);
+  });
+};
+
+const createJoin = (
+  sql: string,
+  leftKey: string,
+  rightKey: string,
+  alias: string,
+  type: "LEFT" | "INNER"
+) => {
+  return new clsJoin(sql, leftKey, rightKey, alias, type);
+};
+
+export const processQueryJoins = (
+  query: Record<string, string>,
+  dontFilter: boolean,
+  modelConfig: ModelConfig,
+  replacements: Record<string, unknown>,
+  joinFields: string[],
+  sql: clsSQL,
+  leftJoins: clsJoin[]
+) => {
+  // Process joins for relationships where the current model is on the left side
+  processLeftModelRelationships(
+    query,
+    dontFilter,
+    modelConfig,
+    replacements,
+    joinFields,
+    sql,
+    leftJoins
+  );
+
+  // Process joins for relationships where the current model is on the right side
+  processRightModelRelationships(
+    query,
+    dontFilter,
+    modelConfig,
+    replacements,
+    joinFields,
+    sql,
+    leftJoins
+  );
+};
+
+export const getChildModelSQL = (
+  query: Record<string, string>,
+  dontFilter: boolean,
+  modelConfig: ModelConfig
+) => {
+  const table = modelConfig.tableName;
+  const fields: ([string, string] | string)[] =
+    generateFieldsForSQL(modelConfig);
+  const fieldAliases: string[] = [];
+  const modelName = modelConfig.modelName;
+  let filtered = false;
+  let replacements: Record<string, string> = {};
+
+  let sql = new clsSQL();
+  sql.source = table;
+
+  //build the sql field name and aliases (aliases are used to destructure the object)
+  processFields(fields, modelName, table, fieldAliases, sql);
+
+  const filters: string[] = [];
+
+  if (!dontFilter) {
+    processQueryFilters(sql, filters, query, modelConfig, replacements);
+  }
+
+  if (filters.length > 0) {
+    filtered = true;
+    sql.filter = filters.join(" AND ");
+  }
+
+  return {
+    sql,
+    fieldAliases,
+    replacements,
+    subqueryAlias: `temp${modelName}`,
+    modelName,
+    filtered,
+  };
+};
+
+export function getMainModelSQL(
+  query: Record<string, string>,
+  dontFilter: boolean = false,
+  modelConfig: ModelConfig,
+  options?: {
+    primaryKeyValue?: string | number;
+  }
+) {
+  const simpleOnly = query["simpleOnly"];
+  const cursor = query["cursor"];
+  const limit = query["limit"] || modelConfig.limit || AppConfig.limit || 10;
+
+  const sort = getSortedValueSimplified(query["sort"], modelConfig);
+  const sortField = sort.includes("-") ? sort.substring(1) : sort;
+
+  //Declare the variables
+  const table = modelConfig.tableName;
+  const primaryKeyField = findModelPrimaryKeyField(modelConfig);
+  const fields: ([string, string] | string)[] =
+    generateFieldsForSQL(modelConfig);
+
+  //This will be used to store the fields to be used from the joins
+  const joinFields: string[] = [];
+
+  //This will be used to store the replacements needed
+  let replacements: Record<string, string> = {};
+
+  const sql = new clsSQL();
+  sql.source = table;
+
+  const filters: string[] = [];
+
+  if (!simpleOnly || simpleOnly !== "true") {
+    if (!dontFilter) {
+      processQueryFilters(sql, filters, query, modelConfig, replacements);
+    }
+  }
+
+  if (options?.primaryKeyValue) {
+    filters.push(
+      `${table}.${primaryKeyField.databaseFieldName} = ${options.primaryKeyValue}`
+    );
+  }
+
+  const leftJoins: clsJoin[] = [];
+
+  processQueryJoins(
+    query,
+    dontFilter,
+    modelConfig,
+    replacements,
+    joinFields,
+    sql,
+    leftJoins
+  );
+
+  //Count should be pre-cursor
+  //This part would return the count SQL
+  sql.fields = [
+    `COUNT(DISTINCT ${table}.${primaryKeyField.databaseFieldName}) AS count`,
+  ];
+  if (filters.length > 0) {
+    sql.filter = filters.join(" AND ");
+  }
+  const countSQL = sql.sql();
+  sql.filter = "";
+
+  sql.orderBy = getSort(
+    sort,
+    modelConfig.sortString,
+    primaryKeyField.databaseFieldName
+  );
+  if (cursor) {
+    addCursorFilterToQuery(
+      cursor,
+      sort,
+      sortField,
+      primaryKeyField.databaseFieldName,
+      replacements,
+      filters,
+      table
+    );
+  }
+
+  if (filters.length > 0) {
+    sql.filter = filters.join(" AND ");
+  }
+
+  sql.limit = simpleOnly === "true" ? 0 : forceCastToNumber(limit);
+
+  //This part will produce the distinct SQL
+  sql.fields = [`${table}.${primaryKeyField.databaseFieldName}`];
+  sql.groupBy = [primaryKeyField.databaseFieldName];
+
+  const distinctSQL = sql.sql();
+
+  const distinctJoin = new clsJoin(
+    distinctSQL,
+    primaryKeyField.databaseFieldName,
+    primaryKeyField.databaseFieldName,
+    "tempDistinct",
+    "INNER"
+  );
+
+  sql.fields = [];
+
+  //build the sql field name and aliases (aliases are used to destructure the object)
+  appendFieldsToSQL(fields, sql, table);
+
+  sql.fields = sql.fields.concat(joinFields);
+
+  sql.joins = [distinctJoin, ...leftJoins];
+
+  //Insert joins here LEFT joins e.g. cardCardKeywordJoin, distincJoin or
+  //new clsJoin("marvelduel_belongsto", "deck_id", "id", null)
+  resetSQL(sql);
+
+  const sqlString: string = sql.sql();
+
+  return {
+    sqlString,
+    countSQL,
+    replacements,
+  };
+}
+
+export const getLeftConfigNamesFromRightModelId = (
+  modelConfig: ModelConfig
+): [string, string][] => {
+  return AppConfig.relationships
+    .filter(
+      (relationship) => relationship.rightModelID === modelConfig.seqModelID
+    )
+    .map((relationship) => {
+      const leftModelConfig = findRelationshipModelConfig(
+        relationship.seqModelRelationshipID,
+        "LEFT"
+      );
+      return [leftModelConfig.modelName, leftModelConfig.pluralizedModelName];
+    });
+};
+
+export const removeDuplicatesFromRightModelRelationships = (
+  data: Record<string, unknown>[],
+  modelConfig: ModelConfig
+) => {
+  AppConfig.relationships
+    .filter(
+      (relationship) => relationship.rightModelID === modelConfig.seqModelID
+    )
+    .forEach((relationship) => {
+      const leftModelConfig = findRelationshipModelConfig(
+        relationship.seqModelRelationshipID,
+        "LEFT"
+      );
+      removeDuplicates(
+        data,
+        leftModelConfig.pluralizedModelName,
+        findModelPrimaryKeyField(leftModelConfig).databaseFieldName
+      );
+    });
+};
+
+export const somename = (
+  modelConfig: ModelConfig,
+  parentPrimaryKeyValue: string | number,
+  res: Record<string, unknown>,
+  t: Transaction,
+  newRecords: Record<string, unknown>
+) => {
+  AppConfig.relationships
+    .filter(
+      ({ rightModelID, isSimpleRelationship }) =>
+        rightModelID === modelConfig.seqModelID && isSimpleRelationship
+    )
+    .forEach(async (relationship) => {
+      const leftModelConfig = findRelationshipModelConfig(
+        relationship.leftModelID,
+        "LEFT"
+      );
+
+      const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
+
+      //the foreign key (fieldname) of the main model
+      const leftField = findLeftForeignKeyField(
+        relationship.seqModelRelationshipID
+      );
+
+      const fieldToBeInsertedField = findFielToBeInsertedField(
+        relationship.seqModelRelationshipID
+      );
+
+      const throughModelConfig = findRelationshipModelConfig(
+        relationship.leftModelID,
+        "TROUGH"
+      );
+
+      //@ts-ignore
+      const deletedIDs: number[] =
+        res[`deleted${leftModelConfig.pluralizedVerboseModelName}`];
+
+      if (deletedIDs.length > 0) {
+        await deleteModels(leftModelConfig, deletedIDs, t);
+      }
+    });
+};
+
+export const createNewRecordsForModelAndSimpleRelationships = (
+  modelConfig: ModelConfig,
+  parentPrimaryKeyValue: string | number,
+  res: Record<string, unknown>,
+  t: Transaction,
+  newRecords: Record<string, unknown>
+) => {
+  AppConfig.relationships
+    .filter(
+      ({ rightModelID, isSimpleRelationship }) =>
+        rightModelID === modelConfig.seqModelID && isSimpleRelationship
+    )
+    .forEach(async (relationship) => {
+      const leftModelConfig = findRelationshipModelConfig(
+        relationship.leftModelID,
+        "LEFT"
+      );
+
+      const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
+
+      //the foreign key (fieldname) of the main model
+      const leftField = findLeftForeignKeyField(
+        relationship.seqModelRelationshipID
+      );
+
+      const fieldToBeInsertedField = findFielToBeInsertedField(
+        relationship.seqModelRelationshipID
+      );
+
+      const throughModelConfig = findRelationshipModelConfig(
+        relationship.leftModelID,
+        "TROUGH"
+      );
+
+      //@ts-ignore
+      const newIDs: number[] =
+        res[`new${throughModelConfig.pluralizedVerboseModelName}`];
+
+      const newChildRecords: Record<string, unknown>[] = [];
+
+      for (const item of newIDs) {
+        const newRecord = await createModel(
+          leftModelConfig,
+          {
+            [leftField.databaseFieldName]: parentPrimaryKeyValue,
+            [fieldToBeInsertedField.databaseFieldName]: item,
+          },
+          t
+        );
+
+        const newChildID: number | string =
+          //@ts-ignore
+          newRecord[leftPrimaryKeyField.fieldName];
+
+        //TO DO newChildRecords push to childRecords
+        newChildRecords.push({
+          [relationship.fieldToBeInserted!]: item,
+          [findModelPrimaryKeyField(leftModelConfig).fieldName]: newChildID,
+        });
+      }
+
+      newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
+    });
+};
+
+export const updateOrCreateRelatedRecords = (
+  modelConfig: ModelConfig,
+  res: any,
+  parentPrimaryKeyValue: number | string,
+  t: Transaction,
+  newRecords: Record<string, unknown>
+) => {
+  AppConfig.relationships
+    .filter(
+      (relationship) => relationship.rightModelID === modelConfig.seqModelID
+    )
+    .forEach(async (relationship) => {
+      const newChildRecords: Record<string, unknown>[] = [];
+      const leftModelConfig = findRelationshipModelConfig(
+        relationship.seqModelRelationshipID,
+        "LEFT"
+      );
+      const primaryKeyField = findModelPrimaryKeyField(leftModelConfig);
+      const leftField = findLeftForeignKeyField(
+        relationship.seqModelRelationshipID
+      );
+      const modelPayload = res[leftModelConfig.pluralizedModelName];
+      if (modelPayload) {
+        for (const item of modelPayload) {
+          item[leftField.fieldName] = parentPrimaryKeyValue;
+          try {
+            await ModelSchema(leftModelConfig).validate(item);
+            const childPrimaryKeyValue = item[primaryKeyField.fieldName];
+            if (childPrimaryKeyValue === "") {
+              const newChildRecord = await createModel(
+                leftModelConfig,
+                modelPayload,
+                t
+              );
+              //@ts-ignore
+              const newChildID = newChildRecord[primaryKeyField.fieldName];
+
+              newChildRecords.push({
+                index: item.index,
+                [primaryKeyField.fieldName]: newChildID,
+              });
+            } else {
+              await updateModel(
+                modelConfig,
+                modelPayload,
+                childPrimaryKeyValue,
+                t
+              );
+            }
+          } catch (error) {
+            throw new Error("Validation failed:", error!);
+          }
+        }
+      }
+      newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
+    });
+};

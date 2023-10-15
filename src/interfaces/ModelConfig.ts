@@ -44,6 +44,15 @@ export type DataType =
   | "TINYINT"
   | "UUID";
 
+export type FilterOperator =
+  | "Between"
+  | "Equal"
+  | "In"
+  | "Is Null"
+  | "isPresent"
+  | "Like"
+  | "Not is Null";
+
 interface ModelKeys {
   seqModelID: number;
   modelName: string;
@@ -107,6 +116,7 @@ interface ModelFilterKeys {
   modelPath: string | null;
   controlType: ControlType;
   variableName: string | null;
+  filterOperator: FilterOperator;
   options: ModelFilterOptionKeys[];
 }
 
