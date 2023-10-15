@@ -61,7 +61,7 @@ const Sidebar: React.FC = () => {
               <Tooltip key={modelName}>
                 <TooltipTrigger>
                   <Link
-                    href={modelPath!}
+                    href={"/" + modelPath!}
                     className={cn(
                       "p-2 rounded-sm hover:bg-accent flex gap-4 items-center",
                       {
