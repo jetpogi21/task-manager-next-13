@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/Label";
 import Combobox from "@/components/ui/Combobox";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { useField } from "formik";
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import { ClassValue } from "clsx";
 import { cn } from "@/lib/utils";
 
@@ -15,11 +15,11 @@ export interface FormikComboboxProp {
   setArrayTouched?: () => void;
   onUpdate?: () => void;
   helperText?: string;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   showLabel: boolean;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
-
+  style?: CSSProperties;
   [key: string]: unknown;
 }
 
@@ -35,7 +35,7 @@ export const FormikCombobox = ({
   containerClassNames,
   showLabel = true,
   onChange,
-
+  style,
   ...props
 }: FormikComboboxProp) => {
   const [field, meta, { setValue }] = useField(props);
@@ -44,7 +44,10 @@ export const FormikCombobox = ({
   const hasError = meta.touched && meta.error;
 
   return (
-    <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+    <div
+      className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+      style={style}
+    >
       {showLabel && <Label htmlFor={props.name}>{label}</Label>}
       <Combobox
         value={fieldValue}

@@ -31,6 +31,7 @@ export interface FormikSelectProps extends ButtonProps {
   allowBlank: boolean;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 export const FormikSelect = forwardRef<HTMLButtonElement, FormikSelectProps>(
@@ -46,6 +47,7 @@ export const FormikSelect = forwardRef<HTMLButtonElement, FormikSelectProps>(
       showLabel = true,
       allowBlank = false,
       onChange,
+      style,
       ...props
     },
     ref
@@ -74,7 +76,10 @@ export const FormikSelect = forwardRef<HTMLButtonElement, FormikSelectProps>(
     }, [fieldValue]);
 
     return (
-      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+      <div
+        className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+        style={style}
+      >
         {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
         <div
           className={cn("flex", {

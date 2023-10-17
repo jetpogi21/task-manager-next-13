@@ -12,8 +12,6 @@ async function fixDatabaseRecords() {
         WHERE file IS NOT NULL AND file != ''
     `);
 
-  console.log(records);
-
   for (const record of records) {
   }
 }

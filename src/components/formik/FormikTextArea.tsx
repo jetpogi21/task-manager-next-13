@@ -22,11 +22,12 @@ export interface FormikTextAreaProps extends TextareaProps {
   setFocusOnLoad?: boolean;
   setArrayTouched?: () => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   helperText?: string;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
   nullAllowed?: boolean;
+  style?: React.CSSProperties;
 }
 
 const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
@@ -41,6 +42,7 @@ const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
       setHasUpdate,
       onChange,
       nullAllowed,
+      style,
       ...props
     },
     ref
@@ -97,7 +99,10 @@ const FormikTextArea = forwardRef<any, FormikTextAreaProps>(
     }, [inputRef, setFocusOnLoad]);
 
     return (
-      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+      <div
+        className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+        style={style}
+      >
         {!!label && <Label htmlFor={props.name}>{label}</Label>}
         <Textarea
           ref={ref || inputRef}

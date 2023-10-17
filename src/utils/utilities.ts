@@ -215,7 +215,6 @@ export const getParamsObject = (
   defaultValue: Record<string, unknown>
 ): Record<string, string> => {
   // Create a new object to store the transformed values
-  console.log(values);
 
   const result: Record<string, string> = {};
 
@@ -365,8 +364,6 @@ export function modifySortAsString(
   } else if (sortObject[name].desc === query.sort || query.sort === undefined) {
     setQueryStringParam(query, "sort", sortObject[name].asc || name);
   }
-
-  console.log({ sort: query.sort });
 
   const queryAsURLInput = query as Record<string, string>;
   router.push(`${pathname}?${encodeParams(queryAsURLInput)}`);

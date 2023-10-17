@@ -1,6 +1,7 @@
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { backendModels } from "@/lib/backend-models";
 import { findModelPrimaryKeyField, forceCastToNumber } from "@/utils/utilities";
+import { Op } from "sequelize";
 import { Transaction } from "sequelize";
 
 const createParsedPayload = (
@@ -12,11 +13,16 @@ const createParsedPayload = (
     .filter((field) => !field.primaryKey)
     .forEach(({ dataType, fieldName, allowNull }) => {
       const value = payload[fieldName];
+
       let parsedValue;
-      if ((typeof value === undefined || typeof value === null) && allowNull) {
+      if (value === null && allowNull) {
         parsedValue = null;
+      } else if (value === null && dataType === "BOOLEAN") {
+        parsedValue = false;
       } else if (dataType === "BIGINT") {
         parsedValue = forceCastToNumber(payload[fieldName] as string);
+      } else {
+        parsedValue = payload[fieldName];
       }
 
       parsedPayload[fieldName] = parsedValue;
@@ -48,9 +54,9 @@ export const updateModel = async (
   const primaryKeyField = findModelPrimaryKeyField(modelConfig);
   const Model =
     backendModels[modelConfig.modelName as keyof typeof backendModels];
+
   //@ts-ignore
   await Model.update(parsedPayload as any, {
-    //@ts-ignore
     where: {
       [primaryKeyField.fieldName]:
         primaryKeyValue || payload[primaryKeyField.fieldName],
@@ -70,7 +76,6 @@ export const deleteModels = async (
     backendModels[modelConfig.modelName as keyof typeof backendModels];
   //@ts-ignore
   await Model.destroy({
-    //@ts-ignore
     where: { [primaryKeyField.fieldName]: { [Op.in]: deletedIds } },
     transaction: t,
   });

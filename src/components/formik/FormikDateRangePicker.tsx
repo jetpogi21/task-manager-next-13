@@ -35,6 +35,7 @@ export interface FormikDateRangePickerProps
   showLabel?: boolean;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 const FormikDateRangePicker = forwardRef<any, FormikDateRangePickerProps>(
@@ -51,6 +52,7 @@ const FormikDateRangePicker = forwardRef<any, FormikDateRangePickerProps>(
       showLabel = true,
       format,
       onChange,
+      style,
       ...props
     },
     ref
@@ -136,7 +138,10 @@ const FormikDateRangePicker = forwardRef<any, FormikDateRangePickerProps>(
     }, [setFocusOnLoad]);
 
     return (
-      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+      <div
+        className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+        style={style}
+      >
         {showLabel && !!label && <Label>{label}</Label>}
         <DateRangePicker
           value={value}

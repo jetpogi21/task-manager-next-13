@@ -1,6 +1,6 @@
+import { FormikFilterControlGenerator } from "@/components/FormikFilterControlGenerator";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
-import { FormikFilterControlGenerator } from "@/lib/control-generator";
 
 export interface FilterControlsProps {
   config: ModelConfig;

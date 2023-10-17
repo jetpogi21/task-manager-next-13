@@ -16,9 +16,10 @@ export interface FormikCheckboxProps extends ButtonProps {
   inputRef?: RefObject<HTMLButtonElement> | undefined;
   helperText?: string;
   submitOnChange?: boolean;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
@@ -33,6 +34,7 @@ const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
       submitOnChange = false,
       setHasUpdate,
       onChange,
+      style,
       ...props
     },
     ref
@@ -75,6 +77,7 @@ const FormikCheckbox = forwardRef<any, FormikCheckboxProps>(
           "flex gap-1.5 items-center justify-center",
           containerClassNames
         )}
+        style={style}
       >
         <Checkbox
           checked={fieldValue}

@@ -7,6 +7,7 @@ import {
   useState,
   RefObject,
   FormEventHandler,
+  CSSProperties,
 } from "react";
 import { ClassValue } from "clsx";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export interface FormikSwitchProps extends SwitchProps {
   containerClassNames?: ClassValue;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  style?: CSSProperties;
 }
 
 export const FormikSwitch: React.FC<FormikSwitchProps> = ({
@@ -38,6 +40,7 @@ export const FormikSwitch: React.FC<FormikSwitchProps> = ({
   submitOnChange = false,
   setHasUpdate,
   onChange,
+  style,
   ...props
 }) => {
   const { submitForm } = useFormikContext();
@@ -77,6 +80,7 @@ export const FormikSwitch: React.FC<FormikSwitchProps> = ({
         "flex flex-col w-full gap-1.5 items-center",
         containerClassNames
       )}
+      style={style}
     >
       <Switch
         checked={fieldValue}

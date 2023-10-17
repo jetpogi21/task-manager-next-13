@@ -3,6 +3,29 @@ import { AppConfig } from "@/lib/app-config";
 import { findRelationshipModelConfig } from "@/utils/utilities";
 import * as Yup from "yup";
 
+const getBaseYupChain = (dataTypeInterface: string) => {
+  let yupChain;
+  switch (dataTypeInterface) {
+    case "string":
+      yupChain = Yup.string();
+      break;
+
+    case "number":
+      yupChain = Yup.number();
+      break;
+
+    case "boolean":
+      yupChain = Yup.boolean();
+      break;
+
+    default:
+      yupChain = Yup.string();
+      break;
+  }
+
+  return yupChain;
+};
+
 const createShapeFromModelConfig = (
   modelConfig: ModelConfig,
   arrayMode: boolean = false
@@ -12,44 +35,34 @@ const createShapeFromModelConfig = (
     .filter(({ primaryKey }) => !primaryKey)
     .forEach(
       ({ fieldName, allowNull, verboseFieldName, dataTypeInterface }) => {
-        let yupChain;
+        let yupChain = getBaseYupChain(dataTypeInterface);
 
-        switch (dataTypeInterface) {
-          case "string":
-            yupChain = Yup.string();
-            break;
-
-          case "number":
-            yupChain = Yup.number();
-            break;
-
-          case "boolean":
-            yupChain = Yup.boolean();
-            break;
-
-          default:
-            yupChain = Yup.string();
-            break;
-        }
-
-        if (!allowNull) {
-          if (arrayMode) {
-            //@ts-ignore
-            yupChain.when("touched", ([touched], schema) =>
-              touched
-                ? schema.required(`${verboseFieldName} is a required field.`)
-                : schema.notRequired()
-            );
+        if (dataTypeInterface !== "boolean") {
+          if (!allowNull) {
+            if (arrayMode) {
+              //@ts-ignore
+              yupChain = yupChain.when("touched", ([touched], schema) =>
+                touched
+                  ? schema.required(`${verboseFieldName} is a required field.`)
+                  : schema.notRequired()
+              );
+            } else {
+              yupChain = yupChain.required(
+                `${verboseFieldName} is a required field.`
+              );
+            }
           } else {
-            yupChain["required"](`${verboseFieldName} is a required field.`);
-          }
-        } else {
-          if (arrayMode) {
-            yupChain.nullable();
-          } else {
-            yupChain["nullable"]().transform((value, originalValue) =>
-              originalValue && originalValue !== "" ? value : null
-            );
+            if (arrayMode) {
+              //@ts-ignore
+              yupChain = yupChain.nullable();
+            } else {
+              //@ts-ignore
+              yupChain = yupChain
+                .nullable()
+                .transform((value, originalValue) =>
+                  originalValue && originalValue !== "" ? value : null
+                );
+            }
           }
         }
 
@@ -67,7 +80,10 @@ export const ModelSchema = (modelConfig: ModelConfig) => {
 
   const relationshipShape: Record<string, unknown> = {};
   AppConfig.relationships
-    .filter(({ rightModelID }) => rightModelID === modelConfig.seqModelID)
+    .filter(
+      ({ rightModelID, isSimpleRelationship }) =>
+        rightModelID === modelConfig.seqModelID && !isSimpleRelationship
+    )
     .forEach(({ seqModelRelationshipID }) => {
       //get the modelSchema of the leftModel
       const leftModelConfig = findRelationshipModelConfig(
@@ -77,7 +93,7 @@ export const ModelSchema = (modelConfig: ModelConfig) => {
 
       relationshipShape[leftModelConfig.pluralizedModelName] = Yup.array().of(
         //@ts-ignore
-        Yup.object().shape(createShapeFromModelConfig(leftModelConfig))
+        Yup.object().shape(createShapeFromModelConfig(leftModelConfig, true))
       );
     });
 

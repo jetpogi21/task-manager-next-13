@@ -17,7 +17,7 @@ export interface FormikFacetedControlProps extends ButtonProps {
   inputRef?: RefObject<HTMLInputElement> | undefined;
   helperText?: string;
   submitOnChange?: boolean;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   options: BasicModel[];
   limit?: number;
   setHasUpdate?: () => void;
@@ -35,12 +35,12 @@ export const FormikFacetedControl: React.FC<FormikFacetedControlProps> = ({
   submitOnChange = false,
   options,
   onChange,
-
+  style,
   ...props
 }) => {
   const { submitForm } = useFormikContext();
   const [field, meta, { setValue }] = useField(props.name);
-  const fieldValue = field.value || [];
+  const fieldValue = field.value?.map((item: number) => item.toString()) || [];
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -62,7 +62,10 @@ export const FormikFacetedControl: React.FC<FormikFacetedControlProps> = ({
   }, [inputRef, setFocusOnLoad]);
 
   return (
-    <div className={cn(containerClassNames)}>
+    <div
+      className={cn(containerClassNames)}
+      style={style}
+    >
       <FacetedControl
         value={fieldValue}
         onValueChange={handleValueChange}

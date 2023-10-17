@@ -19,20 +19,18 @@ import LimitSelector from "@/components/form/LimitSelector";
 import FormikControl from "@/components/form/FormikControl";
 import { Button } from "@/components/ui/Button";
 import { isEqual } from "lodash";
-import { useTaskPageParams } from "@/hooks/tasks/useTaskPageParams";
 import useScreenSize from "@/hooks/useScreenSize";
 import { Search, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SortingState } from "@tanstack/react-table";
 import SortSelector from "@/components/form/SortSelector";
 import { center } from "@/lib/tailwind-combo";
-import useModelList from "@/hooks/useModelList";
 import { TaskConfig } from "@/utils/config/TaskConfig";
 import FilterControls from "@/components/FilterControls";
 import FilterDialog from "@/components/FilterDialog";
-import { AppConfig } from "@/lib/app-config";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { createRequiredModelListsForFilter } from "@/lib/createRequiredModelLists";
 
 const TaskFilterForm: React.FC = () => {
   const config = TaskConfig;
@@ -49,19 +47,8 @@ const TaskFilterForm: React.FC = () => {
     defaultFilters
   );
 
-  const requiredList: Record<string, BasicModel[]> = {};
-
-  config.fields
-    .filter(({ relatedModelID }) => relatedModelID)
-    .forEach(({ relatedModelID }) => {
-      const relatedModel = AppConfig.models.find(
-        (model) => model.seqModelID === relatedModelID
-      );
-      if (!relatedModel) return;
-      requiredList[`${relatedModel.variableName}List`] = useModelList(
-        relatedModel.modelPath
-      );
-    });
+  const requiredList: Record<string, BasicModel[]> =
+    createRequiredModelListsForFilter(config);
 
   //Sort related
   const sorting = getSorting(params.sort);

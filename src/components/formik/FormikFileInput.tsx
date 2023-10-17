@@ -23,6 +23,7 @@ interface FormikFileInputProp {
   parent?: string;
   fieldName?: string;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 interface AttachmentProps {
@@ -86,6 +87,7 @@ export const FormikFileInput = ({
   fieldName,
   label,
   onChange,
+  style,
 }: FormikFileInputProp) => {
   const { values, setFieldValue } = useFormikContext();
 
@@ -192,7 +194,10 @@ export const FormikFileInput = ({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1">
+    <div
+      className="flex flex-col items-center justify-center gap-1"
+      style={style}
+    >
       {!!label && <div>{label}</div>}
       <label
         className={cn(

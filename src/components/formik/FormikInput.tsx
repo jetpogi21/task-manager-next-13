@@ -18,7 +18,7 @@ export interface FormikInputProps extends InputProps {
   onKeyDown?: (e: React.KeyboardEvent) => void;
   helperText?: string;
   submitOnChange?: boolean;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   isNumeric?: boolean;
   wholeNumberOnly?: boolean;
   allowNegative?: boolean;
@@ -27,6 +27,7 @@ export interface FormikInputProps extends InputProps {
   currency?: string;
   nullAllowed?: boolean;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
@@ -45,6 +46,7 @@ const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
       nullAllowed = false,
       setHasUpdate,
       onChange,
+      style,
       ...props
     },
     ref
@@ -219,7 +221,10 @@ const FormikInput = forwardRef<HTMLInputElement, FormikInputProps>(
     }, [typingTimer]);
 
     return (
-      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+      <div
+        className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+        style={style}
+      >
         {!!label && <Label htmlFor={props.name}>{label}</Label>}
         <div className="relative flex items-center">
           {props.currency && (

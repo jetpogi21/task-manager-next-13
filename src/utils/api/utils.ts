@@ -427,16 +427,20 @@ export const processQueryFilters = (
   filters: string[],
   query: Record<string, string>,
   modelConfig: ModelConfig,
-  replacements: Record<string, string>
+  replacements: Record<string, string>,
+  parentMode?: boolean
 ) => {
   const table = modelConfig.tableName;
-  const q = query.q;
-  if (q) {
-    const fields: string[] = generateQFields(modelConfig);
-    replacements["q"] = `%${q}%`;
-    filters.push(
-      `(${fields.map((field) => `(${table}.${field} LIKE :q)`).join(" OR ")})`
-    );
+
+  if (parentMode) {
+    const q = query.q;
+    if (q) {
+      const fields: string[] = generateQFields(modelConfig);
+      replacements["q"] = `%${q}%`;
+      filters.push(
+        `(${fields.map((field) => `(${table}.${field} LIKE :q)`).join(" OR ")})`
+      );
+    }
   }
 
   modelConfig.filters
@@ -793,7 +797,7 @@ export function getMainModelSQL(
 
   if (!simpleOnly || simpleOnly !== "true") {
     if (!dontFilter) {
-      processQueryFilters(sql, filters, query, modelConfig, replacements);
+      processQueryFilters(sql, filters, query, modelConfig, replacements, true);
     }
   }
 
@@ -824,6 +828,7 @@ export function getMainModelSQL(
     sql.filter = filters.join(" AND ");
   }
   const countSQL = sql.sql();
+
   sql.filter = "";
 
   sql.orderBy = getSort(
@@ -922,127 +927,110 @@ export const removeDuplicatesFromRightModelRelationships = (
     });
 };
 
-export const somename = (
+export const deleteRelatedSimpleModels = async (
   modelConfig: ModelConfig,
-  parentPrimaryKeyValue: string | number,
   res: Record<string, unknown>,
-  t: Transaction,
-  newRecords: Record<string, unknown>
+  t: Transaction
 ) => {
-  AppConfig.relationships
-    .filter(
-      ({ rightModelID, isSimpleRelationship }) =>
-        rightModelID === modelConfig.seqModelID && isSimpleRelationship
-    )
-    .forEach(async (relationship) => {
+  const relationships = AppConfig.relationships.filter(
+    ({ rightModelID, isSimpleRelationship }) =>
+      rightModelID === modelConfig.seqModelID && isSimpleRelationship
+  );
+
+  await Promise.all(
+    relationships.map(async (relationship) => {
       const leftModelConfig = findRelationshipModelConfig(
-        relationship.leftModelID,
+        relationship.seqModelRelationshipID,
         "LEFT"
-      );
-
-      const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
-
-      //the foreign key (fieldname) of the main model
-      const leftField = findLeftForeignKeyField(
-        relationship.seqModelRelationshipID
-      );
-
-      const fieldToBeInsertedField = findFielToBeInsertedField(
-        relationship.seqModelRelationshipID
-      );
-
-      const throughModelConfig = findRelationshipModelConfig(
-        relationship.leftModelID,
-        "TROUGH"
       );
 
       //@ts-ignore
       const deletedIDs: number[] =
-        res[`deleted${leftModelConfig.pluralizedVerboseModelName}`];
+        res[`deleted${leftModelConfig.pluralizedModelName}`];
 
-      if (deletedIDs.length > 0) {
+      if (deletedIDs && deletedIDs.length > 0) {
         await deleteModels(leftModelConfig, deletedIDs, t);
       }
-    });
+    })
+  );
 };
 
-export const createNewRecordsForModelAndSimpleRelationships = (
+export const createNewRecordsForModelAndSimpleRelationships = async (
   modelConfig: ModelConfig,
   parentPrimaryKeyValue: string | number,
   res: Record<string, unknown>,
   t: Transaction,
   newRecords: Record<string, unknown>
 ) => {
-  AppConfig.relationships
-    .filter(
-      ({ rightModelID, isSimpleRelationship }) =>
-        rightModelID === modelConfig.seqModelID && isSimpleRelationship
-    )
-    .forEach(async (relationship) => {
-      const leftModelConfig = findRelationshipModelConfig(
-        relationship.leftModelID,
-        "LEFT"
-      );
+  const relationships = AppConfig.relationships.filter(
+    ({ rightModelID, isSimpleRelationship }) =>
+      rightModelID === modelConfig.seqModelID && isSimpleRelationship
+  );
 
-      const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
+  for (const relationship of relationships) {
+    const leftModelConfig = findRelationshipModelConfig(
+      relationship.seqModelRelationshipID,
+      "LEFT"
+    );
 
-      //the foreign key (fieldname) of the main model
-      const leftField = findLeftForeignKeyField(
-        relationship.seqModelRelationshipID
-      );
+    const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
 
-      const fieldToBeInsertedField = findFielToBeInsertedField(
-        relationship.seqModelRelationshipID
-      );
+    //the foreign key (fieldname) of the main model
+    const leftField = findLeftForeignKeyField(
+      relationship.seqModelRelationshipID
+    );
 
-      const throughModelConfig = findRelationshipModelConfig(
-        relationship.leftModelID,
-        "TROUGH"
-      );
+    const throughModelConfig = findRelationshipModelConfig(
+      relationship.seqModelRelationshipID,
+      "TROUGH"
+    );
 
-      //@ts-ignore
-      const newIDs: number[] =
-        res[`new${throughModelConfig.pluralizedVerboseModelName}`];
+    //@ts-ignore
+    const newIDs: number[] =
+      res[`new${throughModelConfig.pluralizedVerboseModelName}`];
 
-      const newChildRecords: Record<string, unknown>[] = [];
+    const newChildRecords: Record<string, unknown>[] = [];
 
-      for (const item of newIDs) {
-        const newRecord = await createModel(
-          leftModelConfig,
-          {
-            [leftField.databaseFieldName]: parentPrimaryKeyValue,
-            [fieldToBeInsertedField.databaseFieldName]: item,
-          },
-          t
-        );
-
-        const newChildID: number | string =
-          //@ts-ignore
-          newRecord[leftPrimaryKeyField.fieldName];
-
-        //TO DO newChildRecords push to childRecords
-        newChildRecords.push({
+    for (const item of newIDs) {
+      const newRecord = await createModel(
+        leftModelConfig,
+        {
+          [leftField.fieldName]: parentPrimaryKeyValue,
           [relationship.fieldToBeInserted!]: item,
-          [findModelPrimaryKeyField(leftModelConfig).fieldName]: newChildID,
-        });
-      }
+        },
+        t
+      );
 
-      newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
-    });
+      const newChildID: number | string =
+        //@ts-ignore
+        newRecord[leftPrimaryKeyField.fieldName];
+
+      //TO DO newChildRecords push to childRecords
+      newChildRecords.push({
+        [relationship.fieldToBeInserted!]: item,
+        [findModelPrimaryKeyField(leftModelConfig).fieldName]: newChildID,
+      });
+    }
+
+    newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
+  }
 };
 
-export const updateOrCreateRelatedRecords = (
+export const updateOrCreateRelatedRecords = async (
   modelConfig: ModelConfig,
   res: any,
   parentPrimaryKeyValue: number | string,
   t: Transaction,
   newRecords: Record<string, unknown>
 ) => {
-  AppConfig.relationships
-    .filter(
-      (relationship) => relationship.rightModelID === modelConfig.seqModelID
-    )
-    .forEach(async (relationship) => {
+  const relationships = AppConfig.relationships.filter(
+    (relationship) =>
+      relationship.rightModelID === modelConfig.seqModelID &&
+      !relationship.isSimpleRelationship
+  );
+
+  await Promise.all(
+    relationships.map(async (relationship) => {
       const newChildRecords: Record<string, unknown>[] = [];
       const leftModelConfig = findRelationshipModelConfig(
         relationship.seqModelRelationshipID,
@@ -1053,6 +1041,7 @@ export const updateOrCreateRelatedRecords = (
         relationship.seqModelRelationshipID
       );
       const modelPayload = res[leftModelConfig.pluralizedModelName];
+
       if (modelPayload) {
         for (const item of modelPayload) {
           item[leftField.fieldName] = parentPrimaryKeyValue;
@@ -1062,7 +1051,7 @@ export const updateOrCreateRelatedRecords = (
             if (childPrimaryKeyValue === "") {
               const newChildRecord = await createModel(
                 leftModelConfig,
-                modelPayload,
+                item,
                 t
               );
               //@ts-ignore
@@ -1081,10 +1070,11 @@ export const updateOrCreateRelatedRecords = (
               );
             }
           } catch (error) {
-            throw new Error("Validation failed:", error!);
+            console.log(error);
           }
         }
       }
       newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
-    });
+    })
+  );
 };

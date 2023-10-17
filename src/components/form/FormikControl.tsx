@@ -29,7 +29,7 @@ interface ControlProps {
   label?: string;
   submitOnChange?: boolean;
   placeholder?: string;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   disabled?: boolean;
   setHasUpdate?: () => void;
   nullAllowed?: boolean;

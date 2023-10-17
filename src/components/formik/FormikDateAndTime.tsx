@@ -26,10 +26,11 @@ export interface FormikDateAndTimeProps
   onKeyDown?: (e: React.KeyboardEvent) => void;
   helperText?: string;
   submitOnChange?: boolean;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   showLabel?: boolean;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
@@ -45,6 +46,7 @@ const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
       showLabel = true,
       format,
       onChange,
+      style,
       ...props
     },
     ref
@@ -104,7 +106,10 @@ const FormikDateAndTime = forwardRef<HTMLInputElement, FormikDateAndTimeProps>(
     }, [inputRef, setFocusOnLoad]);
 
     return (
-      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+      <div
+        className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+        style={style}
+      >
         {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
         <Input
           type="datetime-local"

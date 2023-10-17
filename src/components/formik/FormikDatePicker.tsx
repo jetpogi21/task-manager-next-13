@@ -19,10 +19,11 @@ export interface FormikDatePickerProps
   inputRef?: RefObject<HTMLInputElement> | undefined;
   helperText?: string;
   submitOnChange?: boolean;
-  containerClassNames?: ClassValue[];
+  containerClassNames?: ClassValue;
   showLabel?: boolean;
   setHasUpdate?: () => void;
   onChange?: (newValue: unknown) => void;
+  style?: React.CSSProperties;
 }
 
 const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
@@ -39,6 +40,7 @@ const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
       showLabel = true,
       format,
       onChange,
+      style,
       ...props
     },
     ref
@@ -71,7 +73,10 @@ const FormikDatePicker = forwardRef<any, FormikDatePickerProps>(
     }, [inputRef, setFocusOnLoad]);
 
     return (
-      <div className={cn("flex flex-col w-full gap-1.5", containerClassNames)}>
+      <div
+        className={cn("flex flex-col w-full gap-1.5", containerClassNames)}
+        style={style}
+      >
         {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
         <DatePicker
           value={fieldValue}

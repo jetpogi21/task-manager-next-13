@@ -21,6 +21,8 @@ import {
 import { Separator } from "@/components/ui/Separator";
 import { useEffect, useState } from "react";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
+import { center } from "@/lib/tailwind-combo";
+import useScreenSize from "@/hooks/useScreenSize";
 
 interface FacetedControlProps {
   value: string[];
@@ -37,6 +39,7 @@ export const FacetedControl: React.FC<FacetedControlProps> = ({
   options,
   limit = 4,
 }) => {
+  const isMedium = useScreenSize("md");
   const [internalVal, setInternalVal] = useState(value);
   const [input, setInput] = useState("");
   const filteredOptions = options.filter((item) =>
@@ -62,23 +65,26 @@ export const FacetedControl: React.FC<FacetedControlProps> = ({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 min-w-full border-dashed whitespace-nowrap"
+          className="flex flex-col w-full h-auto gap-2 p-2 border-2 border-dashed md:flex-row md:w-auto"
         >
-          <PlusCircleIcon className="w-4 h-4 mr-2" />
-          {title}
+          <div className={cn(center, "gap-1")}>
+            <PlusCircleIcon className="w-4 h-4 mr-2" />
+            {title}
+          </div>
+
           {internalVal.length > 0 && (
             <>
               <Separator
-                orientation="vertical"
-                className="h-4 mx-2"
+                orientation={isMedium ? "horizontal" : "vertical"}
+                className="w-full md:w-[1px] md:mx-2 md:h-4"
               />
-              <Badge
+              {/* <Badge
                 variant="secondary"
                 className="px-1 font-normal rounded-sm lg:hidden"
               >
                 {internalVal.length}
-              </Badge>
-              <div className="hidden space-x-1 lg:flex">
+              </Badge> */}
+              <div className="flex flex-wrap justify-center gap-2 md:flex-nowrap">
                 {internalVal.length > limit ? (
                   <Badge
                     variant="secondary"
