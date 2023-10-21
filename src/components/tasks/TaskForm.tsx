@@ -6,7 +6,13 @@ import {
   TaskSearchParams,
 } from "@/interfaces/TaskInterfaces";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
-import React, { MouseEventHandler, useEffect, useRef, useState } from "react";
+import React, {
+  MouseEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { useListURLStore, useURL } from "@/hooks/useURL";
 import { Button } from "@/components/ui/Button";
@@ -32,7 +38,11 @@ import FormikSubformGenerator from "@/components/FormikSubformGenerator";
 import { getPrevURL } from "@/lib/getPrevURL";
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import ModelDropzonesForRelationships from "@/components/ModelDropzonesForRelationships";
-import { generateGridTemplateAreas } from "@/lib/generateGridTemplateAreas";
+import {
+  fillArray,
+  generateGridTemplateAreas,
+} from "@/lib/generateGridTemplateAreas";
+import useScreenSize from "@/hooks/useScreenSize";
 
 interface TaskFormProps {
   data: TaskModel | null;
@@ -196,6 +206,19 @@ const TaskForm: React.FC<TaskFormProps> = (prop) => {
     }
   };
 
+  const isSmall = useScreenSize("sm");
+
+  const overrideRow = useMemo(
+    () =>
+      isSmall
+        ? {
+            3: fillArray(7, "finishDateTime").concat(
+              fillArray(5, "isFinished")
+            ),
+          }
+        : undefined,
+    [isSmall]
+  );
   const renderFormik = (formik: FormikProps<TaskFormFormikInitialValues>) => {
     const handleSubmitClick: MouseEventHandler = (e) => {
       e.preventDefault();
@@ -212,7 +235,16 @@ const TaskForm: React.FC<TaskFormProps> = (prop) => {
             <div
               className="grid grid-cols-12 gap-4"
               style={{
-                gridTemplateAreas: generateGridTemplateAreas(modelConfig),
+                gridTemplateAreas: generateGridTemplateAreas(
+                  modelConfig,
+                  isSmall
+                    ? {
+                        3: fillArray(7, "finishDateTime").concat(
+                          fillArray(5, "isFinished")
+                        ),
+                      }
+                    : undefined
+                ),
               }}
             >
               <FormikFormControlGenerator

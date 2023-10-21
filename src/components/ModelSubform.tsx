@@ -72,9 +72,16 @@ const ModelSubform = <T,>({
   const parentPrimaryKeyField =
     findModelPrimaryKeyField(parentModelConfig).fieldName;
   const pluralizedModelName = modelConfig.pluralizedModelName;
-  let rows = (
-    formik.values[pluralizedModelName as keyof T] as ArrayOfObject
-  ).filter(filterFunction || Boolean);
+
+  const rows = useMemo(
+    () =>
+      (formik.values[pluralizedModelName as keyof T] as ArrayOfObject).filter(
+        filterFunction || Boolean
+      ) as ArrayOfObject,
+    []
+  );
+
+  /* const rows = formik.values[pluralizedModelName as keyof T] as ArrayOfObject; */
   const {
     rowSelection,
     setRowSelection,
@@ -156,7 +163,6 @@ const ModelSubform = <T,>({
     const indexes = Object.keys(rowSelection)
       .filter((item) => rowSelection[item])
       .map((item) => parseInt(item));
-    console.log(rowSelection);
 
     //Compute the Ids to be deleted. the index should be the selected indexes. then see if the rows has an actual id value
     const deletedIDs = rows

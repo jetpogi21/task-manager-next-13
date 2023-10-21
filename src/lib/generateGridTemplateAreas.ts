@@ -7,7 +7,14 @@ import { getChildModelsWithDropzone } from "@/components/ModelDropzonesForRelati
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { findRelationshipModelConfig } from "@/utils/utilities";
 
-export const generateGridTemplateAreas = (modelConfig: ModelConfig) => {
+interface OverrideRowProp {
+  [key: number]: string[];
+}
+
+export const generateGridTemplateAreas = (
+  modelConfig: ModelConfig,
+  overrideRow?: OverrideRowProp
+) => {
   const rows: string[][] = [];
   const fields = getSortedFormikFormControlFields(modelConfig);
 
@@ -65,5 +72,13 @@ export const generateGridTemplateAreas = (modelConfig: ModelConfig) => {
     rows.push(row);
   }
 
+  for (const key in overrideRow) {
+    rows[+key] = overrideRow[+key];
+  }
+
   return `${rows.map((row) => `"${row.join(" ")}"`).join(" ")}`;
 };
+
+export function fillArray(count: number, value: string) {
+  return Array(count).fill(value);
+}

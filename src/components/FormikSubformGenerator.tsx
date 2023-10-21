@@ -37,6 +37,7 @@ const FormikSubformGenerator = <T,>({
           key={relationship.seqModelRelationshipID}
         >
           <ModelSubform
+            key={relationship.seqModelRelationshipID}
             formik={formik}
             relationshipConfig={relationship}
             setHasUpdate={handleHasUdpate}
