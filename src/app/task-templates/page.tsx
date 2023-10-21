@@ -3,17 +3,20 @@ import React from "react";
 import TaskTemplateFilterForm from "@/components/task-templates/TaskTemplateFilterForm";
 import TaskTemplateTable from "@/components/task-templates/TaskTemplateTable";
 import PageSession from "@/components/PageSession";
+import { TaskTemplateConfig } from "@/utils/config/TaskTemplateConfig";
+
+const config = TaskTemplateConfig;
 
 export const metadata = {
-  title: "Task Templates",
+  title: config.pluralizedModelName,
 };
 
 const TaskTemplates: React.FC = () => {
   return (
     <>
-      <div className="flex flex-col flex-1 w-full px-4 mx-auto text-sm lg:px-0 main-height-less-footer">
-        <div className="flex flex-col flex-1 w-full gap-4 p-4 mx-auto border rounded-sm border-border">
-          <h1 className="text-2xl font-bold">Task Templates</h1>
+      <div className="flex flex-col flex-1 w-full mx-auto text-sm 2xl:px-0 main-height-less-footer">
+        <div className="flex flex-col flex-1 w-full gap-4 pl-4 mx-auto rounded-sm">
+          <h1 className="text-2xl font-bold">{config.pluralizedModelName}</h1>
           <div className="flex">
             <TaskTemplateFilterForm />
           </div>

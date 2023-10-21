@@ -4,18 +4,22 @@ import React, { useEffect } from "react";
 import { useTaskTemplateStore } from "@/hooks/task-templates/useTaskTemplateStore";
 import TaskTemplateDataTable from "@/components/task-templates/TaskTemplateDataTable";
 import { useTaskTemplatePageParams } from "@/hooks/task-templates/useTaskTemplatePageParams";
-import { useTaskTemplatesQuery } from "@/hooks/task-templates/useTaskTemplateQuery";
 import {
-  GetTaskTemplatesResponse,
   TaskTemplateModel,
+  TaskTemplateSearchParams,
 } from "@/interfaces/TaskTemplateInterfaces";
-import { VARIABLE_PLURAL_NAME } from "@/utils/constants/TagConstants";
 import { useQueryClient, InfiniteData } from "@tanstack/react-query";
-import _ from "lodash";
+import { useModelsQuery } from "@/hooks/useModelQuery";
+import { TaskTemplateConfig } from "@/utils/config/TaskTemplateConfig";
+import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
 
 const TaskTemplateTable: React.FC = () => {
-  const { params } = useTaskTemplatePageParams();
+  const config = TaskTemplateConfig;
+  const { params } = useModelPageParams<TaskTemplateSearchParams>(config);
   const queryClient = useQueryClient();
+
+  const [mounted, setMounted] = React.useState(false);
 
   //Store Variables
   const page = useTaskTemplateStore((state) => state.page);
@@ -34,14 +38,15 @@ const TaskTemplateTable: React.FC = () => {
   const queryParams = params;
 
   const useTaskTemplateSearchQuery = () =>
-    useTaskTemplatesQuery({
+    //@ts-ignore
+    useModelsQuery<TaskTemplateModel>(config, {
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
 
   const { data, refetch, isFetching, isLoading } = useTaskTemplateSearchQuery();
 
-  const currentPageData: GetTaskTemplatesResponse | null = data
+  const currentPageData: GetModelsResponse<TaskTemplateModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
   const currentData: TaskTemplateModel[] =
@@ -50,8 +55,10 @@ const TaskTemplateTable: React.FC = () => {
   //Client functions
   const refetchQuery = (idx: number) => {
     queryClient.setQueryData(
-      [VARIABLE_PLURAL_NAME, { ...queryParams }],
-      (data: InfiniteData<GetTaskTemplatesResponse> | undefined) => {
+      [config.modelPath, { ...queryParams }],
+      (
+        data: InfiniteData<GetModelsResponse<TaskTemplateModel>> | undefined
+      ) => {
         return data
           ? {
               pages: data.pages.slice(0, idx + 1),
@@ -61,11 +68,18 @@ const TaskTemplateTable: React.FC = () => {
       }
     );
     refetch({
-      refetchPage(lastPage, index) {
+      refetchPage(_, index) {
         return index === idx;
       },
     });
   };
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      setMounted(false);
+    };
+  }, []);
 
   useEffect(() => {
     setQueryResponse(useTaskTemplateSearchQuery);
@@ -78,7 +92,9 @@ const TaskTemplateTable: React.FC = () => {
   }, [currentPageData?.count, data, page]);
 
   return (
-    <TaskTemplateDataTable taskTemplateQuery={useTaskTemplateSearchQuery} />
+    mounted && (
+      <TaskTemplateDataTable taskTemplateQuery={useTaskTemplateSearchQuery} />
+    )
   );
 };
 
