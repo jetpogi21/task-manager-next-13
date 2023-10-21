@@ -38,6 +38,8 @@ import { getInitialValues } from "@/lib/getInitialValues";
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import { DataTable } from "@/components/ui/DataTable";
 import { useTableProps } from "@/hooks/useTableProps";
+import { ModelConfig } from "@/interfaces/ModelConfig";
+import { sortFunction } from "@/lib/sortFunction";
 
 interface ModelSubformProps<T> {
   formik: FormikProps<T>;
@@ -243,14 +245,7 @@ const ModelSubform = <T,>({
 
     formik.setFieldValue(
       pluralizedModelName,
-      rows
-        .filter((item) => item.id)
-        .sort((a, b) => {
-          const desc = sortParams.includes("-");
-          const field = desc ? sortParams.substring(1) : sortParams;
-
-          return sortRows(a, b, desc, field, modelConfig);
-        })
+      rows.filter((item) => item.id).sort(sortFunction(sortParams, modelConfig))
     );
     resetRowSelection();
   };

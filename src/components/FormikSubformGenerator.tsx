@@ -20,7 +20,7 @@ const FormikSubformGenerator = <T,>({
   handleHasUdpate,
   filterFunction,
 }: FormikSubformGeneratorProps<T>) => {
-  return getChildModels(modelConfig).map((relationship) => {
+  return getChildModels(modelConfig, { formMode: true }).map((relationship) => {
     const leftModelConfig = findRelationshipModelConfig(
       relationship.seqModelRelationshipID,
       "LEFT"
@@ -61,9 +61,18 @@ const FormikSubformGenerator = <T,>({
 
 export default FormikSubformGenerator;
 
-export function getChildModels(modelConfig: ModelConfig) {
+interface GetChilModelsOptions {
+  formMode?: boolean;
+}
+
+export function getChildModels(
+  modelConfig: ModelConfig,
+  options?: GetChilModelsOptions
+) {
   return AppConfig.relationships.filter(
-    ({ rightModelID, isSimpleRelationship }) =>
-      rightModelID === modelConfig.seqModelID && !isSimpleRelationship
+    ({ rightModelID, isSimpleRelationship, excludeInForm }) =>
+      rightModelID === modelConfig.seqModelID &&
+      !isSimpleRelationship &&
+      (options?.formMode ? !excludeInForm : true)
   );
 }

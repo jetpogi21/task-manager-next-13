@@ -3,6 +3,7 @@ import { getChildModels } from "@/components/FormikSubformGenerator";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { sortFunction } from "@/lib/sortFunction";
 import {
   findModelPrimaryKeyField,
   findConfigItemObject,
@@ -86,7 +87,7 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
 
   //Do this only if not childMode
   if (!options?.childMode) {
-    getChildModels(modelConfig).forEach(
+    getChildModels(modelConfig, { formMode: true }).forEach(
       ({ seqModelRelationshipID, leftForeignKey }) => {
         const leftModelConfig = findRelationshipModelConfig(
           seqModelRelationshipID,
@@ -102,11 +103,13 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
             string,
             unknown
           >[];
-          initialValues[pluralizedModelName] = rows.map((item, index) => ({
-            ...item,
-            touched: false,
-            index,
-          }));
+          initialValues[pluralizedModelName] = rows
+            .sort(sortFunction(leftModelConfig.sortString, leftModelConfig))
+            .map((item, index) => ({
+              ...item,
+              touched: false,
+              index,
+            }));
         } else {
           initialValues[pluralizedModelName] = [
             {
