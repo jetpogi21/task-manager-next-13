@@ -13,6 +13,7 @@ import {
 interface GetInitialValuesOption {
   requiredList?: Record<string, BasicModel[]>;
   childMode?: boolean;
+  leftFieldName?: string;
 }
 
 export const getInitialValues = <T extends Record<keyof T, unknown>>(
@@ -27,6 +28,11 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
     ({ allowNull, fieldName, dataType, relatedModelID, orderField }) => {
       if (record) {
         initialValues[fieldName] = record[fieldName as keyof T];
+        return;
+      }
+
+      if (fieldName === options?.leftFieldName) {
+        initialValues[fieldName] = 0;
         return;
       }
 
@@ -88,6 +94,9 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
           seqModelRelationshipID,
           "LEFT"
         );
+        const leftFieldName = findLeftForeignKeyField(
+          seqModelRelationshipID
+        ).fieldName;
         const { pluralizedModelName } = leftModelConfig;
 
         if (record) {
@@ -105,6 +114,8 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
             {
               ...getInitialValues(leftModelConfig, undefined, {
                 childMode: true,
+                leftFieldName,
+                requiredList: options?.requiredList,
               }),
               index: 0,
             },

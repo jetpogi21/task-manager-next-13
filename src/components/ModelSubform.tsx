@@ -1,6 +1,4 @@
 "use client";
-import { SubTaskColumns } from "@/components/sub-tasks/SubTaskColumns";
-import { SubTaskDeleteDialog } from "@/components/sub-tasks/SubTaskDeleteDialog";
 import { Button } from "@/components/ui/Button";
 import {
   Table,
@@ -37,6 +35,9 @@ import { AppConfig } from "@/lib/app-config";
 import { sortRows } from "@/lib/sortRows";
 import { getModelColumns } from "@/lib/getModelColumns";
 import { getInitialValues } from "@/lib/getInitialValues";
+import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
+import { DataTable } from "@/components/ui/DataTable";
+import { useTableProps } from "@/hooks/useTableProps";
 
 interface ModelSubformProps<T> {
   formik: FormikProps<T>;
@@ -71,24 +72,17 @@ const ModelSubform = <T,>({
   const pluralizedModelName = modelConfig.pluralizedModelName;
   const rows = formik.values[pluralizedModelName as keyof T] as ArrayOfObject;
 
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
-  const setRowSelectionByIndex = (idx: number) => {
-    setRowSelection((prev) => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
-  const resetRowSelection = () => setRowSelection({});
-  const setRowSelectionToAll = (idx: number) => {
-    const rowSelection: Record<number, boolean> = {};
-    for (let index = 0; index < idx; index++) {
-      rowSelection[index] = true;
-    }
-    setRowSelection(rowSelection);
-  };
-
-  const [sort, setSort] = useState<string>(modelConfig.sortString);
-
-  const [recordsToDelete, setRecordsToDelete] = useState<string[]>([]);
+  const {
+    rowSelection,
+    setRowSelection,
+    setRowSelectionByIndex,
+    resetRowSelection,
+    setRowSelectionToAll,
+    sort,
+    setSort,
+    recordsToDelete,
+    setRecordsToDelete,
+  } = useTableProps(modelConfig);
 
   const requiredList: Record<string, BasicModel[]> =
     createRequiredModelLists(modelConfig);
@@ -97,6 +91,7 @@ const ModelSubform = <T,>({
   const defaultFormValue = getInitialValues(modelConfig, undefined, {
     childMode: true,
     requiredList,
+    leftFieldName: leftFieldName.fieldName,
   });
 
   //Transformations
@@ -155,13 +150,16 @@ const ModelSubform = <T,>({
   };
 
   const deleteSelectedRows = () => {
-    const indexes = Object.keys(rowSelection).map((item) => parseInt(item));
+    const indexes = Object.keys(rowSelection)
+      .filter((item) => rowSelection[item])
+      .map((item) => parseInt(item));
+    console.log(rowSelection);
 
     //Compute the Ids to be deleted. the index should be the selected indexes. then see if the rows has an actual id value
     const deletedIDs = rows
       .filter((_, idx) => indexes.includes(idx))
       .filter((item) => !!item[primaryKeyField])
-      .map((item) => item[primaryKeyField]) as string[];
+      .map((item) => (item[primaryKeyField] as string).toString()) as string[];
 
     if (deletedIDs.length > 0) {
       setRecordsToDelete(deletedIDs);
@@ -272,9 +270,14 @@ const ModelSubform = <T,>({
       lastFieldInForm = field.fieldName;
     });
 
+  const modelColumns = useMemo(
+    () => getModelColumns<Record<string, unknown>, unknown>({ modelConfig }),
+    [modelConfig]
+  );
+
   const modelTable = useReactTable<Record<string, unknown>>({
     data: rows,
-    columns: useMemo(() => getModelColumns({ modelConfig }), [modelConfig]),
+    columns: modelColumns,
     state: {
       sorting: sorting,
       rowSelection,
@@ -333,7 +336,10 @@ const ModelSubform = <T,>({
   }, []);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div
+      className="flex flex-col gap-2"
+      style={{ gridArea: pluralizedModelName }}
+    >
       <h3 className="text-xl font-bold">
         {modelConfig.pluralizedVerboseModelName}
       </h3>
@@ -392,78 +398,12 @@ const ModelSubform = <T,>({
       </div>
 
       <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            {modelTable.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {draggableField && <TableHead className="w-[50px]"></TableHead>}
-                {headerGroup.headers.map((header) => {
-                  //@ts-ignore
-                  const customWidth = header.column.columnDef.meta?.width;
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn({
-                        "w-[50px] p-0": ["select", "actions"].includes(
-                          header.id
-                        ),
-                      })}
-                      style={{
-                        width: `${customWidth}px`,
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {modelTable.getRowModel().rows?.length ? (
-              modelTable.getRowModel().rows.map((row) => {
-                return draggableField ? (
-                  <DraggableRow
-                    key={row.id}
-                    row={row}
-                    reorderRow={reorderRow}
-                  />
-                ) : (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        align={(cell.column.columnDef.meta as any)?.alignment}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={SubTaskColumns.length}
-                  className="h-24 text-center"
-                >
-                  {"No results."}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          table={modelTable}
+          isLoading={false}
+          draggableField={draggableField}
+          reorderRow={reorderRow}
+        />
       </div>
       <div className="flex items-center justify-between flex-1 text-sm select-none text-muted-foreground">
         {
@@ -482,7 +422,13 @@ const ModelSubform = <T,>({
           </div>
         }
       </div>
-      <SubTaskDeleteDialog formik={formik} />
+      <ModelDeleteDialog
+        formik={formik}
+        modelConfig={modelConfig}
+        recordsToDelete={recordsToDelete}
+        setRecordsToDelete={setRecordsToDelete}
+        resetRowSelection={resetRowSelection}
+      />
     </div>
   );
 };

@@ -5,6 +5,17 @@ import {
   findRelationshipModelConfig,
 } from "@/utils/utilities";
 
+/**
+ * This function maps original simple models based on the provided properties and model configuration.
+ *
+ * @param prop - An object containing properties to be mapped.
+ * @param modelConfig - The configuration of the model to be mapped.
+ *
+ * @returns A record of original simple models (primary key and the field to insert field).
+ *
+ * @example
+ * // { TaskTags: [ { id: 92, tagID: 6 }, { id: 91, tagID: 10 } ] }
+ */
 export const mapOriginalSimpleModels = (
   prop: Record<string, unknown>,
   modelConfig: ModelConfig

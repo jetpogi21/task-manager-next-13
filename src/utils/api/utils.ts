@@ -967,53 +967,57 @@ export const createNewRecordsForModelAndSimpleRelationships = async (
       rightModelID === modelConfig.seqModelID && isSimpleRelationship
   );
 
-  for (const relationship of relationships) {
-    const leftModelConfig = findRelationshipModelConfig(
-      relationship.seqModelRelationshipID,
-      "LEFT"
-    );
-
-    const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
-
-    //the foreign key (fieldname) of the main model
-    const leftField = findLeftForeignKeyField(
-      relationship.seqModelRelationshipID
-    );
-
-    const throughModelConfig = findRelationshipModelConfig(
-      relationship.seqModelRelationshipID,
-      "TROUGH"
-    );
-
-    //@ts-ignore
-    const newIDs: number[] =
-      res[`new${throughModelConfig.pluralizedVerboseModelName}`];
-
-    const newChildRecords: Record<string, unknown>[] = [];
-
-    for (const item of newIDs) {
-      const newRecord = await createModel(
-        leftModelConfig,
-        {
-          [leftField.fieldName]: parentPrimaryKeyValue,
-          [relationship.fieldToBeInserted!]: item,
-        },
-        t
+  await Promise.all(
+    relationships.map(async (relationship) => {
+      const leftModelConfig = findRelationshipModelConfig(
+        relationship.seqModelRelationshipID,
+        "LEFT"
       );
 
-      const newChildID: number | string =
-        //@ts-ignore
-        newRecord[leftPrimaryKeyField.fieldName];
+      const leftPrimaryKeyField = findModelPrimaryKeyField(leftModelConfig);
 
-      //TO DO newChildRecords push to childRecords
-      newChildRecords.push({
-        [relationship.fieldToBeInserted!]: item,
-        [findModelPrimaryKeyField(leftModelConfig).fieldName]: newChildID,
-      });
-    }
+      //the foreign key (fieldname) of the main model
+      const leftField = findLeftForeignKeyField(
+        relationship.seqModelRelationshipID
+      );
 
-    newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
-  }
+      const throughModelConfig = findRelationshipModelConfig(
+        relationship.seqModelRelationshipID,
+        "TROUGH"
+      );
+
+      //@ts-ignore
+      const newIDs: number[] =
+        res[`new${throughModelConfig.pluralizedVerboseModelName}`];
+
+      const newChildRecords: Record<string, unknown>[] = [];
+
+      await Promise.all(
+        newIDs.map(async (item) => {
+          const newRecord = await createModel(
+            leftModelConfig,
+            {
+              [leftField.fieldName]: parentPrimaryKeyValue,
+              [relationship.fieldToBeInserted!]: item,
+            },
+            t
+          );
+
+          const newChildID: number | string =
+            //@ts-ignore
+            newRecord[leftPrimaryKeyField.fieldName];
+
+          //TO DO newChildRecords push to childRecords
+          newChildRecords.push({
+            [relationship.fieldToBeInserted!]: item,
+            [findModelPrimaryKeyField(leftModelConfig).fieldName]: newChildID,
+          });
+        })
+      );
+
+      newRecords[leftModelConfig.pluralizedModelName] = newChildRecords;
+    })
+  );
 };
 
 export const updateOrCreateRelatedRecords = async (

@@ -28,10 +28,11 @@ interface FormikLocalDropZoneDeleteProps {
   pkField: string;
 }
 
-interface FormikLocalDropZone extends FormikLocalDropZoneDeleteProps {
+interface FormikLocalDropZoneProps extends FormikLocalDropZoneDeleteProps {
   setHasUpdate?: () => void;
   parent: string;
   fieldName: string;
+  defaultValue?: Record<string, unknown>;
 }
 
 interface AttachmentProps {
@@ -140,10 +141,12 @@ export const FormikLocalDropZone = ({
   fieldName,
   deleteRow,
   pkField,
-}: FormikLocalDropZone) => {
+  defaultValue,
+}: FormikLocalDropZoneProps) => {
   const { values, setFieldValue } = useFormikContext();
   //@ts-ignore
-  const fieldValues = values[parent] as any[];
+  const fieldValues: any[] = values[parent] || [];
+
   //@ts-ignore
   const rowCount = fieldValues.length;
 
@@ -163,20 +166,26 @@ export const FormikLocalDropZone = ({
           let i = 0;
           const newFiles = [];
           for (const url of localResponse.fileURLs) {
-            newFiles.push({
+            let newFile = {
               [pkField]: "",
               [fieldName]: url,
               [fileName_n]: files[i].name,
               [fileSize_n]: files[i].size,
               touched: true,
-            });
+            };
+
+            if (defaultValue) {
+              //@ts-ignore
+              newFile = { ...newFile, ...defaultValue };
+            }
+            newFiles.push(newFile);
             i++;
           }
 
           setFieldValue(parent, [
             //@ts-ignore
-            ...values[parent].map((item) => ({ ...item })),
-            ...newFiles.map((item) => ({ ...item })),
+            ...fieldValues,
+            ...newFiles,
           ]);
 
           setHasUpdate && setHasUpdate();
@@ -245,7 +254,10 @@ export const FormikLocalDropZone = ({
   });
 
   return (
-    <div className="space-y-8">
+    <div
+      className="space-y-8"
+      style={{ gridArea: parent + "Files" }}
+    >
       <div
         className={cn(
           "flex flex-col items-center justify-center gap-1 p-8 border-4 border-dotted",

@@ -104,7 +104,7 @@ export const POST = async (req: Request) => {
 
     const newRecords: Record<string, unknown> = {};
 
-    createNewRecordsForModelAndSimpleRelationships(
+    await createNewRecordsForModelAndSimpleRelationships(
       modelConfig,
       newParentID,
       res,
@@ -112,7 +112,13 @@ export const POST = async (req: Request) => {
       newRecords
     );
 
-    updateOrCreateRelatedRecords(modelConfig, res, newParentID, t, newRecords);
+    await updateOrCreateRelatedRecords(
+      modelConfig,
+      res,
+      newParentID,
+      t,
+      newRecords
+    );
 
     await t.commit();
 

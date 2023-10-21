@@ -18,45 +18,47 @@ const FormikSubformGenerator = <T,>({
   formik,
   handleHasUdpate,
 }: FormikSubformGeneratorProps<T>) => {
-  return AppConfig.relationships
-    .filter(
-      ({ rightModelID, isSimpleRelationship }) =>
-        rightModelID === modelConfig.seqModelID && !isSimpleRelationship
-    )
-    .map((relationship) => {
-      const leftModelConfig = findRelationshipModelConfig(
-        relationship.seqModelRelationshipID,
-        "LEFT"
-      );
+  return getChildModels(modelConfig).map((relationship) => {
+    const leftModelConfig = findRelationshipModelConfig(
+      relationship.seqModelRelationshipID,
+      "LEFT"
+    );
 
-      const hasOrderField = leftModelConfig.fields.some(
-        (field) => field.orderField
-      );
+    const hasOrderField = leftModelConfig.fields.some(
+      (field) => field.orderField
+    );
 
-      if (hasOrderField) {
-        return (
-          <DndProvider
-            backend={HTML5Backend}
-            key={relationship.seqModelRelationshipID}
-          >
-            <ModelSubform
-              formik={formik}
-              relationshipConfig={relationship}
-              setHasUpdate={handleHasUdpate}
-            />
-          </DndProvider>
-        );
-      } else {
-        return (
+    if (hasOrderField) {
+      return (
+        <DndProvider
+          backend={HTML5Backend}
+          key={relationship.seqModelRelationshipID}
+        >
           <ModelSubform
-            key={relationship.seqModelRelationshipID}
             formik={formik}
             relationshipConfig={relationship}
             setHasUpdate={handleHasUdpate}
           />
-        );
-      }
-    });
+        </DndProvider>
+      );
+    } else {
+      return (
+        <ModelSubform
+          key={relationship.seqModelRelationshipID}
+          formik={formik}
+          relationshipConfig={relationship}
+          setHasUpdate={handleHasUdpate}
+        />
+      );
+    }
+  });
 };
 
 export default FormikSubformGenerator;
+
+export function getChildModels(modelConfig: ModelConfig) {
+  return AppConfig.relationships.filter(
+    ({ rightModelID, isSimpleRelationship }) =>
+      rightModelID === modelConfig.seqModelID && !isSimpleRelationship
+  );
+}

@@ -95,6 +95,7 @@ interface ModelFieldKeys {
   dataType: DataType;
   dataTypeInterface: string;
   controlType: ControlType;
+  columnsOccupied: number;
 }
 
 interface ModelFilterOptionKeys {
