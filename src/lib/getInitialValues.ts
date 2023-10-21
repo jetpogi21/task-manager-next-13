@@ -1,3 +1,5 @@
+import { getChildModelsWithSimpleRelationship } from "@/components/FormikFormControlGenerator";
+import { getChildModels } from "@/components/FormikSubformGenerator";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
@@ -84,12 +86,8 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
 
   //Do this only if not childMode
   if (!options?.childMode) {
-    AppConfig.relationships
-      .filter(
-        ({ rightModelID, isSimpleRelationship }) =>
-          rightModelID === seqModelID && !isSimpleRelationship
-      )
-      .forEach(({ seqModelRelationshipID, leftForeignKey }) => {
+    getChildModels(modelConfig).forEach(
+      ({ seqModelRelationshipID, leftForeignKey }) => {
         const leftModelConfig = findRelationshipModelConfig(
           seqModelRelationshipID,
           "LEFT"
@@ -151,17 +149,14 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
           }
           initialValuesRows.push(newRow);
         }
-      });
+      }
+    );
   }
 
   //Do this only if not childmode meaning you will generate the children rows of the modelConfig
   if (!options?.childMode) {
-    AppConfig.relationships
-      .filter(
-        ({ rightModelID, isSimpleRelationship }) =>
-          rightModelID === seqModelID && isSimpleRelationship
-      )
-      .forEach(({ seqModelRelationshipID, fieldToBeInserted }) => {
+    getChildModelsWithSimpleRelationship(modelConfig).forEach(
+      ({ seqModelRelationshipID, fieldToBeInserted }) => {
         const leftModelConfig = findRelationshipModelConfig(
           seqModelRelationshipID,
           "LEFT"
@@ -176,7 +171,8 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
         } else {
           initialValues[pluralizedModelName] = [];
         }
-      });
+      }
+    );
   }
 
   return initialValues as T;

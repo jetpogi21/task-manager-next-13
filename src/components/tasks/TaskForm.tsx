@@ -90,8 +90,6 @@ const TaskForm: React.FC<TaskFormProps> = (prop) => {
     { requiredList }
   );
 
-  initialValues["TaskNoteFiles"] = [];
-
   const handleFocus = () => {
     ref && ref.current && ref.current.focus();
   };
@@ -243,21 +241,24 @@ const TaskForm: React.FC<TaskFormProps> = (prop) => {
                   },
                 }}
               />
+              <FormikSubformGenerator
+                modelConfig={modelConfig}
+                formik={formik}
+                handleHasUdpate={handleHasUdpate}
+                //Get only the blank files from the original value
+                filterFunction={(item) => !item.file}
+              />
             </div>
-            <FormikSubformGenerator
-              modelConfig={modelConfig}
-              formik={formik}
-              handleHasUdpate={handleHasUdpate}
-            />
+          </div>
+          <div
+            id="dropzone"
+            className="min-w-[40%]"
+          >
             <ModelDropzonesForRelationships
               formik={formik}
               handleHasUpdate={handleHasUdpate}
               modelConfig={modelConfig}
             />
-          </div>
-
-          <div className="w-full xl:w-[500px]">
-            <TaskNoteFileDropzone formik={formik} />
           </div>
         </div>
         <div className="flex gap-2 mt-auto">

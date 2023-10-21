@@ -43,6 +43,7 @@ interface ModelSubformProps<T> {
   formik: FormikProps<T>;
   setHasUpdate: () => void;
   relationshipConfig: (typeof AppConfig)["relationships"][number];
+  filterFunction?: (item: Record<string, unknown>) => boolean;
 }
 
 type ArrayOfObject = Record<string, unknown>[];
@@ -51,6 +52,7 @@ const ModelSubform = <T,>({
   formik,
   setHasUpdate,
   relationshipConfig,
+  filterFunction,
 }: ModelSubformProps<T>) => {
   const [willFocus, setWillFocus] = useState(false);
   const ref: React.RefObject<HTMLElement> = useRef(null); //to be attached to the last row in form, first control in that row
@@ -70,8 +72,9 @@ const ModelSubform = <T,>({
   const parentPrimaryKeyField =
     findModelPrimaryKeyField(parentModelConfig).fieldName;
   const pluralizedModelName = modelConfig.pluralizedModelName;
-  const rows = formik.values[pluralizedModelName as keyof T] as ArrayOfObject;
-
+  let rows = (
+    formik.values[pluralizedModelName as keyof T] as ArrayOfObject
+  ).filter(filterFunction || Boolean);
   const {
     rowSelection,
     setRowSelection,

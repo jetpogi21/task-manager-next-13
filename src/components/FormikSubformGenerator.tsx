@@ -11,12 +11,14 @@ type FormikSubformGeneratorProps<T> = {
   modelConfig: ModelConfig;
   formik: FormikProps<T>;
   handleHasUdpate: () => void;
+  filterFunction?: (item: Record<string, unknown>) => boolean;
 };
 
 const FormikSubformGenerator = <T,>({
   modelConfig,
   formik,
   handleHasUdpate,
+  filterFunction,
 }: FormikSubformGeneratorProps<T>) => {
   return getChildModels(modelConfig).map((relationship) => {
     const leftModelConfig = findRelationshipModelConfig(
@@ -38,6 +40,7 @@ const FormikSubformGenerator = <T,>({
             formik={formik}
             relationshipConfig={relationship}
             setHasUpdate={handleHasUdpate}
+            filterFunction={filterFunction}
           />
         </DndProvider>
       );
@@ -48,6 +51,7 @@ const FormikSubformGenerator = <T,>({
           formik={formik}
           relationshipConfig={relationship}
           setHasUpdate={handleHasUdpate}
+          filterFunction={filterFunction}
         />
       );
     }
