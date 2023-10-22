@@ -3,52 +3,47 @@
 import React, { useEffect } from "react";
 import { useTaskIntervalStore } from "@/hooks/task-intervals/useTaskIntervalStore";
 import {
-  TaskIntervalFormikInitialValues,
-  TaskIntervalUpdatePayload,
-  GetTaskIntervalsResponse,
-  TaskIntervalFormikShape,
+  TaskIntervalModel,
+  TaskIntervalSearchParams,
 } from "@/interfaces/TaskIntervalInterfaces";
-import {
-  InfiniteData,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Formik } from "formik";
-import { TaskIntervalArraySchema } from "@/schema/TaskIntervalSchema";
+import { TaskIntervalConfig } from "@/utils/config/TaskIntervalConfig";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { getInitialValues } from "@/lib/getInitialValues";
+import { BasicModel, GetModelsResponse } from "@/interfaces/GeneralInterfaces";
+import { createRequiredModelLists } from "@/lib/createRequiredModelLists";
+import { useModelsQuery, useUpdateModelsMutation } from "@/hooks/useModelQuery";
+import { ModelSchema } from "@/schema/ModelSchema";
+import ModelFormArray from "@/components/ModelFormArray";
+import { getCurrentData } from "@/lib/getCurrentData";
+import { getRefetchQueryFunction } from "@/lib/refetchQuery";
 import { toast } from "@/hooks/use-toast";
-import {
-  DEFAULT_FORM_VALUE,
-  VARIABLE_PLURAL_NAME,
-} from "@/utils/constants/TaskIntervalConstants";
-import { useTaskIntervalDeleteDialog } from "@/hooks/task-intervals/useTaskIntervalDeleteDialog";
-import TaskIntervalFormArray from "@/components/task-intervals/TaskIntervalFormArray";
-import {
-  deleteTaskIntervals,
-  updateTaskIntervals,
-  useTaskIntervalsQuery,
-} from "@/hooks/task-intervals/useTaskIntervalQuery";
-import { useTaskIntervalPageParams } from "@/hooks/task-intervals/useTaskIntervalPageParams";
 
 const TaskIntervalTable: React.FC = () => {
-  const { params: queryParams } = useTaskIntervalPageParams();
+  const modelConfig = TaskIntervalConfig;
+  const { pluralizedModelName } = modelConfig;
+  const { params } = useModelPageParams<TaskIntervalSearchParams>(modelConfig);
   const queryClient = useQueryClient();
 
+  const [mounted, setMounted] = React.useState(false);
+
+  const requiredList: Record<string, BasicModel[]> =
+    createRequiredModelLists(modelConfig);
+
   //Page constants
-  const DEFAULT_TASKINTERVAL = DEFAULT_FORM_VALUE;
+  const defaultFormValue = getInitialValues(modelConfig, undefined, {
+    childMode: true,
+    requiredList,
+  });
 
   //Store Variables
-  const recordCount = useTaskIntervalStore((state) => state.recordCount);
-  const previousData = useTaskIntervalStore((state) => state.currentData);
-  const setRecordCount = useTaskIntervalStore((state) => state.setRecordCount);
   const page = useTaskIntervalStore((state) => state.page);
+  const setRecordCount = useTaskIntervalStore((state) => state.setRecordCount);
   const fetchCount = useTaskIntervalStore((state) => state.fetchCount);
   const setFetchCount = useTaskIntervalStore((state) => state.setFetchCount);
-  const queryResponse = useTaskIntervalStore((state) => state.queryResponse);
-  const resetRowSelection = useTaskIntervalStore(
-    (state) => state.resetRowSelection
-  );
+  const previousData = useTaskIntervalStore((state) => state.currentData);
   const setCurrentData = useTaskIntervalStore((state) => state.setCurrentData);
-  const setIsUpdating = useTaskIntervalStore((state) => state.setIsUpdating);
   const setQueryResponse = useTaskIntervalStore(
     (state) => state.setQueryResponse
   );
@@ -56,144 +51,71 @@ const TaskIntervalTable: React.FC = () => {
     (state) => state.setRefetchQuery
   );
 
-  const [setRecordsToDelete, setIsDialogLoading, setMutate] =
-    useTaskIntervalDeleteDialog((state) => [
-      state.setRecordsToDelete,
-      state.setIsDialogLoading,
-      state.setMutate,
-    ]);
+  const recordCount = useTaskIntervalStore((state) => state.recordCount);
+  const setIsUpdating = useTaskIntervalStore((state) => state.setIsUpdating);
+  const isUpdating = useTaskIntervalStore((state) => state.isUpdating);
+  const setPage = useTaskIntervalStore((state) => state.setPage);
+  const lastFetchedPage = useTaskIntervalStore(
+    (state) => state.lastFetchedPage
+  );
 
-  //API Functions
-  
-  //Tanstacks
+  const queryParams = params;
   const useTaskIntervalSearchQuery = () =>
-    useTaskIntervalsQuery({
-      ...queryParams,
+    useModelsQuery<TaskIntervalModel>(modelConfig, {
+      ...params,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching } = useTaskIntervalSearchQuery();
+  const queryResponse = useTaskIntervalSearchQuery();
+  const { data, refetch, isFetching } = queryResponse;
 
-  const currentPageData: GetTaskIntervalsResponse | null = data
+  const currentPageData: GetModelsResponse<TaskIntervalModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
-  const currentData: TaskIntervalFormikShape[] =
-    currentPageData === null
-      ? previousData
-      : currentPageData?.rows.map((item, index) => ({
-          ...item,
-          touched: false,
-          index,
-        })) || [];
-
-  currentData.push({
-    ...DEFAULT_TASKINTERVAL,
-    touched: false,
-    index: currentData.length - 1,
-  });
+  const currentData: any[] = getCurrentData(
+    currentPageData,
+    previousData as any,
+    defaultFormValue
+  );
 
   //Client functions
-  const refetchQuery = (idx: number) => {
-    queryClient.setQueryData(
-      [VARIABLE_PLURAL_NAME, { ...queryParams }],
-      (data: InfiniteData<GetTaskIntervalsResponse> | undefined) => {
-        return data
-          ? {
-              pages: data.pages.slice(0, idx + 1),
-              pageParams: data.pageParams.slice(0, idx + 1),
-            }
-          : undefined;
-      }
-    );
-    refetch();
-  };
-
-  //Generated by GetMutationSnippets
-  type MutationData = { recordsCreated?: number; recordsDeleted?: number };
-  const useHandleMutation = (
-    mutationFunction: (payload: any) => Promise<MutationData>,
-    successCallback: (data: MutationData) => string,
-    updateRecordCountCallback: (
-      recordCount: number,
-      data: MutationData
-    ) => number
-  ) => {
-    const { mutate } = useMutation(mutationFunction, {
-      onMutate: () => {
-        setIsDialogLoading(true);
-        setIsUpdating(true);
-      },
-      onSuccess: (data) => {
-        toast({
-          description: successCallback(data),
-          variant: "success",
-          duration: 2000,
-        });
-        resetRowSelection();
-        setRecordCount(updateRecordCountCallback(recordCount, data));
-        refetchQuery(page);
-      },
-      onError: (error) => {
-        const responseText =
-          //@ts-ignore
-          error?.response?.statusText || "Something went wrong with the app";
-        toast({
-          description: responseText,
-          variant: "destructive",
-          duration: 2000,
-        });
-      },
-      onSettled: () => {
-        setIsDialogLoading(false);
-        setIsUpdating(false);
-        setRecordsToDelete([]);
-      },
-    });
-
-    return mutate;
-  };
-
-  // Usage for deleteTaskIntervalMutation
-  const deleteTaskIntervalMutation = useHandleMutation(
-    deleteTaskIntervals,
-    (data) => {
-      return "Task Interval(s) deleted successfully";
-    },
-    (recordCount, data) => {
-      return recordCount - (data.recordsDeleted || 0);
-    }
+  const refetchQuery = getRefetchQueryFunction(
+    modelConfig,
+    params,
+    refetch,
+    queryClient
   );
 
-  // Usage for updateTaskIntervals
-  const updateTaskIntervalsMutation = useHandleMutation(
-    updateTaskIntervals,
-    (data) => {
-      return "Task Interval list updated successfully";
-    },
-    (recordCount, data) => {
-      return (
-        recordCount + (data.recordsCreated || 0) - (data.recordsDeleted || 0)
-      );
-    }
-  );
+  const updateModelsMutation = useUpdateModelsMutation(modelConfig);
 
   //Client Actions
-  const handleSubmit = async (values: TaskIntervalFormikInitialValues) => {
+  const handleSubmit = async (values: any) => {
     //The reference is the index of the row
-    const TaskIntervalsToBeSubmitted = values.TaskIntervals.filter((item) => item.touched);
+    //@ts-ignore
+    const rowsToBeSubmitted = values[pluralizedModelName].filter(
+      //@ts-ignore
+      (item) => item.touched
+    );
 
-    if (TaskIntervalsToBeSubmitted.length > 0) {
-      const payload: TaskIntervalUpdatePayload = {
-        TaskIntervals: TaskIntervalsToBeSubmitted,
+    if (rowsToBeSubmitted.length > 0) {
+      setIsUpdating(true);
+      const payload = {
+        [pluralizedModelName]: rowsToBeSubmitted,
       };
 
-      updateTaskIntervalsMutation(payload);
+      //@ts-ignore
+      updateModelsMutation.mutateAsync(payload).then((data) => {
+        console.log(data);
+        setIsUpdating(false);
+        toast({
+          variant: "success",
+          description: `${modelConfig.pluralizedVerboseModelName} successfully updated`,
+        });
+      });
     }
   };
 
   useEffect(() => {
-    setMutate(deleteTaskIntervalMutation);
-    setQueryResponse(useTaskIntervalSearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }
@@ -202,18 +124,38 @@ const TaskIntervalTable: React.FC = () => {
     setRefetchQuery(refetchQuery);
   }, [currentPageData?.count, data, page]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    queryResponse && (
+    mounted && (
       <Formik
         initialValues={{
-          TaskIntervals: currentData,
+          [pluralizedModelName]: currentData,
         }}
         enableReinitialize={true}
         onSubmit={handleSubmit}
-        validationSchema={TaskIntervalArraySchema}
+        validationSchema={ModelSchema(modelConfig, true)}
         validateOnChange={false}
       >
-        {(formik) => <TaskIntervalFormArray formik={formik} />}
+        {(formik) => (
+          <ModelFormArray
+            formik={formik as any}
+            modelConfig={modelConfig}
+            storeStates={{
+              currentData,
+              page,
+              recordCount,
+              isUpdating,
+              setPage,
+              lastFetchedPage,
+              setRecordCount,
+            }}
+            queryResponse={queryResponse as any}
+            refetchQuery={refetchQuery}
+          />
+        )}
       </Formik>
     )
   );

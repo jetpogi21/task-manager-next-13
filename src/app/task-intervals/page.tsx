@@ -3,17 +3,22 @@ import React from "react";
 import TaskIntervalFilterForm from "@/components/task-intervals/TaskIntervalFilterForm";
 import TaskIntervalTable from "@/components/task-intervals/TaskIntervalTable";
 import PageSession from "@/components/PageSession";
+import { TaskIntervalConfig } from "@/utils/config/TaskIntervalConfig";
+
+const config = TaskIntervalConfig;
 
 export const metadata = {
-  title: "Task Intervals",
+  title: config.pluralizedVerboseModelName,
 };
 
 const TaskIntervals: React.FC = () => {
   return (
     <>
-      <div className="flex flex-col flex-1 w-full px-4 mx-auto text-sm lg:px-0 main-height-less-footer">
-        <div className="flex flex-col flex-1 w-full max-w-[750px] mx-auto gap-4 p-4 border rounded-sm border-border">
-          <h1 className="text-2xl font-bold">Task Intervals</h1>
+      <div className="flex flex-col flex-1 w-full mx-auto text-sm 2xl:px-0 main-height-less-footer">
+        <div className="flex flex-col flex-1 w-full gap-4 pl-4 mx-auto rounded-sm">
+          <h1 className="text-2xl font-bold">
+            {config.pluralizedVerboseModelName}
+          </h1>
           <div className="flex">
             <TaskIntervalFilterForm />
           </div>

@@ -58,6 +58,10 @@ export interface TaskIntervalDeletePayload {
   deletedTaskIntervals: string[] | number[];
 }
 
+export interface TaskIntervalSelectedPayload {
+  selectedTaskIntervals: string[] | number[];
+}
+
 //Use for single form (with children)
 //The Related Models will be replaced by the Payload version
 export interface TaskIntervalFormUpdatePayload
