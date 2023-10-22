@@ -455,7 +455,7 @@ export const processQueryFilters = (
         seqModelRelationshipID,
         options,
       }) => {
-        const queryValue = query[filterQueryName];
+        let queryValue = query[filterQueryName];
 
         const field = seqModelFieldID
           ? findConfigItemObject(
@@ -470,7 +470,10 @@ export const processQueryFilters = (
         const databaseFieldName = field?.databaseFieldName;
         const dataType = field?.dataType;
 
-        if (queryValue) {
+        const isBetweenDatesFilter =
+          dataType === "DATEONLY" && filterOperator === "Between";
+
+        if (queryValue || isBetweenDatesFilter) {
           if (filterOperator === "Equal" && dataType === "BOOLEAN" && options) {
             if (queryValue === options[0].fieldValue) {
               filters.push(`${table}.${databaseFieldName}`);
@@ -487,7 +490,7 @@ export const processQueryFilters = (
             return;
           }
 
-          if (filterOperator === "Between" && dataType === "DATEONLY") {
+          if (isBetweenDatesFilter) {
             const dateFromName = `${filterQueryName}From`;
             const dateToName = `${filterQueryName}To`;
             const dateFrom = query[dateFromName];
