@@ -153,3 +153,5 @@ export const FormikSelect = forwardRef<HTMLButtonElement, FormikSelectProps>(
     );
   }
 );
+
+FormikSelect.displayName = "FormikSelect";
