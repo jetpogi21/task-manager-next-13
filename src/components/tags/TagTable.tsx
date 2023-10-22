@@ -3,187 +3,119 @@
 import React, { useEffect } from "react";
 import { useTagStore } from "@/hooks/tags/useTagStore";
 import {
-  TagFormikInitialValues,
-  TagUpdatePayload,
-  GetTagsResponse,
-  TagFormikShape,
+  TagModel,
+  TagSearchParams,
 } from "@/interfaces/TagInterfaces";
-import {
-  InfiniteData,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Formik } from "formik";
-import { TagArraySchema } from "@/schema/TagSchema";
+import { TagConfig } from "@/utils/config/TagConfig";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { getInitialValues } from "@/lib/getInitialValues";
+import { BasicModel, GetModelsResponse } from "@/interfaces/GeneralInterfaces";
+import { createRequiredModelLists } from "@/lib/createRequiredModelLists";
+import { useModelsQuery, useUpdateModelsMutation } from "@/hooks/useModelQuery";
+import { ModelSchema } from "@/schema/ModelSchema";
+import ModelFormArray from "@/components/ModelFormArray";
+import { getCurrentData } from "@/lib/getCurrentData";
+import { getRefetchQueryFunction } from "@/lib/refetchQuery";
 import { toast } from "@/hooks/use-toast";
-import {
-  DEFAULT_FORM_VALUE,
-  VARIABLE_PLURAL_NAME,
-} from "@/utils/constants/TagConstants";
-import { useTagDeleteDialog } from "@/hooks/tags/useTagDeleteDialog";
-import TagFormArray from "@/components/tags/TagFormArray";
-import { deleteTags, updateTags, useTagsQuery } from "@/hooks/tags/useTagQuery";
-import { useTagPageParams } from "@/hooks/tags/useTagPageParams";
 
 const TagTable: React.FC = () => {
-  const { params: queryParams } = useTagPageParams();
+  const modelConfig = TagConfig;
+  const { pluralizedModelName } = modelConfig;
+  const { params } = useModelPageParams<TagSearchParams>(modelConfig);
   const queryClient = useQueryClient();
 
+  const [mounted, setMounted] = React.useState(false);
+
+  const requiredList: Record<string, BasicModel[]> =
+    createRequiredModelLists(modelConfig);
+
   //Page constants
-  const DEFAULT_TAG = DEFAULT_FORM_VALUE;
+  const defaultFormValue = getInitialValues(modelConfig, undefined, {
+    childMode: true,
+    requiredList,
+  });
 
   //Store Variables
-  const recordCount = useTagStore((state) => state.recordCount);
-  const previousData = useTagStore((state) => state.currentData);
-  const setRecordCount = useTagStore((state) => state.setRecordCount);
   const page = useTagStore((state) => state.page);
+  const setRecordCount = useTagStore((state) => state.setRecordCount);
   const fetchCount = useTagStore((state) => state.fetchCount);
   const setFetchCount = useTagStore((state) => state.setFetchCount);
-  const queryResponse = useTagStore((state) => state.queryResponse);
-  const resetRowSelection = useTagStore((state) => state.resetRowSelection);
+  const previousData = useTagStore((state) => state.currentData);
   const setCurrentData = useTagStore((state) => state.setCurrentData);
+  const setQueryResponse = useTagStore(
+    (state) => state.setQueryResponse
+  );
+  const setRefetchQuery = useTagStore(
+    (state) => state.setRefetchQuery
+  );
+
+  const recordCount = useTagStore((state) => state.recordCount);
   const setIsUpdating = useTagStore((state) => state.setIsUpdating);
-  const setQueryResponse = useTagStore((state) => state.setQueryResponse);
-  const setRefetchQuery = useTagStore((state) => state.setRefetchQuery);
+  const isUpdating = useTagStore((state) => state.isUpdating);
+  const setPage = useTagStore((state) => state.setPage);
+  const lastFetchedPage = useTagStore(
+    (state) => state.lastFetchedPage
+  );
 
-  const [setRecordsToDelete, setIsDialogLoading, setMutate] =
-    useTagDeleteDialog((state) => [
-      state.setRecordsToDelete,
-      state.setIsDialogLoading,
-      state.setMutate,
-    ]);
-
-  //API Functions
-
-  //Tanstacks
+  const queryParams = params;
   const useTagSearchQuery = () =>
-    useTagsQuery({
-      ...queryParams,
+    useModelsQuery<TagModel>(modelConfig, {
+      ...params,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching } = useTagSearchQuery();
+  const queryResponse = useTagSearchQuery();
+  const { data, refetch, isFetching } = queryResponse;
 
-  const currentPageData: GetTagsResponse | null = data
+  const currentPageData: GetModelsResponse<TagModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
-  const currentData: TagFormikShape[] =
-    currentPageData === null
-      ? previousData
-      : currentPageData?.rows.map((item, index) => ({
-          ...item,
-          touched: false,
-          index,
-        })) || [];
-
-  currentData.push({
-    ...DEFAULT_TAG,
-    touched: false,
-    index: currentData.length - 1,
-  });
+  const currentData: any[] = getCurrentData(
+    currentPageData,
+    previousData as any,
+    defaultFormValue
+  );
 
   //Client functions
-  const refetchQuery = (idx: number) => {
-    queryClient.setQueryData(
-      [VARIABLE_PLURAL_NAME, { ...queryParams }],
-      (data: InfiniteData<GetTagsResponse> | undefined) => {
-        return data
-          ? {
-              pages: data.pages.slice(0, idx + 1),
-              pageParams: data.pageParams.slice(0, idx + 1),
-            }
-          : undefined;
-      }
-    );
-    refetch();
-  };
-
-  //Generated by GetMutationSnippets
-  type MutationData = { recordsCreated?: number; recordsDeleted?: number };
-  const useHandleMutation = (
-    mutationFunction: (payload: any) => Promise<MutationData>,
-    successCallback: (data: MutationData) => string,
-    updateRecordCountCallback: (
-      recordCount: number,
-      data: MutationData
-    ) => number
-  ) => {
-    const { mutate } = useMutation(mutationFunction, {
-      onMutate: () => {
-        setIsDialogLoading(true);
-        setIsUpdating(true);
-      },
-      onSuccess: (data) => {
-        toast({
-          description: successCallback(data),
-          variant: "success",
-          duration: 2000,
-        });
-        resetRowSelection();
-        setRecordCount(updateRecordCountCallback(recordCount, data));
-        refetchQuery(page);
-      },
-      onError: (error) => {
-        const responseText =
-          //@ts-ignore
-          error?.response?.statusText || "Something went wrong with the app";
-        toast({
-          description: responseText,
-          variant: "destructive",
-          duration: 2000,
-        });
-      },
-      onSettled: () => {
-        setIsDialogLoading(false);
-        setIsUpdating(false);
-        setRecordsToDelete([]);
-      },
-    });
-
-    return mutate;
-  };
-
-  // Usage for deleteTagMutation
-  const deleteTagMutation = useHandleMutation(
-    deleteTags,
-    (data) => {
-      return "Tag(s) deleted successfully";
-    },
-    (recordCount, data) => {
-      return recordCount - (data.recordsDeleted || 0);
-    }
+  const refetchQuery = getRefetchQueryFunction(
+    modelConfig,
+    params,
+    refetch,
+    queryClient
   );
 
-  // Usage for updateTags
-  const updateTagsMutation = useHandleMutation(
-    updateTags,
-    (data) => {
-      return "Tag list updated successfully";
-    },
-    (recordCount, data) => {
-      return (
-        recordCount + (data.recordsCreated || 0) - (data.recordsDeleted || 0)
-      );
-    }
-  );
+  const updateModelsMutation = useUpdateModelsMutation(modelConfig);
 
   //Client Actions
-  const handleSubmit = async (values: TagFormikInitialValues) => {
+  const handleSubmit = async (values: any) => {
     //The reference is the index of the row
-    const TagsToBeSubmitted = values.Tags.filter((item) => item.touched);
+    //@ts-ignore
+    const rowsToBeSubmitted = values[pluralizedModelName].filter(
+      //@ts-ignore
+      (item) => item.touched
+    );
 
-    if (TagsToBeSubmitted.length > 0) {
-      const payload: TagUpdatePayload = {
-        Tags: TagsToBeSubmitted,
+    if (rowsToBeSubmitted.length > 0) {
+      setIsUpdating(true);
+      const payload = {
+        [pluralizedModelName]: rowsToBeSubmitted,
       };
 
-      updateTagsMutation(payload);
+      //@ts-ignore
+      updateModelsMutation.mutateAsync(payload).then((data) => {
+        console.log(data);
+        setIsUpdating(false);
+        toast({
+          variant: "success",
+          description: `${modelConfig.pluralizedVerboseModelName} successfully updated`,
+        });
+      });
     }
   };
 
   useEffect(() => {
-    setMutate(deleteTagMutation);
-    setQueryResponse(useTagSearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }
@@ -192,18 +124,38 @@ const TagTable: React.FC = () => {
     setRefetchQuery(refetchQuery);
   }, [currentPageData?.count, data, page]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    queryResponse && (
+    mounted && (
       <Formik
         initialValues={{
-          Tags: currentData,
+          [pluralizedModelName]: currentData,
         }}
         enableReinitialize={true}
         onSubmit={handleSubmit}
-        validationSchema={TagArraySchema}
+        validationSchema={ModelSchema(modelConfig, true)}
         validateOnChange={false}
       >
-        {(formik) => <TagFormArray formik={formik} />}
+        {(formik) => (
+          <ModelFormArray
+            formik={formik as any}
+            modelConfig={modelConfig}
+            storeStates={{
+              currentData,
+              page,
+              recordCount,
+              isUpdating,
+              setPage,
+              lastFetchedPage,
+              setRecordCount,
+            }}
+            queryResponse={queryResponse as any}
+            refetchQuery={refetchQuery}
+          />
+        )}
       </Formik>
     )
   );
