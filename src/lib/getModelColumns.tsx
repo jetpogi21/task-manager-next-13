@@ -17,7 +17,7 @@ interface ModelColumnProps<TData, TValue> {
 export const getModelColumns = <TData, TValue>({
   ModelSingleColumn,
   modelConfig,
-}: ModelColumnProps<TData, TValue>) => {
+}: ModelColumnProps<TData, TValue>): ColumnDef<TData, TValue>[] => {
   const columnHelper = createColumnHelper<TData>();
 
   const columns: ColumnDef<TData, TValue>[] = [

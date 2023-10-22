@@ -3,52 +3,47 @@
 import React, { useEffect } from "react";
 import { useTaskCategoryStore } from "@/hooks/task-categories/useTaskCategoryStore";
 import {
-  TaskCategoryFormikInitialValues,
-  TaskCategoryUpdatePayload,
-  GetTaskCategoriesResponse,
-  TaskCategoryFormikShape,
+  TaskCategoryModel,
+  TaskCategorySearchParams,
 } from "@/interfaces/TaskCategoryInterfaces";
-import {
-  InfiniteData,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Formik } from "formik";
-import { TaskCategoryArraySchema } from "@/schema/TaskCategorySchema";
+import { TaskCategoryConfig } from "@/utils/config/TaskCategoryConfig";
+import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { getInitialValues } from "@/lib/getInitialValues";
+import { BasicModel, GetModelsResponse } from "@/interfaces/GeneralInterfaces";
+import { createRequiredModelLists } from "@/lib/createRequiredModelLists";
+import { useModelsQuery, useUpdateModelsMutation } from "@/hooks/useModelQuery";
+import { ModelSchema } from "@/schema/ModelSchema";
+import ModelFormArray from "@/components/ModelFormArray";
+import { getCurrentData } from "@/lib/getCurrentData";
+import { getRefetchQueryFunction } from "@/lib/refetchQuery";
 import { toast } from "@/hooks/use-toast";
-import {
-  DEFAULT_FORM_VALUE,
-  VARIABLE_PLURAL_NAME,
-} from "@/utils/constants/TaskCategoryConstants";
-import { useTaskCategoryDeleteDialog } from "@/hooks/task-categories/useTaskCategoryDeleteDialog";
-import TaskCategoryFormArray from "@/components/task-categories/TaskCategoryFormArray";
-import {
-  deleteTaskCategories,
-  updateTaskCategories,
-  useTaskCategoriesQuery,
-} from "@/hooks/task-categories/useTaskCategoryQuery";
-import { useTaskCategoryPageParams } from "@/hooks/task-categories/useTaskCategoryPageParams";
 
 const TaskCategoryTable: React.FC = () => {
-  const { params: queryParams } = useTaskCategoryPageParams();
+  const modelConfig = TaskCategoryConfig;
+  const { pluralizedModelName } = modelConfig;
+  const { params } = useModelPageParams<TaskCategorySearchParams>(modelConfig);
   const queryClient = useQueryClient();
 
+  const [mounted, setMounted] = React.useState(false);
+
+  const requiredList: Record<string, BasicModel[]> =
+    createRequiredModelLists(modelConfig);
+
   //Page constants
-  const DEFAULT_TASKCATEGORY = DEFAULT_FORM_VALUE;
+  const defaultFormValue = getInitialValues(modelConfig, undefined, {
+    childMode: true,
+    requiredList,
+  });
 
   //Store Variables
-  const recordCount = useTaskCategoryStore((state) => state.recordCount);
-  const previousData = useTaskCategoryStore((state) => state.currentData);
-  const setRecordCount = useTaskCategoryStore((state) => state.setRecordCount);
   const page = useTaskCategoryStore((state) => state.page);
+  const setRecordCount = useTaskCategoryStore((state) => state.setRecordCount);
   const fetchCount = useTaskCategoryStore((state) => state.fetchCount);
   const setFetchCount = useTaskCategoryStore((state) => state.setFetchCount);
-  const queryResponse = useTaskCategoryStore((state) => state.queryResponse);
-  const resetRowSelection = useTaskCategoryStore(
-    (state) => state.resetRowSelection
-  );
+  const previousData = useTaskCategoryStore((state) => state.currentData);
   const setCurrentData = useTaskCategoryStore((state) => state.setCurrentData);
-  const setIsUpdating = useTaskCategoryStore((state) => state.setIsUpdating);
   const setQueryResponse = useTaskCategoryStore(
     (state) => state.setQueryResponse
   );
@@ -56,146 +51,71 @@ const TaskCategoryTable: React.FC = () => {
     (state) => state.setRefetchQuery
   );
 
-  const [setRecordsToDelete, setIsDialogLoading, setMutate] =
-    useTaskCategoryDeleteDialog((state) => [
-      state.setRecordsToDelete,
-      state.setIsDialogLoading,
-      state.setMutate,
-    ]);
+  const recordCount = useTaskCategoryStore((state) => state.recordCount);
+  const setIsUpdating = useTaskCategoryStore((state) => state.setIsUpdating);
+  const isUpdating = useTaskCategoryStore((state) => state.isUpdating);
+  const setPage = useTaskCategoryStore((state) => state.setPage);
+  const lastFetchedPage = useTaskCategoryStore(
+    (state) => state.lastFetchedPage
+  );
 
-  //API Functions
-
-  //Tanstacks
+  const queryParams = params;
   const useTaskCategorySearchQuery = () =>
-    useTaskCategoriesQuery({
-      ...queryParams,
+    useModelsQuery<TaskCategoryModel>(modelConfig, {
+      ...params,
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching } = useTaskCategorySearchQuery();
+  const queryResponse = useTaskCategorySearchQuery();
+  const { data, refetch, isFetching } = queryResponse;
 
-  const currentPageData: GetTaskCategoriesResponse | null = data
+  const currentPageData: GetModelsResponse<TaskCategoryModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
-  const currentData: TaskCategoryFormikShape[] =
-    currentPageData === null
-      ? previousData
-      : currentPageData?.rows.map((item, index) => ({
-          ...item,
-          touched: false,
-          index,
-        })) || [];
-
-  currentData.push({
-    ...DEFAULT_TASKCATEGORY,
-    touched: false,
-    index: currentData.length - 1,
-  });
+  const currentData: any[] = getCurrentData(
+    currentPageData,
+    previousData as any,
+    defaultFormValue
+  );
 
   //Client functions
-  const refetchQuery = (idx: number) => {
-    queryClient.setQueryData(
-      [VARIABLE_PLURAL_NAME, { ...queryParams }],
-      (data: InfiniteData<GetTaskCategoriesResponse> | undefined) => {
-        return data
-          ? {
-              pages: data.pages.slice(0, idx + 1),
-              pageParams: data.pageParams.slice(0, idx + 1),
-            }
-          : undefined;
-      }
-    );
-    refetch();
-  };
-
-  //Generated by GetMutationSnippets
-  type MutationData = { recordsCreated?: number; recordsDeleted?: number };
-  const useHandleMutation = (
-    mutationFunction: (payload: any) => Promise<MutationData>,
-    successCallback: (data: MutationData) => string,
-    updateRecordCountCallback: (
-      recordCount: number,
-      data: MutationData
-    ) => number
-  ) => {
-    const { mutate } = useMutation(mutationFunction, {
-      onMutate: () => {
-        setIsDialogLoading(true);
-        setIsUpdating(true);
-      },
-      onSuccess: (data) => {
-        toast({
-          description: successCallback(data),
-          variant: "success",
-          duration: 2000,
-        });
-        resetRowSelection();
-        setRecordCount(updateRecordCountCallback(recordCount, data));
-        refetchQuery(page);
-      },
-      onError: (error) => {
-        const responseText =
-          //@ts-ignore
-          error?.response?.statusText || "Something went wrong with the app";
-        toast({
-          description: responseText,
-          variant: "destructive",
-          duration: 2000,
-        });
-      },
-      onSettled: () => {
-        setIsDialogLoading(false);
-        setIsUpdating(false);
-        setRecordsToDelete([]);
-      },
-    });
-
-    return mutate;
-  };
-
-  // Usage for deleteTaskCategoryMutation
-  const deleteTaskCategoryMutation = useHandleMutation(
-    deleteTaskCategories,
-    (data) => {
-      return "Task Category(s) deleted successfully";
-    },
-    (recordCount, data) => {
-      return recordCount - (data.recordsDeleted || 0);
-    }
+  const refetchQuery = getRefetchQueryFunction(
+    modelConfig,
+    params,
+    refetch,
+    queryClient
   );
 
-  // Usage for updateTaskCategories
-  const updateTaskCategoriesMutation = useHandleMutation(
-    updateTaskCategories,
-    (data) => {
-      return "Task Category list updated successfully";
-    },
-    (recordCount, data) => {
-      return (
-        recordCount + (data.recordsCreated || 0) - (data.recordsDeleted || 0)
-      );
-    }
-  );
+  const updateModelsMutation = useUpdateModelsMutation(modelConfig);
 
   //Client Actions
-  const handleSubmit = async (values: TaskCategoryFormikInitialValues) => {
+  const handleSubmit = async (values: any) => {
     //The reference is the index of the row
-    const TaskCategoriesToBeSubmitted = values.TaskCategories.filter(
+    //@ts-ignore
+    const rowsToBeSubmitted = values[pluralizedModelName].filter(
+      //@ts-ignore
       (item) => item.touched
     );
 
-    if (TaskCategoriesToBeSubmitted.length > 0) {
-      const payload: TaskCategoryUpdatePayload = {
-        TaskCategories: TaskCategoriesToBeSubmitted,
+    if (rowsToBeSubmitted.length > 0) {
+      setIsUpdating(true);
+      const payload = {
+        [pluralizedModelName]: rowsToBeSubmitted,
       };
 
-      updateTaskCategoriesMutation(payload);
+      //@ts-ignore
+      updateModelsMutation.mutateAsync(payload).then((data) => {
+        console.log(data);
+        setIsUpdating(false);
+        toast({
+          variant: "success",
+          description: `${modelConfig.pluralizedVerboseModelName} successfully updated`,
+        });
+      });
     }
   };
 
   useEffect(() => {
-    setMutate(deleteTaskCategoryMutation);
-    setQueryResponse(useTaskCategorySearchQuery);
     if (currentPageData?.count !== undefined) {
       setRecordCount(currentPageData?.count || 0);
     }
@@ -204,18 +124,38 @@ const TaskCategoryTable: React.FC = () => {
     setRefetchQuery(refetchQuery);
   }, [currentPageData?.count, data, page]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    queryResponse && (
+    mounted && (
       <Formik
         initialValues={{
-          TaskCategories: currentData,
+          [pluralizedModelName]: currentData,
         }}
         enableReinitialize={true}
         onSubmit={handleSubmit}
-        validationSchema={TaskCategoryArraySchema}
+        validationSchema={ModelSchema(modelConfig, true)}
         validateOnChange={false}
       >
-        {(formik) => <TaskCategoryFormArray formik={formik} />}
+        {(formik) => (
+          <ModelFormArray
+            formik={formik as any}
+            modelConfig={modelConfig}
+            storeStates={{
+              currentData,
+              page,
+              recordCount,
+              isUpdating,
+              setPage,
+              lastFetchedPage,
+              setRecordCount,
+            }}
+            queryResponse={queryResponse as any}
+            refetchQuery={refetchQuery}
+          />
+        )}
       </Formik>
     )
   );

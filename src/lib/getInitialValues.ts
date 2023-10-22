@@ -13,6 +13,7 @@ import {
   findLeftForeignKeyField,
 } from "@/utils/utilities";
 
+//leftFieldName is for setting the default value of the parent model to 0
 interface GetInitialValuesOption {
   requiredList?: Record<string, BasicModel[]>;
   childMode?: boolean;

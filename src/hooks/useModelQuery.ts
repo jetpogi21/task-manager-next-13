@@ -23,6 +23,14 @@ export const updateModels = async <T>(payload: T, config: ModelConfig) => {
   return data as unknown;
 };
 
+export const useUpdateModelsMutation = (modelConfig: ModelConfig) => {
+  const modelMutation = useMutation({
+    mutationFn: async (payload) => updateModels(payload, modelConfig),
+  });
+
+  return modelMutation;
+};
+
 export const deleteModels = async (
   payload: Record<"deletedRecords", number[] | string[]>,
   config: ModelConfig

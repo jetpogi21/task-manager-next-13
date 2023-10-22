@@ -3,17 +3,22 @@ import React from "react";
 import TaskCategoryFilterForm from "@/components/task-categories/TaskCategoryFilterForm";
 import TaskCategoryTable from "@/components/task-categories/TaskCategoryTable";
 import PageSession from "@/components/PageSession";
+import { TaskCategoryConfig } from "@/utils/config/TaskCategoryConfig";
+
+const config = TaskCategoryConfig;
 
 export const metadata = {
-  title: "Task Categories",
+  title: config.pluralizedVerboseModelName,
 };
 
 const TaskCategories: React.FC = () => {
   return (
     <>
-      <div className="flex flex-col flex-1 w-full px-4 mx-auto text-sm lg:px-0 main-height-less-footer">
-        <div className="flex flex-col flex-1 w-full max-w-[750px] mx-auto gap-4 p-4 border rounded-sm border-border">
-          <h1 className="text-2xl font-bold">Task Categories</h1>
+      <div className="flex flex-col flex-1 w-full mx-auto text-sm 2xl:px-0 main-height-less-footer">
+        <div className="flex flex-col flex-1 w-full gap-4 pl-4 mx-auto rounded-sm">
+          <h1 className="text-2xl font-bold">
+            {config.pluralizedVerboseModelName}
+          </h1>
           <div className="flex">
             <TaskCategoryFilterForm />
           </div>

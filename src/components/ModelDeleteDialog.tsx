@@ -35,7 +35,6 @@ export const ModelDeleteDialog = <T, U>({
   setRecordsToDelete,
 }: ModelDeleteDialogProps<T>) => {
   const [mounted, setMounted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const { pluralizedModelName, verboseModelName, pluralizedVerboseModelName } =
     modelConfig;
@@ -52,7 +51,7 @@ export const ModelDeleteDialog = <T, U>({
     return data;
   };
 
-  const { mutate } = useMutation({
+  const { mutate, isLoading } = useMutation({
     mutationFn: deleteModels,
     onMutate: () => {
       if (formik) {

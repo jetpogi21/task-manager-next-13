@@ -1,3 +1,4 @@
+import { getChildModels } from "@/components/FormikSubformGenerator";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
 import { findRelationshipModelConfig } from "@/utils/utilities";
@@ -73,18 +74,15 @@ const createShapeFromModelConfig = (
   return shape;
 };
 
-export const ModelSchema = (modelConfig: ModelConfig) => {
-  const shape: Record<string, unknown> =
-    createShapeFromModelConfig(modelConfig);
-  //one level deep of object relationship only to avoid loop
+export const ModelSchema = (modelConfig: ModelConfig, arrayMode?: boolean) => {
+  let shape: Record<string, unknown> = createShapeFromModelConfig(
+    modelConfig,
+    arrayMode
+  );
 
   const relationshipShape: Record<string, unknown> = {};
-  AppConfig.relationships
-    .filter(
-      ({ rightModelID, isSimpleRelationship }) =>
-        rightModelID === modelConfig.seqModelID && !isSimpleRelationship
-    )
-    .forEach(({ seqModelRelationshipID }) => {
+  if (!arrayMode) {
+    getChildModels(modelConfig).forEach(({ seqModelRelationshipID }) => {
       //get the modelSchema of the leftModel
       const leftModelConfig = findRelationshipModelConfig(
         seqModelRelationshipID,
@@ -96,7 +94,18 @@ export const ModelSchema = (modelConfig: ModelConfig) => {
         Yup.object().shape(createShapeFromModelConfig(leftModelConfig, true))
       );
     });
+  }
 
-  //@ts-ignore
-  return Yup.object().shape({ ...shape, ...relationshipShape });
+  if (arrayMode) {
+    //@ts-ignore
+    return Yup.object().shape({
+      [modelConfig.pluralizedModelName]: Yup.array().of(
+        //@ts-ignore
+        Yup.object().shape(shape)
+      ),
+    });
+  } else {
+    //@ts-ignore
+    return Yup.object().shape({ ...shape, ...relationshipShape });
+  }
 };

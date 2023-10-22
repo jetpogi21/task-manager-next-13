@@ -628,7 +628,8 @@ const processRightModelRelationships = (
   const rightModelRelationships = AppConfig.relationships.filter(
     (relationship) =>
       relationship.rightModelID === modelConfig.seqModelID &&
-      !relationship.excludeInTable
+      !relationship.excludeInTable &&
+      !relationship.excludeInForm
   );
 
   rightModelRelationships.forEach((relationship) => {
@@ -895,7 +896,10 @@ export const getLeftConfigNamesFromRightModelId = (
 ): [string, string][] => {
   return AppConfig.relationships
     .filter(
-      (relationship) => relationship.rightModelID === modelConfig.seqModelID
+      (relationship) =>
+        relationship.rightModelID === modelConfig.seqModelID &&
+        !relationship.excludeInForm &&
+        !relationship.excludeInTable
     )
     .map((relationship) => {
       const leftModelConfig = findRelationshipModelConfig(
@@ -912,7 +916,10 @@ export const removeDuplicatesFromRightModelRelationships = (
 ) => {
   AppConfig.relationships
     .filter(
-      (relationship) => relationship.rightModelID === modelConfig.seqModelID
+      (relationship) =>
+        relationship.rightModelID === modelConfig.seqModelID &&
+        !relationship.excludeInForm &&
+        !relationship.excludeInTable
     )
     .forEach((relationship) => {
       const leftModelConfig = findRelationshipModelConfig(

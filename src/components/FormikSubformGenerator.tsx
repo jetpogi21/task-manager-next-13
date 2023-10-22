@@ -1,3 +1,4 @@
+"use client";
 import ModelSubform from "@/components/ModelSubform";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";

@@ -1,13 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/Button";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/Table";
 import { cn } from "@/lib/utils";
 import {
   findLeftForeignKeyField,
@@ -20,25 +12,20 @@ import { removeItemsByIndexes } from "@/utils/utils";
 import {
   useReactTable,
   getCoreRowModel,
-  flexRender,
   SortingState,
-  RowSelectionState,
 } from "@tanstack/react-table";
 import { FormikProps } from "formik";
-import { CheckCircle, ChevronLast, Plus, Trash2 } from "lucide-react";
+import { ChevronLast, Plus, Trash2 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { DraggableRow } from "@/components/ui/DataTable/DraggableRow";
 import Decimal from "decimal.js";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { createRequiredModelLists } from "@/lib/createRequiredModelLists";
 import { AppConfig } from "@/lib/app-config";
-import { sortRows } from "@/lib/sortRows";
 import { getModelColumns } from "@/lib/getModelColumns";
 import { getInitialValues } from "@/lib/getInitialValues";
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import { DataTable } from "@/components/ui/DataTable";
 import { useTableProps } from "@/hooks/useTableProps";
-import { ModelConfig } from "@/interfaces/ModelConfig";
 import { sortFunction } from "@/lib/sortFunction";
 
 interface ModelSubformProps<T> {

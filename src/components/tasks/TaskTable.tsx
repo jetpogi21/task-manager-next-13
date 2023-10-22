@@ -3,13 +3,14 @@
 import React, { useEffect } from "react";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import TaskDataTable from "@/components/tasks/TaskDataTable";
-import { useTaskPageParams } from "@/hooks/tasks/useTaskPageParams";
 import { TaskModel, TaskSearchParams } from "@/interfaces/TaskInterfaces";
-import { useQueryClient, InfiniteData } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useModelsQuery } from "@/hooks/useModelQuery";
 import { TaskConfig } from "@/utils/config/TaskConfig";
 import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
 import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { getCurrentData } from "@/lib/getCurrentData";
+import { getRefetchQueryFunction } from "@/lib/refetchQuery";
 
 const TaskTable: React.FC = () => {
   const config = TaskConfig;
@@ -37,33 +38,24 @@ const TaskTable: React.FC = () => {
       fetchCount: fetchCount.toString(),
     });
 
-  const { data, refetch, isFetching, isLoading } = useTaskSearchQuery();
+  const queryResponse = useTaskSearchQuery();
+  const { data, refetch, isFetching } = queryResponse;
 
   const currentPageData: GetModelsResponse<TaskModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
-  const currentData: TaskModel[] =
-    currentPageData === null ? previousData : currentPageData?.rows || [];
+  const currentData: any[] = getCurrentData(
+    currentPageData,
+    previousData as any
+  );
 
   //Client functions
-  const refetchQuery = (idx: number) => {
-    queryClient.setQueryData(
-      [config.modelPath, { ...queryParams }],
-      (data: InfiniteData<GetModelsResponse<TaskModel>> | undefined) => {
-        return data
-          ? {
-              pages: data.pages.slice(0, idx + 1),
-              pageParams: data.pageParams.slice(0, idx + 1),
-            }
-          : undefined;
-      }
-    );
-    refetch({
-      refetchPage(_, index) {
-        return index === idx;
-      },
-    });
-  };
+  const refetchQuery = getRefetchQueryFunction(
+    config,
+    params,
+    refetch,
+    queryClient
+  );
 
   useEffect(() => {
     setMounted(true);
