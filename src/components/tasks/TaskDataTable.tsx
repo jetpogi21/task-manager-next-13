@@ -241,7 +241,7 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
     <>
       <div className="flex flex-col flex-1 gap-4">
         <div className="flex flex-col-reverse items-start gap-4 lg:flex-row lg:items-center">
-          <div className="text-sm">
+          <div className="w-full text-sm">
             {taskTable.getFilteredSelectedRowModel().rows.length} of{" "}
             {taskTable.getFilteredRowModel().rows.length} row(s) selected.
           </div>
