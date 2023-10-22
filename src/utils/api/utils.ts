@@ -403,6 +403,7 @@ export const getSortedValueSimplified = (
       "fieldName",
       sortField
     );
+
     const sortObject =
       sortFieldObject &&
       findConfigItemObject(
@@ -418,7 +419,7 @@ export const getSortedValueSimplified = (
     }
   }
 
-  const modelFields = config.fields.map((field) => field.fieldName);
+  const modelFields = config.fields.map((field) => field.databaseFieldName);
   return getSortedValue(sort, modelFields, config.sortString);
 };
 
