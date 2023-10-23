@@ -1,10 +1,9 @@
 "use client";
 import ModelSubform from "@/components/ModelSubform";
 import { ModelConfig } from "@/interfaces/ModelConfig";
-import { AppConfig } from "@/lib/app-config";
+import { getChildModels } from "@/lib/getChildModels";
 import { findRelationshipModelConfig } from "@/utils/utilities";
 import { FormikProps } from "formik";
-import React from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -61,19 +60,3 @@ const FormikSubformGenerator = <T,>({
 };
 
 export default FormikSubformGenerator;
-
-interface GetChilModelsOptions {
-  formMode?: boolean;
-}
-
-export function getChildModels(
-  modelConfig: ModelConfig,
-  options?: GetChilModelsOptions
-) {
-  return AppConfig.relationships.filter(
-    ({ rightModelID, isSimpleRelationship, excludeInForm }) =>
-      rightModelID === modelConfig.seqModelID &&
-      !isSimpleRelationship &&
-      (options?.formMode ? !excludeInForm : true)
-  );
-}

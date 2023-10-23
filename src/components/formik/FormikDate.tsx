@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { ButtonProps } from "@/components/ui/Button";
 import { DatePickerProps } from "@/components/ui/DatePicker";
 import { Input } from "@/components/ui/Input";
-import { toValidDateTime } from "@/utils/utilities";
+import { isValidDate, toValidDateTime } from "@/utils/utilities";
 import { convertDateStringToYYYYMMDD } from "@/utils/utils";
 
 export interface FormikDateProps
@@ -60,6 +60,10 @@ const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
 
     const [internal, setInternal] = useState(fieldValue);
 
+    /* if (props.name === "date") {
+      console.log({ internal, fieldValue });
+    } */
+
     const inputRef = useRef<HTMLInputElement>(null);
 
     const hasError = meta.touched && meta.error;
@@ -71,17 +75,18 @@ const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
       submitOnChange && submitForm();
     };
 
-    const handleBlur: FocusEventHandler<HTMLInputElement> = (e) => {
-      internal &&
-        fieldValue !== internal &&
-        setArrayTouched &&
-        setArrayTouched();
-      internal &&
-        fieldValue !== internal &&
-        props.setHasUpdate &&
-        props.setHasUpdate();
+    const didValueChange = internal && fieldValue !== internal;
 
-      fieldValue !== internal && setValue(internal);
+    const handleBlur: FocusEventHandler<HTMLInputElement> = (e) => {
+      didValueChange && setArrayTouched && setArrayTouched();
+      didValueChange && props.setHasUpdate && props.setHasUpdate();
+
+      //Check if the internal is a valid date..
+      if (isValidDate(internal)) {
+        fieldValue !== internal && setValue(internal);
+      } else {
+        setInternal("");
+      }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -109,7 +114,7 @@ const FormikDate = forwardRef<HTMLInputElement, FormikDateProps>(
         {showLabel && !!label && <Label htmlFor={props.name}>{label}</Label>}
         <Input
           type="date"
-          value={fieldValue}
+          value={internal}
           onChange={handleChange}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}

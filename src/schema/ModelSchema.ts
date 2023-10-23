@@ -1,6 +1,5 @@
-import { getChildModels } from "@/components/FormikSubformGenerator";
 import { ModelConfig } from "@/interfaces/ModelConfig";
-import { AppConfig } from "@/lib/app-config";
+import { getChildModels } from "@/lib/getChildModels";
 import { findRelationshipModelConfig } from "@/utils/utilities";
 import * as Yup from "yup";
 

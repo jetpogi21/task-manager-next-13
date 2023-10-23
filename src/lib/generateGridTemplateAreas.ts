@@ -1,10 +1,8 @@
-import {
-  getChildModelsWithSimpleRelationship,
-  getSortedFormikFormControlFields,
-} from "@/components/FormikFormControlGenerator";
-import { getChildModels } from "@/components/FormikSubformGenerator";
-import { getChildModelsWithDropzone } from "@/components/ModelDropzonesForRelationships";
 import { ModelConfig } from "@/interfaces/ModelConfig";
+import { getChildModels } from "@/lib/getChildModels";
+import { getChildModelsWithDropzone } from "@/lib/getChildModelsWithDropzone";
+import { getChildModelsWithSimpleRelationship } from "@/lib/getChildModelsWithSimpleRelationship";
+import { getSortedFormikFormControlFields } from "@/lib/getSortedFormikFormControlFields";
 import { findRelationshipModelConfig } from "@/utils/utilities";
 
 interface OverrideRowProp {

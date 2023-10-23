@@ -1,8 +1,8 @@
-import { getChildModelsWithSimpleRelationship } from "@/components/FormikFormControlGenerator";
-import { getChildModels } from "@/components/FormikSubformGenerator";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { getChildModels } from "@/lib/getChildModels";
+import { getChildModelsWithSimpleRelationship } from "@/lib/getChildModelsWithSimpleRelationship";
 import { sortFunction } from "@/lib/sortFunction";
 import {
   findModelPrimaryKeyField,

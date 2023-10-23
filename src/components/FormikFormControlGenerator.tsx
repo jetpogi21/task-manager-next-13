@@ -13,7 +13,9 @@ import { FormikTextArea } from "@/components/formik/FormikTextArea";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { getChildModelsWithSimpleRelationship } from "@/lib/getChildModelsWithSimpleRelationship";
 import { getModelListById } from "@/lib/getModelListById";
+import { getSortedFormikFormControlFields } from "@/lib/getSortedFormikFormControlFields";
 import { cn } from "@/lib/utils";
 import {
   findConfigItemObject,
@@ -35,19 +37,6 @@ interface FormikFormControlGeneratorProps {
     styles?: Record<string, React.CSSProperties>;
     containerClassName?: Record<string, ClassValue>;
   };
-}
-
-export const getSortedFormikFormControlFields = (modelConfig: ModelConfig) => {
-  return modelConfig.fields
-    .filter(({ controlType }) => controlType !== "Hidden")
-    .sort((a, b) => a.fieldOrder - b.fieldOrder);
-};
-
-export function getChildModelsWithSimpleRelationship(modelConfig: ModelConfig) {
-  return AppConfig.relationships.filter(
-    ({ rightModelID, isSimpleRelationship }) =>
-      rightModelID === modelConfig.seqModelID && isSimpleRelationship
-  );
 }
 
 export const FormikFormControlGenerator = ({

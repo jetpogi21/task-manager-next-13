@@ -1,13 +1,12 @@
-import React from "react";
 import ModelFileDropzone from "@/components/ModelFileDropzone";
 import { ModelConfig } from "@/interfaces/ModelConfig";
-import { AppConfig } from "@/lib/app-config";
 import {
   findRelationshipModelConfig,
   findLeftForeignKeyField,
   findModelPrimaryKeyField,
 } from "@/utils/utilities";
 import { FormikProps } from "formik";
+import { getChildModelsWithDropzone } from "@/lib/getChildModelsWithDropzone";
 
 interface ModelDropzonesProps<T> {
   modelConfig: ModelConfig;
@@ -52,10 +51,3 @@ const ModelDropzonesForRelationships = <T,>({
 };
 
 export default ModelDropzonesForRelationships;
-
-export function getChildModelsWithDropzone(modelConfig: ModelConfig) {
-  return AppConfig.relationships.filter(
-    ({ rightModelID, includeAsDropzone }) =>
-      rightModelID === modelConfig.seqModelID && includeAsDropzone
-  );
-}
