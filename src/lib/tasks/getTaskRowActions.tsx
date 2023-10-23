@@ -13,23 +13,27 @@ export const getTaskRowActions = ({
   setCurrentData,
   mutate,
 }: GetTaskRowActionsProps): ModelRowActions => {
-  const toggleTaskCompletion = (idx: number) => {
+  const toggleTaskCompletion = (indexes: number[]) => {
     const newCurrentData = [...currentData];
-    const task = newCurrentData[idx];
 
-    task.isFinished = !task.isFinished;
-    task.finishDateTime = task.isFinished ? formatISO(new Date()) : "";
+    const payload: Record<string, unknown>[] = [];
+    for (const idx of indexes) {
+      const task = newCurrentData[idx];
+
+      task.isFinished = !task.isFinished;
+      task.finishDateTime = task.isFinished ? formatISO(new Date()) : "";
+
+      payload.push({
+        id: task.id,
+        isFinished: task.isFinished,
+        finishDateTime: task.finishDateTime,
+      });
+    }
 
     setCurrentData(newCurrentData);
 
     mutate({
-      Tasks: [
-        {
-          id: task.id,
-          isFinished: task.isFinished,
-          finishDateTime: task.finishDateTime,
-        },
-      ],
+      Tasks: payload,
     });
   };
 

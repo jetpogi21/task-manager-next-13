@@ -210,7 +210,7 @@ export const AppConfig: AppConfigType = {
       through: 48,
       isSimpleRelationship: true,
       fieldToBeInserted: "tagID",
-      excludeInForm: true,
+      excludeInForm: false,
       listName: null,
       excludeInRequiredList: false,
       includeAsDropzone: false,

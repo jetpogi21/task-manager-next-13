@@ -20,7 +20,7 @@ interface ModelRowActionsProps<TData, TValue> {
   modelConfig: ModelConfig;
 }
 
-type RowActionFunction = (idx: number) => void;
+type RowActionFunction = (indexes: number[]) => void;
 type GetActionLabelFunction = (rowData: any) => string;
 interface ModelRowAction {
   actionFn: RowActionFunction;
@@ -105,7 +105,7 @@ export function ModelRowActions<TData, TValue>({
                     key={key}
                     onSelect={() => {
                       setOpen(false);
-                      rowActions[key].actionFn(index);
+                      rowActions[key].actionFn([index]);
                     }}
                     className="cursor-pointer"
                   >

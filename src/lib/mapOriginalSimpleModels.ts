@@ -34,6 +34,7 @@ export const mapOriginalSimpleModels = (
       );
 
       const leftPluralizedModelName = leftModelConfig.pluralizedModelName;
+
       const leftModelPrimaryFieldName =
         findModelPrimaryKeyField(leftModelConfig).fieldName;
 
