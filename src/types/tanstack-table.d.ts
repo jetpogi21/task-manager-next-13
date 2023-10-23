@@ -1,3 +1,4 @@
+import { ModelRowActions } from "@/components/ModelRowActions";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import "@tanstack/table-core";
 
@@ -17,8 +18,6 @@ declare module "@tanstack/table-core" {
     options?: {
       [key: string]: BasicModel[];
     };
-    rowActions?: {
-      [key: string]: (idx: number) => void;
-    };
+    rowActions?: ModelRowActions;
   }
 }

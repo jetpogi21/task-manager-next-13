@@ -28,11 +28,16 @@ const getBaseYupChain = (dataTypeInterface: string) => {
 
 const createShapeFromModelConfig = (
   modelConfig: ModelConfig,
-  arrayMode: boolean = false
+  arrayMode: boolean = false,
+  fieldsToValidate?: string[]
 ) => {
   const shape: Record<string, unknown> = {};
   modelConfig.fields
-    .filter(({ primaryKey }) => !primaryKey)
+    .filter(
+      ({ primaryKey, fieldName }) =>
+        !primaryKey &&
+        (!fieldsToValidate || fieldsToValidate.includes(fieldName))
+    )
     .forEach(
       ({ fieldName, allowNull, verboseFieldName, dataTypeInterface }) => {
         let yupChain = getBaseYupChain(dataTypeInterface);
@@ -73,10 +78,15 @@ const createShapeFromModelConfig = (
   return shape;
 };
 
-export const ModelSchema = (modelConfig: ModelConfig, arrayMode?: boolean) => {
+export const ModelSchema = (
+  modelConfig: ModelConfig,
+  arrayMode?: boolean,
+  fieldsToValidate?: string[]
+) => {
   let shape: Record<string, unknown> = createShapeFromModelConfig(
     modelConfig,
-    arrayMode
+    arrayMode,
+    fieldsToValidate
   );
 
   const relationshipShape: Record<string, unknown> = {};

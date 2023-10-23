@@ -2,14 +2,18 @@
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import { FinishTasksDialog } from "@/components/tasks/FinishTasksDialog";
 import { TaskColumns } from "@/components/tasks/TaskColumns";
+import TaskSingleColumn from "@/components/tasks/TaskSingleColumn";
 import { TaskSpecialDataTable } from "@/components/tasks/TaskSpecialDataTable";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { useImportTaskFromTemplate } from "@/hooks/tasks/useImportTaskFromTemplate";
 import { useTaskStore } from "@/hooks/tasks/useTaskStore";
 import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { useUpdateModelsMutation } from "@/hooks/useModelQuery";
 import useScreenSize from "@/hooks/useScreenSize";
 import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
 import { TaskModel, TaskSearchParams } from "@/interfaces/TaskInterfaces";
+import { getModelColumns } from "@/lib/getModelColumns";
+import { getTaskRowActions } from "@/lib/tasks/getTaskRowActions";
 import { cn } from "@/lib/utils";
 import { TaskConfig } from "@/utils/config/TaskConfig";
 import { getSorting } from "@/utils/utilities";
@@ -20,6 +24,7 @@ import {
   getCoreRowModel,
   SortingState,
 } from "@tanstack/react-table";
+import { formatISO } from "date-fns";
 import { CheckCircle, Trash } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -54,6 +59,7 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
     setPage,
     lastFetchedPage,
     currentData,
+    setCurrentData,
     setLastFetchedPage,
     refetchQuery,
   } = useTaskStore((state) => ({
@@ -67,6 +73,7 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
     setPage: state.setPage,
     lastFetchedPage: state.lastFetchedPage,
     currentData: state.currentData,
+    setCurrentData: state.setCurrentData,
     setLastFetchedPage: state.setLastFetchedPage,
     refetchQuery: state.refetchQuery,
   }));
@@ -186,9 +193,14 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
     { singleColumn: isLarge }
   );
 
+  const { mutate } = useUpdateModelsMutation(config);
+
   const taskTable = useReactTable<TaskModel>({
     data: currentData,
-    columns: TaskColumns,
+    columns: getModelColumns({
+      modelConfig: config,
+      ModelSingleColumn: TaskSingleColumn,
+    }),
     state: {
       sorting: sorting,
       rowSelection,
@@ -210,6 +222,11 @@ const TaskDataTable: React.FC<TaskDataTableProps> = ({ taskQuery }) => {
       toggleRow,
       toggleSelectAllRow,
       editable: false,
+      rowActions: getTaskRowActions({
+        currentData,
+        setCurrentData,
+        mutate,
+      }),
     },
   });
 

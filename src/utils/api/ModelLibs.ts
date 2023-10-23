@@ -9,13 +9,20 @@ const createParsedPayload = (
   payload: Record<string, unknown>
 ) => {
   const parsedPayload: Record<string, unknown> = {};
+  const payloadKeys = Object.keys(payload).map((key) => key);
+
+  //This should also just get the fields which is on the payload since it will be replaced by a
+  //default (e.g. null if it's not provided as a payload)
+  //Useful for updating selected fields only.
   modelConfig.fields
-    .filter((field) => !field.primaryKey)
+    .filter(
+      (field) => !field.primaryKey && payloadKeys.includes(field.fieldName)
+    )
     .forEach(({ dataType, fieldName, allowNull }) => {
       const value = payload[fieldName];
 
       let parsedValue;
-      if (value === null && allowNull) {
+      if ((value === null || value === "") && allowNull) {
         parsedValue = null;
       } else if (value === null && dataType === "BOOLEAN") {
         parsedValue = false;
@@ -51,6 +58,8 @@ export const updateModel = async (
   t: Transaction
 ) => {
   const parsedPayload = createParsedPayload(modelConfig, payload);
+  console.log(parsedPayload);
+
   const primaryKeyField = findModelPrimaryKeyField(modelConfig);
   const Model =
     backendModels[modelConfig.modelName as keyof typeof backendModels];

@@ -20,6 +20,17 @@ interface ModelRowActionsProps<TData, TValue> {
   modelConfig: ModelConfig;
 }
 
+type RowActionFunction = (idx: number) => void;
+type GetActionLabelFunction = (rowData: any) => string;
+interface ModelRowAction {
+  actionFn: RowActionFunction;
+  generateActionLabel?: GetActionLabelFunction;
+}
+
+export interface ModelRowActions {
+  [key: string]: ModelRowAction;
+}
+
 export function ModelRowActions<TData, TValue>({
   cell,
   modelConfig,
@@ -40,6 +51,10 @@ export function ModelRowActions<TData, TValue>({
 
   //Variables from table meta
   const deleteRow = cell.table.options.meta?.deleteRow;
+
+  const rowActions = cell.table.options.meta?.rowActions as
+    | ModelRowActions
+    | undefined;
 
   //Transformations
   const isHidden = !Boolean(id);
@@ -73,14 +88,32 @@ export function ModelRowActions<TData, TValue>({
               setOpen(false);
               deleteRow && deleteRow(index);
             }}
+            className="cursor-pointer"
           >
             Delete
           </DropdownMenuItem>
           <Link href={`/${modelConfig.modelPath}/${slug}`}>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               Edit/View {modelConfig.verboseModelName}
             </DropdownMenuItem>
           </Link>
+          {rowActions
+            ? Object.keys(rowActions).map((key) => {
+                const generateActionLabel = rowActions[key].generateActionLabel;
+                return (
+                  <DropdownMenuItem
+                    key={key}
+                    onSelect={() => {
+                      setOpen(false);
+                      rowActions[key].actionFn(index);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    {generateActionLabel ? generateActionLabel(rowData) : key}
+                  </DropdownMenuItem>
+                );
+              })
+            : null}
         </DropdownMenuContent>
       </DropdownMenu>
     )
