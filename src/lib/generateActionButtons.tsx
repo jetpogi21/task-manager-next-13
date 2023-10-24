@@ -2,7 +2,7 @@ import { ModelRowActions } from "@/components/ModelRowActions";
 import { Button } from "@/components/ui/Button";
 
 export function generateActionButtons(
-  rowActions: ModelRowActions,
+  rowActions: ModelRowActions | undefined,
   indexes: number[],
   openDialog: ({
     title,
