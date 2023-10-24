@@ -4,13 +4,13 @@ import { TaskCategoryFormikShape } from "@/interfaces/TaskCategoryInterfaces";
 import { CellContext } from "@tanstack/react-table";
 import React, { FC } from "react";
 
-interface TaskCategorySingleColumnProps {
-  cell: CellContext<TaskCategoryFormikShape, unknown>;
+interface TaskCategorySingleColumnProps<T> {
+  cell: CellContext<T, unknown>;
 }
 
-const TaskCategorySingleColumn: FC<TaskCategorySingleColumnProps> = ({
+const TaskCategorySingleColumn = <T,>({
   cell,
-}) => {
+}: TaskCategorySingleColumnProps<T>) => {
   const taskCategory = cell.row.original;
   return <div className="flex flex-col gap-2">To continue edit this page</div>;
 };

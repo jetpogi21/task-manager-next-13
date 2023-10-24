@@ -25,7 +25,7 @@ export const getCurrentData = <T>(
     currentData.push({
       ...defaultFormValue,
       touched: false,
-      index: currentData.length - 1,
+      index: currentData.length,
     });
   }
 

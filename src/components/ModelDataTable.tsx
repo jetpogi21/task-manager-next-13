@@ -35,9 +35,31 @@ import {
   CellContext,
 } from "@tanstack/react-table";
 import { Form, FormikProps } from "formik";
-import { Plus, Trash } from "lucide-react";
+import { ChevronLast, Plus, Trash } from "lucide-react";
 import Link from "next/link";
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+
+const TableWrapper = ({
+  children,
+  modelConfig,
+}: {
+  children: ReactNode;
+  modelConfig: ModelConfig;
+}) => {
+  if (modelConfig.isTable) {
+    return <div className="flex flex-col flex-1 gap-4">{children}</div>;
+  } else {
+    return (
+      <Form
+        className="flex flex-col flex-1 gap-4"
+        autoComplete="off"
+        noValidate
+      >
+        {children}
+      </Form>
+    );
+  }
+};
 
 type CustomUseMutationResult<T> = UseMutationResult<
   {
@@ -138,6 +160,7 @@ const ModelDataTable = <T, U, V>({
         pluralizedModelName
       ] as ArrayOfUnknownObject)
     : [];
+
   //Utility Functions
 
   //Client Actions
@@ -148,7 +171,7 @@ const ModelDataTable = <T, U, V>({
   const addRow = () => {
     formik!.setFieldValue(pluralizedModelName, [
       ...rows.map((item) => ({ ...item })),
-      { ...defaultFormValue },
+      { ...defaultFormValue, touched: false, index: rows.length },
     ]);
     setWillFocus(true);
   };
@@ -341,25 +364,9 @@ const ModelDataTable = <T, U, V>({
     });
   }, [isLarge]);
 
-  const TableWrapper = ({ children }: { children: ReactNode }) => {
-    if (modelConfig.isTable) {
-      return <div className="flex flex-col flex-1 gap-4">{children}</div>;
-    } else {
-      return (
-        <Form
-          className="flex flex-col flex-1 gap-4"
-          autoComplete="off"
-          noValidate
-        >
-          {children}
-        </Form>
-      );
-    }
-  };
-
   return (
     <>
-      <TableWrapper>
+      <TableWrapper modelConfig={modelConfig}>
         <div className="flex flex-col-reverse items-start gap-4 lg:flex-row lg:items-center">
           <div className="w-full text-sm">
             {modelTable.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -396,6 +403,18 @@ const ModelDataTable = <T, U, V>({
             )}
           </div>
           <div className="flex items-end w-full space-x-4">
+            {!modelConfig.isTable && (
+              <Button
+                className="ml-auto"
+                variant={"secondary"}
+                type="button"
+                size="sm"
+                onClick={focusOnRef}
+              >
+                <ChevronLast className="w-4 h-4 text-foreground" /> Go to last
+                row
+              </Button>
+            )}
             <Link
               className={cn(
                 buttonVariants({ variant: "secondary", size: "sm" }),
@@ -498,7 +517,7 @@ const ModelDataTable = <T, U, V>({
               ).length
           );
           resetRowSelection();
-          refetchQuery && refetchQuery(page - 1);
+          refetchQuery(page - 1);
         }}
       />
     </>
