@@ -8,6 +8,7 @@ import SessionButton from "@/components/header/SessionButton";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Sidebar from "@/components/sidebar/Sidebar";
 import DarkLightToggle from "@/components/header/DarkLightToggle";
+import { GlobalDialog } from "@/components/GlobalDialog";
 
 const inter = Roboto_Flex({
   subsets: ["latin"],
@@ -43,6 +44,7 @@ export default function RootLayout({
                 <DarkLightToggle />
               </div>
               {children}
+              <GlobalDialog />
               <Footer />
             </main>
           </ClientProviders>

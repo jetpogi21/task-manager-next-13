@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { MoreHorizontal } from "lucide-react";
+import { LucideIcon, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { ModelConfig } from "@/interfaces/ModelConfig";
@@ -22,9 +22,20 @@ interface ModelRowActionsProps<TData, TValue> {
 
 type RowActionFunction = (indexes: number[]) => void;
 type GetActionLabelFunction = (rowData: any) => string;
+type GenerateTexts = (indexes: number[]) => {
+  buttonText: string;
+  dialogTitle: string;
+  dialogMessage: string;
+};
+type RowCondition = (rowData: any) => boolean;
+type MultiSelectCondition = (indexes: number[]) => boolean;
 interface ModelRowAction {
   actionFn: RowActionFunction;
   generateActionLabel?: GetActionLabelFunction;
+  generateTexts: GenerateTexts;
+  ButtonIcon?: LucideIcon;
+  rowCondition?: RowCondition;
+  multiSelectCondition?: MultiSelectCondition;
 }
 
 export interface ModelRowActions {
@@ -38,6 +49,8 @@ export function ModelRowActions<TData, TValue>({
   const primaryKeyField = findModelPrimaryKeyField(modelConfig).fieldName;
   //local state
   const [open, setOpen] = useState(false);
+
+  const closeDropDown = () => setOpen(false);
 
   //Variables from cell
   const rowData = cell.row.original;
@@ -80,12 +93,12 @@ export function ModelRowActions<TData, TValue>({
           align="end"
           className="w-[160px]"
           onPointerDownOutside={() => {
-            setOpen(false);
+            closeDropDown();
           }}
         >
           <DropdownMenuItem
             onSelect={() => {
-              setOpen(false);
+              closeDropDown();
               deleteRow && deleteRow(index);
             }}
             className="cursor-pointer"
@@ -97,25 +110,47 @@ export function ModelRowActions<TData, TValue>({
               Edit/View {modelConfig.verboseModelName}
             </DropdownMenuItem>
           </Link>
-          {rowActions
-            ? Object.keys(rowActions).map((key) => {
-                const generateActionLabel = rowActions[key].generateActionLabel;
-                return (
-                  <DropdownMenuItem
-                    key={key}
-                    onSelect={() => {
-                      setOpen(false);
-                      rowActions[key].actionFn([index]);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {generateActionLabel ? generateActionLabel(rowData) : key}
-                  </DropdownMenuItem>
-                );
-              })
-            : null}
+          {generateDropdownMenuItems<TData, TValue>(
+            rowActions,
+            rowData,
+            closeDropDown,
+            index
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     )
   );
+}
+function generateDropdownMenuItems<TData, TValue>(
+  rowActions: ModelRowActions | undefined,
+  rowData: TData,
+  closeDropDown: () => void,
+  index: number
+) {
+  return rowActions
+    ? Object.keys(rowActions)
+        .filter((key) => {
+          const action = rowActions?.[key];
+          if (!action) {
+            return true;
+          }
+          const { rowCondition } = action;
+          return !rowCondition || rowCondition(rowData);
+        })
+        .map((key) => {
+          const generateActionLabel = rowActions[key].generateActionLabel;
+          return (
+            <DropdownMenuItem
+              key={key}
+              onSelect={() => {
+                closeDropDown();
+                rowActions[key].actionFn([index]);
+              }}
+              className="cursor-pointer"
+            >
+              {generateActionLabel ? generateActionLabel(rowData) : key}
+            </DropdownMenuItem>
+          );
+        })
+    : null;
 }
