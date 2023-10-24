@@ -11,7 +11,9 @@ import {
 
 interface ModelColumnProps<TData, TValue> {
   modelConfig: ModelConfig;
-  ModelSingleColumn?: React.FC<{ cell: CellContext<TData, TValue> }>; // replace CellType with the actual type of cell
+  ModelSingleColumn?:
+    | React.FC<{ cell: CellContext<TData, TValue> }>
+    | undefined; // replace CellType with the actual type of cell
 }
 
 export const getModelColumns = <TData, TValue>({

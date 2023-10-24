@@ -2,7 +2,7 @@ import { ModelConfig } from "@/interfaces/ModelConfig";
 import { RowSelectionState } from "@tanstack/react-table";
 import { useState } from "react";
 
-export const useTableProps = (modelConfig: ModelConfig) => {
+export const useTableProps = <T>(modelConfig: ModelConfig) => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const setRowSelectionByIndex = (idx: number) => {
@@ -22,6 +22,14 @@ export const useTableProps = (modelConfig: ModelConfig) => {
 
   const [recordsToDelete, setRecordsToDelete] = useState<string[]>([]);
 
+  const [page, setPage] = useState(1);
+  const [recordCount, setRecordCount] = useState(0);
+  const [lastFetchedPage, setLastFetchedPage] = useState(1);
+  const [fetchCount, setFetchCount] = useState(true);
+  const [currentData, setCurrentData] = useState<T[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [hasUpdate, setHasUpdate] = useState(false);
+
   return {
     rowSelection,
     setRowSelection,
@@ -32,5 +40,19 @@ export const useTableProps = (modelConfig: ModelConfig) => {
     setSort,
     recordsToDelete,
     setRecordsToDelete,
+    page,
+    setPage,
+    recordCount,
+    setRecordCount,
+    fetchCount,
+    setFetchCount,
+    lastFetchedPage,
+    setLastFetchedPage,
+    currentData,
+    setCurrentData,
+    isUpdating,
+    setIsUpdating,
+    hasUpdate,
+    setHasUpdate,
   };
 };

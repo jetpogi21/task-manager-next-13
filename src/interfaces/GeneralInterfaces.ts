@@ -112,3 +112,7 @@ export interface GetModelsResponse<TModel> {
   rows: TModel[];
   cursor: string;
 }
+
+export type UnknownObject = Record<string, unknown>;
+export type ArrayOfUnknownObject = UnknownObject[];
+export type PrimaryKey = string | number | undefined | null;

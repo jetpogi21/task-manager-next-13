@@ -2,11 +2,14 @@
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
+import useGlobalDialog from "@/hooks/useGlobalDialog";
 import { useModelPageParams } from "@/hooks/useModelPageParams";
+import { useUpdateModelsMutation } from "@/hooks/useModelQuery";
 import { useTableProps } from "@/hooks/useTableProps";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { createRequiredModelLists } from "@/lib/createRequiredModelLists";
+import { generateActionButtons } from "@/lib/generateActionButtons";
 import { getInitialValues } from "@/lib/getInitialValues";
 import { getModelColumns } from "@/lib/getModelColumns";
 import { Slice } from "@/lib/zustand-slice";
@@ -22,7 +25,7 @@ import { ChevronLast, Plus, Trash } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 interface ModelFormArrayProp<T> {
-  formik: FormikProps<{ string: T[] }>;
+  formik: FormikProps<T>;
   modelConfig: ModelConfig;
   queryResponse?: Slice<T>["queryResponse"];
   storeStates: Partial<Slice<T>>;
@@ -51,6 +54,12 @@ const ModelFormArray = <T,>({
 
   const { pluralizedModelName } = modelConfig;
 
+  //zustand states
+  const { closeDialog, openDialog } = useGlobalDialog((state) => ({
+    closeDialog: state.closeDialog,
+    openDialog: state.openDialog,
+  }));
+
   const {
     rowSelection,
     setRowSelection,
@@ -75,6 +84,8 @@ const ModelFormArray = <T,>({
   });
 
   //Tanstacks
+  const { mutate } = useUpdateModelsMutation(modelConfig);
+  const rowActions = undefined;
   //@ts-ignore
   const { data, isLoading, isFetching, fetchNextPage } = queryResponse;
 
@@ -87,6 +98,9 @@ const ModelFormArray = <T,>({
   const pageStatus = `Showing ${dataRowCount} of ${recordCount} record(s)`;
   const hasPreviousPage = page! > 1;
   const hasNextPage = dataRowCount < recordCount!;
+  const indexes = Object.keys(rowSelection)
+    .filter((key) => rowSelection[key])
+    .map((item) => parseInt(item));
 
   //@ts-ignore
   const rows = formik.values[pluralizedModelName] as Record<string, unknown>[];
@@ -250,6 +264,7 @@ const ModelFormArray = <T,>({
       lastFieldInForm: lastFieldInForm,
       forwardedRef: ref,
       editable: true,
+      rowActions,
       options: {},
     },
   });
@@ -273,18 +288,27 @@ const ModelFormArray = <T,>({
           {modelTable.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         {hasSelected && (
-          <Button
-            type="button"
-            size={"sm"}
-            variant={"destructive"}
-            onClick={() => {
-              deleteSelectedRows();
-            }}
-            className="flex items-center justify-center gap-2"
-          >
-            Delete Selected
-            <Trash className="w-4 h-4 text-foreground" />
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              size={"sm"}
+              variant={"destructive"}
+              onClick={() => {
+                deleteSelectedRows();
+              }}
+              className="flex items-center justify-center gap-2"
+            >
+              Delete Selected
+              <Trash className="w-4 h-4 text-foreground" />
+            </Button>
+            {generateActionButtons(
+              rowActions,
+              indexes,
+              openDialog,
+              closeDialog,
+              resetRowSelection
+            )}
+          </div>
         )}
         <Button
           className="ml-auto"

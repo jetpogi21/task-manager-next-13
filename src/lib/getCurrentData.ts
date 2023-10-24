@@ -2,10 +2,10 @@ import { GetModelsResponse } from "@/interfaces/GeneralInterfaces";
 
 export const getCurrentData = <T>(
   currentPageData: GetModelsResponse<T> | null,
-  previousData: Record<string, unknown>[],
+  previousData: T[],
   defaultFormValue?: any
-): Record<string, unknown>[] => {
-  let currentData: Record<string, unknown>[] = [];
+): T[] => {
+  let currentData: T[] = [];
 
   if (currentPageData === null) {
     currentData = previousData;

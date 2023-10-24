@@ -41,6 +41,6 @@ export const useModelPageParams = <TSearchParams>(modelConfig: ModelConfig) => {
     query,
     pathname,
     router,
-    params: params as TSearchParams,
+    params: params as TSearchParams & { sort: string; limit: number },
   };
 };

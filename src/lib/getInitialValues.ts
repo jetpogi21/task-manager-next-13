@@ -1,4 +1,4 @@
-import { BasicModel } from "@/interfaces/GeneralInterfaces";
+import { BasicModel, UnknownObject } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
 import { getChildModels } from "@/lib/getChildModels";
@@ -20,14 +20,13 @@ interface GetInitialValuesOption {
   leftFieldName?: string;
 }
 
-export const getInitialValues = <T extends Record<keyof T, unknown>>(
+export const getInitialValues = <T>(
   modelConfig: ModelConfig,
   record?: T,
   options?: GetInitialValuesOption
 ) => {
-  const { seqModelID } = modelConfig;
   const primaryKeyField = findModelPrimaryKeyField(modelConfig).fieldName;
-  const initialValues: Record<string, unknown> = {};
+  const initialValues: UnknownObject = {};
   modelConfig.fields.forEach(
     ({ allowNull, fieldName, dataType, relatedModelID, orderField }) => {
       if (record) {
@@ -114,11 +113,11 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
         } else {
           initialValues[pluralizedModelName] = [
             {
-              ...getInitialValues(leftModelConfig, undefined, {
+              ...(getInitialValues(leftModelConfig, undefined, {
                 childMode: true,
                 leftFieldName,
                 requiredList: options?.requiredList,
-              }),
+              }) as T),
               index: 0,
             },
           ];
@@ -138,9 +137,9 @@ export const getInitialValues = <T extends Record<keyof T, unknown>>(
           ).fieldName;
 
           const newRow: Record<string, unknown> = {
-            ...getInitialValues(leftModelConfig, undefined, {
+            ...(getInitialValues(leftModelConfig, undefined, {
               childMode: true,
-            }),
+            }) as T),
             index: initialValuesRows.length + 1,
             [leftFieldName]: record[primaryKeyField as keyof T],
           };
