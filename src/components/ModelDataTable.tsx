@@ -276,7 +276,7 @@ const ModelDataTable = <T, U, V>({
       if (field.hideInTable) {
         acc[field.fieldName] = false;
       } else {
-        acc[field.fieldName] = !isLarge;
+        acc[field.fieldName] = modelConfig.isTable ? !isLarge : true;
       }
       return acc;
     },
@@ -359,9 +359,13 @@ const ModelDataTable = <T, U, V>({
         ].includes(column.id)
       ) {
         if (column.id === "singleColumn") {
-          column.toggleVisibility(isLarge);
+          if (modelConfig.isTable) {
+            column.toggleVisibility(isLarge);
+          } else {
+            column.toggleVisibility(false);
+          }
         } else {
-          column.toggleVisibility(!isLarge);
+          column.toggleVisibility(!modelConfig.isTable || !isLarge);
         }
       }
     });
