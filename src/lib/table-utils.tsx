@@ -1,16 +1,30 @@
+import { Badge } from "@/components/ui/Badge";
 import { DataTableColumnHeader } from "@/components/ui/DataTable/DataTableColumnHeader";
 import { EditableTableCell } from "@/components/ui/DataTable/EditableTableCell";
-import { BasicModel } from "@/interfaces/GeneralInterfaces";
+import { BasicModel, UnknownObject } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
 import { getColumnAlignment } from "@/utils/utilities";
-import { ColumnDef, ColumnHelper } from "@tanstack/react-table";
+import {
+  CellContext,
+  ColumnDef,
+  ColumnHelper,
+  HeaderContext,
+} from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Check, X } from "lucide-react";
 
+export interface ColumnsToBeOverriden<TData, TValue> {
+  [key: string]: {
+    header?: (header: HeaderContext<TData, TValue>) => JSX.Element;
+    cell?: (cell: CellContext<TData, TValue>) => JSX.Element;
+  };
+}
+
 export const createTableColumns = <T,>(
   config: ModelConfig,
-  modelColumnHelper: ColumnHelper<T>
+  modelColumnHelper: ColumnHelper<T>,
+  columnsToBeOverriden?: ColumnsToBeOverriden<T, unknown>
 ): ColumnDef<T, unknown>[] => {
   return config.fields
     .sort(({ fieldOrder: sortA }, { fieldOrder: sortB }) => sortA - sortB)
@@ -30,13 +44,26 @@ export const createTableColumns = <T,>(
 
         //@ts-ignore
         return modelColumnHelper.accessor(fieldName, {
-          header: ({ column }) => (
-            <DataTableColumnHeader
-              column={column}
-              title={verboseFieldName}
-            />
-          ),
+          header: (header) => {
+            //Eearly exit if this will be overriden
+            const headerFunction = columnsToBeOverriden?.[fieldName]?.header;
+            if (headerFunction) {
+              return headerFunction(header);
+            }
+            return (
+              <DataTableColumnHeader
+                column={header.column}
+                title={verboseFieldName}
+              />
+            );
+          },
           cell: (cell) => {
+            //Eearly exit if this will be overriden
+            const cellFunction = columnsToBeOverriden?.[fieldName]?.cell;
+            if (cellFunction) {
+              return cellFunction(cell);
+            }
+
             if (cell.table.options.meta?.editable) {
               let options: BasicModel[] | undefined = [];
 

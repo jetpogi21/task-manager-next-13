@@ -2,7 +2,7 @@ import { ModelRowActions } from "@/components/ModelRowActions";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DeleteRowColumn } from "@/components/ui/DataTable/DeleteRowColumn";
 import { ModelConfig } from "@/interfaces/ModelConfig";
-import { createTableColumns } from "@/lib/table-utils";
+import { ColumnsToBeOverriden, createTableColumns } from "@/lib/table-utils";
 import {
   CellContext,
   ColumnDef,
@@ -14,11 +14,13 @@ interface ModelColumnProps<TData, TValue> {
   ModelSingleColumn?:
     | React.FC<{ cell: CellContext<TData, TValue> }>
     | undefined; // replace CellType with the actual type of cell
+  columnsToBeOverriden?: ColumnsToBeOverriden<TData, unknown>;
 }
 
 export const getModelColumns = <TData, TValue>({
   ModelSingleColumn,
   modelConfig,
+  columnsToBeOverriden,
 }: ModelColumnProps<TData, TValue>): ColumnDef<TData, TValue>[] => {
   const columnHelper = createColumnHelper<TData>();
 
@@ -72,7 +74,11 @@ export const getModelColumns = <TData, TValue>({
 
   return [
     ...columns,
-    ...createTableColumns<TData>(modelConfig, columnHelper),
+    ...createTableColumns<TData>(
+      modelConfig,
+      columnHelper,
+      columnsToBeOverriden
+    ),
     {
       id: "actions",
       cell: (cell) =>

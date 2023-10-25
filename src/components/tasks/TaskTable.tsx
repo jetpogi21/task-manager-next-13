@@ -23,6 +23,7 @@ import { getInitialValues } from "@/lib/getInitialValues";
 import { toast } from "@/hooks/use-toast";
 import { Formik, FormikProps } from "formik";
 import { ModelSchema } from "@/schema/ModelSchema";
+import { getTaskColumnsToBeOverriden } from "@/lib/tasks/getTaskColumnsToBeOverriden";
 
 const TaskTable: React.FC = () => {
   const modelConfig = TaskConfig;
@@ -69,7 +70,11 @@ const TaskTable: React.FC = () => {
   const currentPageData: GetModelsResponse<TaskModel> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
-  const currentData = getCurrentData(currentPageData, previousData);
+  const currentData = getCurrentData(
+    currentPageData,
+    previousData,
+    modelConfig.isTable ? false : defaultFormValue
+  );
 
   //Client functions
   const refetchQuery = getRefetchQueryFunction(
@@ -87,12 +92,18 @@ const TaskTable: React.FC = () => {
     "Add Form Templates": addTasksFromTemplateMutation,
   };
 
-  const { mutate: updateRecords } = useUpdateModelsMutation(modelConfig);
+  const { mutate: updateRecords, mutateAsync: asyncUpdateRecords } =
+    useUpdateModelsMutation(modelConfig);
   const rowActions = getTaskRowActions({
     currentData,
     setCurrentData,
     mutate: updateRecords,
   });
+
+  const columnsToBeOverriden = getTaskColumnsToBeOverriden<
+    TaskModel,
+    unknown
+  >();
 
   const handleSubmit = async (values: TaskFormikInitialValues) => {
     //The reference is the index of the row
@@ -109,7 +120,7 @@ const TaskTable: React.FC = () => {
       };
 
       //@ts-ignore
-      updateModelsMutation.mutateAsync(payload).then((data) => {
+      asyncUpdateRecords(payload).then((data) => {
         console.log(data);
         setIsUpdating(false);
         toast({
@@ -151,7 +162,10 @@ const TaskTable: React.FC = () => {
   return (
     mounted &&
     (modelConfig.isTable ? (
-      <ModelDataTable {...commonProps} />
+      <ModelDataTable
+        {...commonProps}
+        columnsToBeOverriden={columnsToBeOverriden}
+      />
     ) : (
       <Formik
         initialValues={
