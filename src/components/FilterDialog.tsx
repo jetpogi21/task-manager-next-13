@@ -31,7 +31,10 @@ const FilterDialog: FC<FilterDialogProps> = ({
           <ListFilter className="w-4 h-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[90%]">
+      <DialogContent
+        className="w-[90%]"
+        onPointerDownOutside={() => setIsOpen(false)}
+      >
         <div className="flex items-center">
           <div className="font-bold">
             Filter {config.pluralizedVerboseModelName}

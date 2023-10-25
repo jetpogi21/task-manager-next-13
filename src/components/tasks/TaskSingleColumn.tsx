@@ -14,7 +14,7 @@ const TaskSingleColumn: FC<TaskSingleColumnProps> = ({ cell }) => {
   return (
     <div className="flex flex-col gap-2">
       <div>{task.description}</div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Badge className="whitespace-nowrap">{task.TaskCategory.name}</Badge>
         <Badge className="whitespace-nowrap">{task.TaskInterval.name}</Badge>
         <Badge variant={task.isFinished ? "success" : "destructive"}>
