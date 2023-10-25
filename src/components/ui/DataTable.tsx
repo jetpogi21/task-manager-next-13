@@ -19,10 +19,11 @@ interface DataTableProps<T> {
   isLoading: boolean;
   draggableField?: ModelConfig["fields"][number];
   reorderRow?: (draggedRowIndex: number, targetRowIndex: number) => void;
+  isFetching: boolean;
 }
 
 export function DataTable<T>(props: DataTableProps<T>) {
-  const { table, isLoading, draggableField, reorderRow } = props;
+  const { table, isLoading, draggableField, reorderRow, isFetching } = props;
   const rowData = table.getRowModel().rows;
   return (
     <Table>
@@ -59,7 +60,7 @@ export function DataTable<T>(props: DataTableProps<T>) {
         ))}
       </TableHeader>
       <TableBody>
-        {isLoading ? (
+        {isLoading || isFetching ? (
           <TableRow>
             <TableCell
               colSpan={table.getVisibleFlatColumns().length}

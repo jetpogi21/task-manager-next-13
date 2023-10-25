@@ -451,6 +451,7 @@ const ModelDataTable = <T, U, V>({
           <DataTable
             table={modelTable}
             isLoading={isLoading}
+            isFetching={isFetching}
           />
         </div>
         <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">
