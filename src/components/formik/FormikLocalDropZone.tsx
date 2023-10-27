@@ -123,11 +123,11 @@ const useFileUploadMutation = (
   options: UseMutationOptions<unknown, Error, UploadFilesPayload>,
   setUploadProgress: React.Dispatch<React.SetStateAction<number>>
 ) => {
-  const fileUploadMutation = useMutation<unknown, Error, UploadFilesPayload>(
-    (filePayload: UploadFilesPayload) =>
+  const fileUploadMutation = useMutation<unknown, Error, UploadFilesPayload>({
+    mutationFn: (filePayload: UploadFilesPayload) =>
       sendFileToServer(filePayload, setUploadProgress),
-    options
-  );
+    ...options,
+  });
 
   return { fileUploadMutation };
 };

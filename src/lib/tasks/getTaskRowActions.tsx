@@ -1,26 +1,25 @@
 import { ModelRowActions } from "@/components/ModelRowActions";
-import { TaskModel } from "@/interfaces/TaskInterfaces";
 import { formatISO } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 
-interface GetTaskRowActionsProps {
-  currentData: TaskModel[];
-  setCurrentData: (item: TaskModel[]) => void;
+interface GetTaskRowActionsProps<T> {
+  currentData: T[];
+  setCurrentData: (item: T[]) => void;
   mutate: (payload: any) => void;
 }
 
-const toggleTask = (
+const toggleTask = <T,>(
   indexes: number[],
-  currentData: TaskModel[],
+  currentData: T[],
   isFinished: boolean,
-  setCurrentData: (item: TaskModel[]) => void,
+  setCurrentData: (item: T[]) => void,
   mutate: (payload: any) => void
 ) => {
   const newCurrentData = [...currentData];
   const payload: Record<string, unknown>[] = [];
 
   for (const idx of indexes) {
-    const task = newCurrentData[idx];
+    const task = newCurrentData[idx] as any;
     task.isFinished = isFinished;
     task.finishDateTime = isFinished ? formatISO(new Date()) : "";
 
@@ -35,15 +34,16 @@ const toggleTask = (
   mutate({ Tasks: payload });
 };
 
-export const getTaskRowActions = ({
+export const getTaskRowActions = <T,>({
   currentData,
   setCurrentData,
   mutate,
-}: GetTaskRowActionsProps): ModelRowActions => {
+}: GetTaskRowActionsProps<T>): ModelRowActions => {
   return {
     "Finish Task": {
       rowCondition: (rowData: any) => !rowData.isFinished,
       multiSelectCondition: (indexes: number[]) =>
+        //@ts-ignore
         indexes.some((value) => !currentData[value].isFinished),
       actionFn: (indexes: number[]) =>
         toggleTask(indexes, currentData, true, setCurrentData, mutate),
@@ -63,6 +63,7 @@ export const getTaskRowActions = ({
     "Unfinish Task": {
       rowCondition: (rowData: any) => rowData.isFinished,
       multiSelectCondition: (indexes: number[]) =>
+        //@ts-ignore
         indexes.some((value) => currentData[value].isFinished),
       actionFn: (indexes: number[]) =>
         toggleTask(indexes, currentData, false, setCurrentData, mutate),

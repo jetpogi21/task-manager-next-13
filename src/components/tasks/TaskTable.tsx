@@ -17,16 +17,25 @@ import { useTableProps } from "@/hooks/useTableProps";
 import ModelDataTable from "@/components/ModelDataTable";
 import { getTaskRowActions } from "@/lib/tasks/getTaskRowActions";
 import { useImportTaskFromTemplate } from "@/hooks/tasks/useImportTaskFromTemplate";
-import TaskSingleColumn from "@/components/tasks/TaskSingleColumn";
 import { createRequiredModelLists } from "@/lib/createRequiredModelLists";
 import { getInitialValues } from "@/lib/getInitialValues";
 import { toast } from "@/hooks/use-toast";
 import { Formik, FormikProps } from "formik";
 import { ModelSchema } from "@/schema/ModelSchema";
 import { getTaskColumnsToBeOverriden } from "@/lib/tasks/getTaskColumnsToBeOverriden";
+import TaskSingleColumn from "@/components/tasks/TaskSingleColumn";
+import useGlobalDialog from "@/hooks/useGlobalDialog";
+import TaskForm from "@/components/tasks/TaskForm";
+import { Row } from "@tanstack/react-table";
+import { findModelPrimaryKeyField } from "@/utils/utilities";
 
-const TaskTable: React.FC = () => {
+const TaskTable = <T,>({
+  tableStates,
+}: {
+  tableStates: ReturnType<typeof useTableProps<T>>;
+}) => {
   const modelConfig = TaskConfig;
+  const primaryKeyFieldName = findModelPrimaryKeyField(modelConfig).fieldName;
   const { pluralizedModelName } = modelConfig;
   const pageParams = useModelPageParams<TaskSearchParams>(modelConfig);
   const { params } = pageParams;
@@ -39,13 +48,12 @@ const TaskTable: React.FC = () => {
     createRequiredModelLists(modelConfig);
 
   //For Editable Tables
-  const defaultFormValue = getInitialValues<TaskModel>(modelConfig, undefined, {
+  const defaultFormValue = getInitialValues<T>(modelConfig, undefined, {
     childMode: true,
     requiredList,
   });
 
   //Store Variables
-  const tableStates = useTableProps<TaskModel>(modelConfig);
   const {
     page,
     setRecordCount,
@@ -59,7 +67,7 @@ const TaskTable: React.FC = () => {
   const queryParams = params;
 
   const useTaskSearchQuery = () =>
-    useModelsQuery<TaskModel>(modelConfig, {
+    useModelsQuery<T>(modelConfig, {
       ...queryParams,
       fetchCount: fetchCount.toString(),
     });
@@ -67,7 +75,7 @@ const TaskTable: React.FC = () => {
   const queryResponse = useTaskSearchQuery();
   const { data, refetch, isFetching } = queryResponse;
 
-  const currentPageData: GetModelsResponse<TaskModel> | null = data
+  const currentPageData: GetModelsResponse<T> | null = data
     ? data.pages[page - (isFetching ? 2 : 1)]
     : null;
   const currentData = getCurrentData(
@@ -100,10 +108,7 @@ const TaskTable: React.FC = () => {
     mutate: updateRecords,
   });
 
-  const columnsToBeOverriden = getTaskColumnsToBeOverriden<
-    TaskModel,
-    unknown
-  >();
+  const columnsToBeOverriden = getTaskColumnsToBeOverriden<T, unknown>();
 
   const handleSubmit = async (values: TaskFormikInitialValues) => {
     //The reference is the index of the row
@@ -130,6 +135,35 @@ const TaskTable: React.FC = () => {
       });
     }
   };
+
+  const { openDialog, closeDialog } = useGlobalDialog();
+
+  const openDialogHandler = (row?: Row<T>["original"]) => {
+    openDialog({
+      title: `${modelConfig.verboseModelName} Form`,
+      message: (
+        <div className="pt-8">
+          <TaskForm
+            data={(row ? row : null) as TaskModel | null}
+            id={
+              row
+                ? (row[primaryKeyFieldName as keyof typeof row] as string)
+                : "new"
+            }
+            modalFormProps={{
+              onSuccess: () => {
+                closeDialog();
+                refetchQuery(page - 1);
+              },
+            }}
+          />
+        </div>
+      ),
+      formMode: true,
+    });
+  };
+
+  const dialogFormProps = { openDialogHandler };
 
   useEffect(() => {
     setMounted(true);
@@ -165,6 +199,7 @@ const TaskTable: React.FC = () => {
       <ModelDataTable
         {...commonProps}
         columnsToBeOverriden={columnsToBeOverriden}
+        dialogFormProps={modelConfig.isModal ? dialogFormProps : undefined}
       />
     ) : (
       <Formik
@@ -181,7 +216,7 @@ const TaskTable: React.FC = () => {
         {(formik) => (
           <ModelDataTable
             {...commonProps}
-            formik={formik as unknown as FormikProps<TaskModel>}
+            formik={formik as unknown as FormikProps<T>}
           />
         )}
       </Formik>

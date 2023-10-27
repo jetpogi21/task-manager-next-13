@@ -5,12 +5,12 @@ import { CellContext } from "@tanstack/react-table";
 import { format } from "date-fns";
 import React, { FC } from "react";
 
-interface TaskSingleColumnProps {
-  cell: CellContext<TaskModel, unknown>;
+interface TaskSingleColumnProps<T> {
+  cell: CellContext<T, unknown>;
 }
 
-const TaskSingleColumn: FC<TaskSingleColumnProps> = ({ cell }) => {
-  const task = cell.row.original;
+const TaskSingleColumn = <T,>({ cell }: TaskSingleColumnProps<T>) => {
+  const task = cell.row.original as TaskModel;
   return (
     <div className="flex flex-col gap-2">
       <div>{task.description}</div>
