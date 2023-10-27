@@ -15,6 +15,7 @@ import {
 } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { generateActionButtons } from "@/lib/generateActionButtons";
+import { getColumnOrder } from "@/lib/getColumnOrder";
 import { getModelColumns } from "@/lib/getModelColumns";
 import { ColumnsToBeOverriden } from "@/lib/table-utils";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,7 @@ interface ModelDataTableProps<T, U, V> {
   formik?: FormikProps<T>;
   columnsToBeOverriden?: ColumnsToBeOverriden<T, unknown>;
   dialogFormProps?: DialogFormProps<T>;
+  columnOrderToOverride?: [string, number][];
 }
 
 const TableWrapper = ({
@@ -109,6 +111,7 @@ const ModelDataTable = <T, U, V>({
   formik,
   columnsToBeOverriden,
   dialogFormProps,
+  columnOrderToOverride,
 }: ModelDataTableProps<T, U, V>) => {
   const { query, pathname, router, params } = pageParams;
   const { sort, limit } = params;
@@ -290,6 +293,11 @@ const ModelDataTable = <T, U, V>({
     { singleColumn: isLarge }
   );
 
+  const columnOrder: string[] = getColumnOrder(
+    modelConfig,
+    columnOrderToOverride
+  );
+
   let firstFieldInForm: string = "";
   let lastFieldInForm: string = "";
   modelConfig.fields
@@ -331,6 +339,7 @@ const ModelDataTable = <T, U, V>({
     enableMultiRowSelection: true,
     initialState: {
       columnVisibility,
+      columnOrder,
     },
     meta: {
       name: modelConfig.pluralizedModelName,

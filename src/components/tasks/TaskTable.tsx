@@ -165,6 +165,9 @@ const TaskTable = <T,>({
 
   const dialogFormProps = { openDialogHandler };
 
+  const columnOrderToOverride: [string, number][] = [["isFinished", 2]];
+  /* const columnOrderToOverride = undefined; */
+
   useEffect(() => {
     setMounted(true);
     return () => {
@@ -191,6 +194,7 @@ const TaskTable = <T,>({
     SingleColumnComponent: TaskSingleColumn,
     requiredList,
     defaultFormValue,
+    columnOrderToOverride,
   };
 
   return (
