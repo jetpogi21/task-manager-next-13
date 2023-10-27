@@ -20,6 +20,24 @@ interface GetInitialValuesOption {
   leftFieldName?: string;
 }
 
+function handleRequiredList(
+  requiredList: Record<string, BasicModel[]> | undefined,
+  listKey: string,
+  fieldName: string,
+  initialValues: Record<string, unknown>
+) {
+  if (requiredList) {
+    const requiredModelList = requiredList[listKey];
+    if (requiredModelList.length > 0) {
+      initialValues[fieldName] = requiredModelList[0].id;
+      return true;
+    }
+    initialValues[fieldName] = "";
+    return true;
+  }
+  return false;
+}
+
 export const getInitialValues = <T>(
   modelConfig: ModelConfig,
   record?: T,
@@ -28,7 +46,14 @@ export const getInitialValues = <T>(
   const primaryKeyField = findModelPrimaryKeyField(modelConfig).fieldName;
   const initialValues: UnknownObject = {};
   modelConfig.fields.forEach(
-    ({ allowNull, fieldName, dataType, relatedModelID, orderField }) => {
+    ({
+      allowNull,
+      fieldName,
+      dataType,
+      relatedModelID,
+      orderField,
+      dataTypeOption,
+    }) => {
       if (record) {
         initialValues[fieldName] = record[fieldName as keyof T];
         return;
@@ -49,7 +74,19 @@ export const getInitialValues = <T>(
         return;
       }
 
-      //Meaning it uses some kind of reference to get its value based of a model
+      if (dataTypeOption && dataType === "ENUM") {
+        if (
+          handleRequiredList(
+            options?.requiredList,
+            `${fieldName}List`,
+            fieldName,
+            initialValues
+          )
+        ) {
+          return;
+        }
+      }
+
       if (relatedModelID) {
         const relatedModelConfig = findConfigItemObject(
           AppConfig.models,
@@ -58,15 +95,14 @@ export const getInitialValues = <T>(
         );
         const variableName = relatedModelConfig.variableName;
 
-        //Look at the requiredList
-        const requiredList = options?.requiredList;
-        if (requiredList) {
-          const requiredModelList = requiredList[`${variableName}List`];
-          if (requiredModelList.length > 0) {
-            initialValues[fieldName] = requiredModelList[0].id;
-            return;
-          }
-          initialValues[fieldName] = "";
+        if (
+          handleRequiredList(
+            options?.requiredList,
+            `${variableName}List`,
+            fieldName,
+            initialValues
+          )
+        ) {
           return;
         }
       }

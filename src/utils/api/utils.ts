@@ -137,7 +137,7 @@ export function appendFieldsToSQL(
 
 export function resetSQL(sql: clsSQL) {
   sql.limit = 0;
-  sql.orderBy = [];
+  //sql.orderBy = [];
   sql.filter = "";
   sql.groupBy = [];
 }
@@ -360,15 +360,20 @@ export function getMappedKeys(columns: {
 export const generateFieldsForSQL = (
   config: ModelConfig
 ): ([string, string] | string)[] => {
-  return config.fields
+  const field = [];
+  if (config.slugField) {
+    field.push("slug");
+  }
+  config.fields
     .sort((a, b) => a.fieldOrder - b.fieldOrder)
-    .map(({ fieldName, databaseFieldName }) => {
+    .forEach(({ fieldName, databaseFieldName }) => {
       if (fieldName === databaseFieldName) {
-        return fieldName;
+        field.push(fieldName);
       } else {
-        return [databaseFieldName, fieldName];
+        field.push([databaseFieldName, fieldName]);
       }
     });
+  return field;
 };
 
 export const generateQFields = (config: ModelConfig) => {
@@ -774,6 +779,7 @@ export function getMainModelSQL(
   modelConfig: ModelConfig,
   options?: {
     primaryKeyValue?: string | number;
+    useSlug?: boolean;
   }
 ) {
   const simpleOnly = query["simpleOnly"];
@@ -807,9 +813,12 @@ export function getMainModelSQL(
   }
 
   if (options?.primaryKeyValue) {
-    filters.push(
-      `${table}.${primaryKeyField.databaseFieldName} = ${options.primaryKeyValue}`
-    );
+    if (options?.useSlug) {
+      filters.push(`${table}.slug = :id`);
+    } else {
+      filters.push(`${table}.${primaryKeyField.databaseFieldName} = :id`);
+    }
+    replacements["id"] = options.primaryKeyValue as string;
   }
 
   const leftJoins: clsJoin[] = [];

@@ -4,6 +4,7 @@ import { EditableTableCell } from "@/components/ui/DataTable/EditableTableCell";
 import { BasicModel, UnknownObject } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { findModelUniqueFieldName } from "@/lib/findModelUniqueFieldName";
 import { getColumnAlignment } from "@/utils/utilities";
 import {
   CellContext,
@@ -69,6 +70,7 @@ export const createTableColumns = <T,>(
 
               if (relatedModel) {
                 const opt = cell.table.options.meta?.options;
+
                 options = opt ? opt[relatedModel.variableName + "List"] : [];
               } else {
                 options = [];
@@ -83,8 +85,9 @@ export const createTableColumns = <T,>(
             }
 
             if (relatedModel) {
+              const uniqueFieldName = findModelUniqueFieldName(relatedModel);
               //@ts-ignore
-              return cell.row.original[relatedModel.modelName].name;
+              return cell.row.original[relatedModel.modelName][uniqueFieldName];
             }
 
             const cellValue = cell.getValue();

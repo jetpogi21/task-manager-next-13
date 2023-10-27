@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
 interface Dialog {
-  message: string;
-  setMessage: (message: string) => void;
+  message: React.ReactNode;
+  setMessage: (message: React.ReactNode) => void;
   title: string;
   setTitle: (title: string) => void;
   open: boolean;
@@ -12,12 +12,14 @@ interface Dialog {
     secondaryAction,
     isLoading,
     primaryAction,
+    formMode,
   }: {
     title: string;
-    message: string;
+    message: React.ReactNode;
     secondaryAction?: () => void;
     isLoading?: boolean;
-    primaryAction: () => void;
+    primaryAction?: () => void;
+    formMode?: boolean;
   }) => void;
   closeDialog: () => void;
   isLoading: boolean;
@@ -26,22 +28,31 @@ interface Dialog {
   setPrimaryAction: (primaryAction: () => void) => void;
   secondaryAction?: () => void;
   setSecondaryAction: (secondaryAction: () => void) => void;
+  formMode: boolean;
 }
 
 const useGlobalDialog = create<Dialog>((set) => ({
+  formMode: false,
   message: "",
   title: "",
   open: false,
   primaryAction: undefined,
   isLoading: false,
   secondaryAction: () => set({ open: false }),
-  setIsLoading: (isLoading: boolean) => set({ isLoading }),
+  setIsLoading: (isLoading) => set({ isLoading }),
   closeDialog: () => set({ open: false }),
-  setPrimaryAction: (primaryAction: () => void) => set({ primaryAction }),
-  setSecondaryAction: (secondaryAction: () => void) => set({ secondaryAction }),
-  setMessage: (message: string) => set({ message }),
-  setTitle: (title: string) => set({ title }),
-  openDialog({ title, message, secondaryAction, isLoading, primaryAction }) {
+  setPrimaryAction: (primaryAction) => set({ primaryAction }),
+  setSecondaryAction: (secondaryAction) => set({ secondaryAction }),
+  setMessage: (message) => set({ message }),
+  setTitle: (title) => set({ title }),
+  openDialog({
+    title,
+    message,
+    secondaryAction,
+    isLoading,
+    primaryAction,
+    formMode,
+  }) {
     return set({
       open: true,
       title,
@@ -50,6 +61,7 @@ const useGlobalDialog = create<Dialog>((set) => ({
         (secondaryAction as () => void) || (() => set({ open: false })),
       primaryAction,
       isLoading: Boolean(isLoading),
+      formMode: Boolean(formMode),
     });
   },
 }));

@@ -27,6 +27,7 @@ import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import { DataTable } from "@/components/ui/DataTable";
 import { useTableProps } from "@/hooks/useTableProps";
 import { sortFunction } from "@/lib/sortFunction";
+import { getFirstAndLastFieldInForm } from "@/lib/getFirstAndLastFieldInForm";
 
 interface ModelSubformProps<T> {
   formik: FormikProps<T>;
@@ -87,7 +88,7 @@ const ModelSubform = <T,>({
     createRequiredModelLists(modelConfig);
 
   //Page Constants
-  const defaultFormValue = getInitialValues(modelConfig, undefined, {
+  const defaultFormValue = getInitialValues<T>(modelConfig, undefined, {
     childMode: true,
     requiredList,
     leftFieldName: leftFieldName.fieldName,
@@ -239,7 +240,9 @@ const ModelSubform = <T,>({
 
   const columnVisibility: Record<string, boolean> = modelConfig.fields.reduce(
     (acc: Record<string, boolean>, field) => {
-      if (field.hideInTable) {
+      if (relationshipConfig.leftForeignKey === field.fieldName) {
+        acc[field.fieldName] = false;
+      } else if (field.hideInTable) {
         acc[field.fieldName] = false;
       }
       return acc;
@@ -247,19 +250,9 @@ const ModelSubform = <T,>({
     {}
   );
 
-  let firstFieldInForm: string = "";
-  let lastFieldInForm: string = "";
-  modelConfig.fields
-    .filter((field) => !field.hideInTable)
-    .sort((a, b) => {
-      return a.fieldOrder - b.fieldOrder;
-    })
-    .forEach((field, index) => {
-      if (index === 0) {
-        firstFieldInForm = field.fieldName;
-      }
-      lastFieldInForm = field.fieldName;
-    });
+  const [firstFieldInForm, lastFieldInForm] = getFirstAndLastFieldInForm(
+    modelConfig.fields
+  );
 
   const modelColumns = useMemo(
     () => getModelColumns<Record<string, unknown>, unknown>({ modelConfig }),
@@ -294,7 +287,7 @@ const ModelSubform = <T,>({
       lastFieldInForm: lastFieldInForm,
       forwardedRef: ref,
       editable: true,
-      options: {},
+      options: { ...requiredList },
       rowActions: {},
     },
   });

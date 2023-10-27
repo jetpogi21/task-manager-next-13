@@ -54,8 +54,6 @@ const sendFileToServer = async (
     },
   })) as { data: LocalFileInputAPIResponse };
 
-  console.log(data);
-
   return data;
 };
 
@@ -64,10 +62,10 @@ const useFileUploadMutation = (
 ) => {
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const fileUploadMutation = useMutation<unknown, Error, File>(
-    (file: File) => sendFileToServer({ file }, setUploadProgress),
-    options
-  );
+  const fileUploadMutation = useMutation<unknown, Error, File>({
+    ...options,
+    mutationFn: (file: File) => sendFileToServer({ file }, setUploadProgress),
+  });
 
   return { fileUploadMutation, uploadProgress };
 };

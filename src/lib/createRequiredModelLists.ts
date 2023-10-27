@@ -2,6 +2,7 @@ import useModelList from "@/hooks/useModelList";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { extractDataTypeOptionSubstrings } from "@/lib/extractDataTypeOptionSubstrings";
 import {
   findConfigItemObject,
   findRelationshipModelConfig,
@@ -9,6 +10,19 @@ import {
 
 export const createRequiredModelLists = (modelConfig: ModelConfig) => {
   const requiredList: Record<string, BasicModel[]> = {};
+
+  modelConfig.fields
+    .filter(
+      ({ dataTypeOption, dataType }) => dataTypeOption && dataType === "ENUM"
+    )
+    .forEach(({ fieldName, dataTypeOption }) => {
+      const controlOptionArr = extractDataTypeOptionSubstrings(dataTypeOption!);
+
+      requiredList[`${fieldName}List`] = controlOptionArr.map((item) => ({
+        id: item,
+        name: item,
+      }));
+    });
 
   //Loop through each field having relatedModelID value
   modelConfig.fields
@@ -18,9 +32,8 @@ export const createRequiredModelLists = (modelConfig: ModelConfig) => {
         (model) => model.seqModelID === relatedModelID
       );
       if (!relatedModel) return;
-      requiredList[`${relatedModel.variableName}List`] = useModelList(
-        relatedModel.modelPath
-      );
+      requiredList[`${relatedModel.variableName}List`] =
+        useModelList(relatedModel);
     });
 
   AppConfig.relationships
@@ -36,9 +49,8 @@ export const createRequiredModelLists = (modelConfig: ModelConfig) => {
         "TROUGH"
       );
 
-      requiredList[`${throughModelConfig.variableName}List`] = useModelList(
-        throughModelConfig.modelPath
-      );
+      requiredList[`${throughModelConfig.variableName}List`] =
+        useModelList(throughModelConfig);
     });
 
   return requiredList;
@@ -56,9 +68,8 @@ export const createRequiredModelListsForFilter = (modelConfig: ModelConfig) => {
         modelListID!
       );
 
-      requiredList[`${relatedModel.variableName}List`] = useModelList(
-        relatedModel.modelPath
-      );
+      requiredList[`${relatedModel.variableName}List`] =
+        useModelList(relatedModel);
     });
 
   return requiredList;

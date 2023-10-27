@@ -58,7 +58,6 @@ export const updateModel = async (
   t: Transaction
 ) => {
   const parsedPayload = createParsedPayload(modelConfig, payload);
-  console.log(parsedPayload);
 
   const primaryKeyField = findModelPrimaryKeyField(modelConfig);
   const Model =

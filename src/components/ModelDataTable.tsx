@@ -1,7 +1,7 @@
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import { ModelRowActions } from "@/components/ModelRowActions";
 import { Button, buttonVariants } from "@/components/ui/Button";
-import { DataTable } from "@/components/ui/DataTable";
+import { DataTable, DialogFormProps } from "@/components/ui/DataTable";
 import useGlobalDialog from "@/hooks/useGlobalDialog";
 import { useModelPageParams } from "@/hooks/useModelPageParams";
 import useScreenSize from "@/hooks/useScreenSize";
@@ -25,6 +25,7 @@ import {
 } from "@/utils/utilities";
 import { encodeParams, removeItemsByIndexes } from "@/utils/utils";
 import {
+  InfiniteData,
   UseInfiniteQueryResult,
   UseMutationResult,
 } from "@tanstack/react-query";
@@ -33,11 +34,44 @@ import {
   getCoreRowModel,
   SortingState,
   CellContext,
+  Row,
 } from "@tanstack/react-table";
 import { Form, FormikProps } from "formik";
 import { ChevronLast, Plus, Trash } from "lucide-react";
 import Link from "next/link";
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+
+type CustomUseMutationResult<T> = UseMutationResult<
+  {
+    data: T;
+  },
+  unknown,
+  void,
+  unknown
+>;
+
+interface ModelActions<T> {
+  [key: string]: CustomUseMutationResult<T>;
+}
+
+interface ModelDataTableProps<T, U, V> {
+  modelConfig: ModelConfig;
+  tableStates: ReturnType<typeof useTableProps<T>>;
+  refetchQuery: (idx: number) => void;
+  queryResponse: UseInfiniteQueryResult<
+    InfiniteData<GetModelsResponse<T>, unknown>,
+    unknown
+  >;
+  pageParams: ReturnType<typeof useModelPageParams<U>>;
+  SingleColumnComponent?: React.FC<{ cell: CellContext<T, unknown> }>;
+  rowActions?: ModelRowActions;
+  modelActions?: ModelActions<V>;
+  requiredList?: Record<string, BasicModel[]>;
+  defaultFormValue?: T;
+  formik?: FormikProps<T>;
+  columnsToBeOverriden?: ColumnsToBeOverriden<T, unknown>;
+  dialogFormProps?: DialogFormProps<T>;
+}
 
 const TableWrapper = ({
   children,
@@ -61,34 +95,6 @@ const TableWrapper = ({
   }
 };
 
-type CustomUseMutationResult<T> = UseMutationResult<
-  {
-    data: T;
-  },
-  unknown,
-  void,
-  unknown
->;
-
-interface ModelActions<T> {
-  [key: string]: CustomUseMutationResult<T>;
-}
-
-interface ModelDataTableProps<T, U, V> {
-  modelConfig: ModelConfig;
-  tableStates: ReturnType<typeof useTableProps<T>>;
-  refetchQuery: (idx: number) => void;
-  queryResponse: UseInfiniteQueryResult<GetModelsResponse<T>, unknown>;
-  pageParams: ReturnType<typeof useModelPageParams<U>>;
-  SingleColumnComponent?: React.FC<{ cell: CellContext<T, unknown> }>;
-  rowActions?: ModelRowActions;
-  modelActions?: ModelActions<V>;
-  requiredList?: Record<string, BasicModel[]>;
-  defaultFormValue?: T;
-  formik?: FormikProps<T>;
-  columnsToBeOverriden?: ColumnsToBeOverriden<T, unknown>;
-}
-
 const ModelDataTable = <T, U, V>({
   modelConfig,
   tableStates,
@@ -102,6 +108,7 @@ const ModelDataTable = <T, U, V>({
   defaultFormValue,
   formik,
   columnsToBeOverriden,
+  dialogFormProps,
 }: ModelDataTableProps<T, U, V>) => {
   const { query, pathname, router, params } = pageParams;
   const { sort, limit } = params;
@@ -276,7 +283,7 @@ const ModelDataTable = <T, U, V>({
       if (field.hideInTable) {
         acc[field.fieldName] = false;
       } else {
-        acc[field.fieldName] = modelConfig.isTable ? !isLarge : true;
+        acc[field.fieldName] = !SingleColumnComponent ? !isLarge : true;
       }
       return acc;
     },
@@ -337,6 +344,7 @@ const ModelDataTable = <T, U, V>({
       forwardedRef: ref,
       editable: !modelConfig.isTable,
       rowActions,
+      openDialogHandler: dialogFormProps?.openDialogHandler,
       options: {},
     },
   });
@@ -359,13 +367,13 @@ const ModelDataTable = <T, U, V>({
         ].includes(column.id)
       ) {
         if (column.id === "singleColumn") {
-          if (modelConfig.isTable) {
+          if (SingleColumnComponent) {
             column.toggleVisibility(isLarge);
           } else {
             column.toggleVisibility(false);
           }
         } else {
-          column.toggleVisibility(!modelConfig.isTable || !isLarge);
+          column.toggleVisibility(!Boolean(SingleColumnComponent) || !isLarge);
         }
       }
     });
@@ -422,21 +430,34 @@ const ModelDataTable = <T, U, V>({
                 row
               </Button>
             )}
-            <Link
-              className={cn(
-                buttonVariants({ variant: "secondary", size: "sm" }),
-                "ml-auto"
-              )}
-              href={`/${modelConfig.modelPath}/new`}
-            >
-              Add New
-            </Link>
+            {dialogFormProps ? (
+              <Button
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "sm" }),
+                  "ml-auto"
+                )}
+                onClick={() => dialogFormProps.openDialogHandler()}
+              >
+                Add New
+              </Button>
+            ) : (
+              <Link
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "sm" }),
+                  "ml-auto"
+                )}
+                href={`/${modelConfig.modelPath}/new`}
+              >
+                Add New
+              </Link>
+            )}
+
             {modelActions
               ? Object.keys(modelActions).map((key) => {
                   const mutation = modelActions[key];
                   return (
                     <Button
-                      isLoading={mutation.isLoading}
+                      isLoading={mutation.isPending}
                       variant={"secondary"}
                       size="sm"
                       onClick={() => {
@@ -456,6 +477,17 @@ const ModelDataTable = <T, U, V>({
             table={modelTable}
             isLoading={isLoading}
             isFetching={isFetching}
+            dialogFormProps={dialogFormProps}
+            onRowClick={(row) => {
+              const hasSlugField = !!modelConfig.slugField;
+
+              const url = `${pathname}/${
+                hasSlugField
+                  ? row["slug" as keyof typeof row]
+                  : row[primaryKeyFieldName as keyof typeof row]
+              }`;
+              router.push(url);
+            }}
           />
         </div>
         <div className="flex items-center justify-between mt-auto text-sm select-none text-muted-foreground">

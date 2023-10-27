@@ -13,6 +13,7 @@ import { FormikTextArea } from "@/components/formik/FormikTextArea";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { extractDataTypeOptionSubstrings } from "@/lib/extractDataTypeOptionSubstrings";
 import { getChildModelsWithSimpleRelationship } from "@/lib/getChildModelsWithSimpleRelationship";
 import { getModelListById } from "@/lib/getModelListById";
 import { getSortedFormikFormControlFields } from "@/lib/getSortedFormikFormControlFields";
@@ -52,6 +53,8 @@ export const FormikFormControlGenerator = ({
         relatedModelID,
         allowNull,
         columnsOccupied,
+        dataTypeOption,
+        dataType,
       },
       index
     ) => {
@@ -82,10 +85,17 @@ export const FormikFormControlGenerator = ({
           options?.containerClassName?.[fieldName]
         ),
       };
-      const relatedModelList = getModelListById(
-        relatedModelID,
-        options?.requiredList
-      );
+
+      let controlOptions;
+      if (dataTypeOption && dataType === "ENUM") {
+        controlOptions = options?.requiredList?.[`${fieldName}List`] || [];
+      } else {
+        controlOptions = getModelListById(
+          relatedModelID,
+          options?.requiredList
+        );
+      }
+
       switch (controlType) {
         case "Switch":
           return (
@@ -98,7 +108,7 @@ export const FormikFormControlGenerator = ({
         case "ComboBox":
           return (
             <FormikCombobox
-              items={relatedModelList}
+              items={controlOptions}
               showLabel={true}
               key={fieldName}
               {...commonProps}
@@ -108,7 +118,7 @@ export const FormikFormControlGenerator = ({
         case "Select":
           return (
             <FormikSelect
-              options={relatedModelList}
+              options={controlOptions}
               showLabel={true}
               allowBlank={allowNull}
               key={fieldName}

@@ -10,6 +10,7 @@ import Sidebar from "@/components/sidebar/Sidebar";
 import DarkLightToggle from "@/components/header/DarkLightToggle";
 import { GlobalDialog } from "@/components/GlobalDialog";
 
+
 const inter = Roboto_Flex({
   subsets: ["latin"],
   display: "swap",

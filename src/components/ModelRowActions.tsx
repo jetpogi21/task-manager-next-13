@@ -56,14 +56,13 @@ export function ModelRowActions<TData, TValue>({
   const rowData = cell.row.original;
 
   const id = rowData[primaryKeyField as keyof TData] as string;
-  const slug = modelConfig.slugField
-    ? rowData[modelConfig.slugField as keyof TData]
-    : id;
+  const slug = modelConfig.slugField ? rowData["slug" as keyof TData] : id;
 
   const index = cell.row.index;
 
   //Variables from table meta
   const deleteRow = cell.table.options.meta?.deleteRow;
+  const openDialogHandler = cell.table.options.meta?.openDialogHandler;
 
   const rowActions = cell.table.options.meta?.rowActions as
     | ModelRowActions
@@ -96,6 +95,30 @@ export function ModelRowActions<TData, TValue>({
             closeDropDown();
           }}
         >
+          {modelConfig.isModal ? (
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => {
+                setOpen(false);
+                openDialogHandler && openDialogHandler(rowData);
+              }}
+            >
+              Edit/View {modelConfig.verboseModelName}
+            </DropdownMenuItem>
+          ) : (
+            <Link href={`/${modelConfig.modelPath}/${slug}`}>
+              <DropdownMenuItem className="cursor-pointer">
+                Edit/View {modelConfig.verboseModelName}
+              </DropdownMenuItem>
+            </Link>
+          )}
+
+          {generateDropdownMenuItems<TData, TValue>(
+            rowActions,
+            rowData,
+            closeDropDown,
+            index
+          )}
           <DropdownMenuItem
             onSelect={() => {
               closeDropDown();
@@ -105,17 +128,6 @@ export function ModelRowActions<TData, TValue>({
           >
             Delete
           </DropdownMenuItem>
-          <Link href={`/${modelConfig.modelPath}/${slug}`}>
-            <DropdownMenuItem className="cursor-pointer">
-              Edit/View {modelConfig.verboseModelName}
-            </DropdownMenuItem>
-          </Link>
-          {generateDropdownMenuItems<TData, TValue>(
-            rowActions,
-            rowData,
-            closeDropDown,
-            index
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     )

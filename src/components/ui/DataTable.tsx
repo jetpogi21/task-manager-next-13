@@ -1,6 +1,5 @@
 "use client";
-
-import { Table as TTable, flexRender } from "@tanstack/react-table";
+import { Row, Table as TTable, flexRender } from "@tanstack/react-table";
 
 import {
   Table,
@@ -14,17 +13,32 @@ import { cn } from "@/lib/utils";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { DraggableRow } from "@/components/ui/DataTable/DraggableRow";
 
+export interface DialogFormProps<T> {
+  openDialogHandler: (row?: Row<T>["original"]) => void;
+}
+
 interface DataTableProps<T> {
   table: TTable<T>;
   isLoading: boolean;
   draggableField?: ModelConfig["fields"][number];
   reorderRow?: (draggedRowIndex: number, targetRowIndex: number) => void;
-  isFetching: boolean;
+  isFetching?: boolean;
+  dialogFormProps?: DialogFormProps<T>;
+  onRowClick: (row: Row<T>["original"]) => void;
 }
 
 export function DataTable<T>(props: DataTableProps<T>) {
-  const { table, isLoading, draggableField, reorderRow, isFetching } = props;
+  const {
+    table,
+    isLoading,
+    draggableField,
+    reorderRow,
+    isFetching,
+    dialogFormProps,
+    onRowClick,
+  } = props;
   const rowData = table.getRowModel().rows;
+
   return (
     <Table>
       <TableHeader>
@@ -82,14 +96,34 @@ export function DataTable<T>(props: DataTableProps<T>) {
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    align={(cell.column.columnDef.meta as any)?.alignment}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  const isSelectable =
+                    cell.column.id === "select" || cell.column.id === "actions";
+                  const cellClickHandler = isSelectable
+                    ? undefined
+                    : dialogFormProps
+                    ? dialogFormProps.openDialogHandler
+                    : onRowClick;
+
+                  return (
+                    <TableCell
+                      key={cell.id}
+                      align={(cell.column.columnDef.meta as any)?.alignment}
+                      className={cn(
+                        "cursor-pointer",
+                        isSelectable && "cursor-default"
+                      )}
+                      onClick={() =>
+                        cellClickHandler && cellClickHandler(cell.row.original)
+                      }
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             );
           })

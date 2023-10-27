@@ -11,7 +11,7 @@ import {
 import { AppConfig } from "@/lib/app-config";
 import { getInitials } from "@/utils/utilities";
 import { ModelConfig } from "@/interfaces/ModelConfig";
-import { Home } from "lucide-react";
+import { Home, LayoutGrid } from "lucide-react";
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
@@ -74,7 +74,9 @@ const Sidebar: React.FC = () => {
                   >
                     {NavItemIcon ? (
                       <NavItemIcon className="w-3.5 h-3.5" />
-                    ) : null}
+                    ) : (
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                    )}
                     <span className="hidden lg:block">
                       {pluralizedVerboseModelName}
                     </span>

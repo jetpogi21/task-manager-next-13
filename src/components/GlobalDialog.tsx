@@ -21,6 +21,7 @@ export function GlobalDialog() {
     primaryAction,
     secondaryAction,
     isLoading,
+    formMode,
   } = useGlobalDialog((state) => ({
     open: state.open,
     message: state.message,
@@ -29,11 +30,12 @@ export function GlobalDialog() {
     primaryAction: state.primaryAction,
     secondaryAction: state.secondaryAction,
     isLoading: state.isLoading,
+    formMode: state.formMode,
   }));
 
   return (
     <Dialog open={open}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-full max-w-max">
         <DialogPrimitive.Close
           className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
           onClick={closeDialog}
@@ -43,27 +45,29 @@ export function GlobalDialog() {
         </DialogPrimitive.Close>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{message}</DialogDescription>
+          {message}
         </DialogHeader>
-        <DialogFooter>
-          <Button
-            type="button"
-            size="sm"
-            variant={"destructive"}
-            isLoading={isLoading}
-            onClick={primaryAction}
-          >
-            Proceed
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={secondaryAction}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-        </DialogFooter>
+        {formMode ? null : (
+          <DialogFooter>
+            <Button
+              type="button"
+              size="sm"
+              variant={"destructive"}
+              isLoading={isLoading}
+              onClick={primaryAction}
+            >
+              Proceed
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={secondaryAction}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
