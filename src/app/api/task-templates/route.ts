@@ -31,7 +31,6 @@ export const GET = async (req: Request) => {
 
   const fetchCount = query["fetchCount"] === "true";
   const sort = getSortedValueSimplified(query["sort"], modelConfig);
-
   const sortField = sort.includes("-") ? sort.substring(1) : sort;
 
   const cursorField = findConfigItem(

@@ -47,7 +47,8 @@ export const LoginForm: React.FC<LoginFormProps> = (props) => {
     }
   };
 
-  const { mutate, isLoading } = useMutation(login, {
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: login,
     onSuccess: (data) => {
       //router.push("/dashboard");
     },

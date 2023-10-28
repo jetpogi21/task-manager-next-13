@@ -387,6 +387,9 @@ const ModelSubform = <T,>({
           isLoading={false}
           draggableField={draggableField}
           reorderRow={reorderRow}
+          onRowClick={() =>
+            alert("This ModelSubform functionality is still pending..")
+          }
         />
       </div>
       <div className="flex items-center justify-between flex-1 text-sm select-none text-muted-foreground">

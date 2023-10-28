@@ -466,6 +466,7 @@ const ModelDataTable = <T, U, V>({
                   const mutation = modelActions[key];
                   return (
                     <Button
+                      key={key}
                       isLoading={mutation.isPending}
                       variant={"secondary"}
                       size="sm"

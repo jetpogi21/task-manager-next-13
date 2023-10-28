@@ -40,6 +40,7 @@ export function generateActionButtons(
             generateTexts(indexes);
           return (
             <Button
+              key={key}
               type="button"
               size={"sm"}
               variant={"secondary"}

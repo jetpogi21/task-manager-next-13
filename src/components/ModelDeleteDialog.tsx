@@ -51,7 +51,7 @@ export const ModelDeleteDialog = <T, U>({
     return data;
   };
 
-  const { mutate, isLoading } = useMutation({
+  const { mutate, isPending: isLoading } = useMutation({
     mutationFn: deleteModels,
     onMutate: () => {
       if (formik) {

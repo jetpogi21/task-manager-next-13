@@ -57,7 +57,9 @@ const RegisterForm: React.FC = () => {
     return data;
   };
 
-  const { isLoading, mutateAsync } = useMutation(registerUser);
+  const { isPending: isLoading, mutateAsync } = useMutation({
+    mutationFn: registerUser,
+  });
 
   const handleSubmit = async (
     values: FormValues,

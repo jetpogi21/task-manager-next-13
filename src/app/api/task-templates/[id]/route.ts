@@ -22,10 +22,12 @@ export const GET = async (
   req: Request,
   { params }: { params: { id: string } }
 ) => {
+  //This can be a slug or id
   const id = params.id;
 
   let { sqlString, replacements } = getMainModelSQL({}, true, modelConfig, {
     primaryKeyValue: id,
+    useSlug: !!modelConfig.slugField,
   });
 
   let data = await sequelize.query(sqlString, {

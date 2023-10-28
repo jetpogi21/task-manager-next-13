@@ -6,7 +6,7 @@ import {
   TaskTemplateSearchParams,
 } from "@/interfaces/TaskTemplateInterfaces";
 import { Form, Formik, FormikHelpers, FormikProps } from "formik";
-import React, { MouseEventHandler, useEffect, useRef, useState } from "react";
+import React, { MouseEventHandler, useEffect, useMemo, useRef, useState } from "react";
 import { BasicModel } from "@/interfaces/GeneralInterfaces";
 import { useListURLStore, useURL } from "@/hooks/useURL";
 import { Button } from "@/components/ui/Button";
@@ -30,24 +30,35 @@ import { getPrevURL } from "@/lib/getPrevURL";
 import { ModelDeleteDialog } from "@/components/ModelDeleteDialog";
 import ModelDropzonesForRelationships from "@/components/ModelDropzonesForRelationships";
 import { generateGridTemplateAreas } from "@/lib/generateGridTemplateAreas";
+import { cn } from "@/lib/utils";
+import { getFirstAndLastFieldInForm } from "@/lib/getFirstAndLastFieldInForm";
+
+interface ModelFormProps {
+  onSuccess: () => void;
+}
 
 interface TaskTemplateFormProps {
   data: TaskTemplateModel | null;
   id: string;
+  modalFormProps?: ModelFormProps;
 }
 
 const modelConfig = TaskTemplateConfig;
 const primaryKeyField = findModelPrimaryKeyField(modelConfig).fieldName;
-const slugField = TaskTemplateConfig.slugField || primaryKeyField;
+const slugField = modelConfig.slugField || primaryKeyField;
 
 const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
-  const { id } = prop;
+  const { id, modalFormProps } = prop;
   const { router, query, pathname } = useURL<TaskTemplateSearchParams>();
 
   //Local states
   const [mounted, setMounted] = useState(false);
   const [recordName, setRecordName] = useState(
-    prop.data ? prop.data.id.toString() : "New " + modelConfig.verboseModelName
+    prop.data
+      ? modelConfig.slugField
+        ? (prop.data[modelConfig.slugField as keyof typeof prop.data] as string)
+        : prop.data.id.toString()
+      : "New " + modelConfig.verboseModelName
   );
   const [isUpdating, setIsUpdating] = useState(false);
   const [hasUpdate, setHasUpdate] = useState(false);
@@ -104,14 +115,27 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
     setIsUpdating(true);
 
     const goToNewRecord = () => {
-      formik.setValues(getInitialValues(modelConfig));
-      window.history.pushState(
-        {},
-        "",
-        `${window.location.origin}/${modelConfig.modelPath}/new`
+      formik.setValues(
+        getInitialValues<TaskTemplateFormFormikInitialValues>(
+          modelConfig,
+          undefined,
+          { requiredList }
+        )
       );
+      if (!modalFormProps) {
+        window.history.pushState(
+          {},
+          "",
+          `${window.location.origin}/${modelConfig.modelPath}/new`
+        );
+      }
+
       setRecordName(`New ${modelConfig.verboseModelName}`);
-      handleFocus();
+
+      const [firstFieldInForm, _] = getFirstAndLastFieldInForm(
+        modelConfig.fields
+      );
+      (document.querySelector(`#${firstFieldInForm}`) as HTMLElement)!.focus();
     };
 
     //e.g. { deletedTaskTemplateTags: [], newTags: []}
@@ -140,11 +164,13 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
             if (data[primaryKeyField]) {
               formik.setFieldValue(primaryKeyField, data[primaryKeyField]);
 
-              window.history.pushState(
-                {},
-                "",
-                `${window.location.origin}/${modelConfig.modelPath}/${data[primaryKeyField]}`
-              );
+              if (!modalFormProps) {
+                window.history.pushState(
+                  {},
+                  "",
+                  `${window.location.origin}/${modelConfig.modelPath}/${data[primaryKeyField]}`
+                );
+              }
             }
 
             //This will replace the breadcrum record name
@@ -169,6 +195,12 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
               data,
               deletedAndNewSimpleRecords
             );
+
+            if (!modalFormProps) {
+              router.replace(prevURL);
+            } else {
+              modalFormProps.onSuccess();
+            }
           }
 
           toast({
@@ -178,8 +210,6 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
           });
 
           setIsUpdating(false);
-
-          router.replace(prevURL);
         })
         .catch((err) => {
           console.log(err);
@@ -219,7 +249,27 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
                 options={{
                   requiredList,
                   setHasUpdate: handleHasUdpate,
-                  onChange: {},
+                  onChange: {
+                    /*
+                    finishDateTime: (newValue) => {
+                      if (newValue) {
+                        formik.setFieldValue("isFinished", true);
+                      } else {
+                        formik.setFieldValue("isFinished", false);
+                      }
+                    },
+                    isFinished: (newValue) => {
+                      if (newValue) {
+                        formik.setFieldValue(
+                          "finishDateTime",
+                          toValidDateTime(new Date())
+                        );
+                      } else {
+                        formik.setFieldValue("finishDateTime", "");
+                      }
+                    },
+                    */
+                  },
                 }}
               />
             </div>
@@ -227,6 +277,10 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
               modelConfig={modelConfig}
               formik={formik}
               handleHasUdpate={handleHasUdpate}
+              /*
+              //Get only the blank files from the original value
+                filterFunction={(item) => !item.file}
+              */
             />
             <ModelDropzonesForRelationships
               formik={formik}
@@ -235,7 +289,7 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
             />
           </div>
         </div>
-        <div className="flex gap-2 mt-auto">
+        <div className={cn("flex gap-2 mt-auto", modalFormProps && "pt-8")}>
           <Button
             type="button"
             size={"sm"}
@@ -260,17 +314,20 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
           >
             Save
           </Button>
-          <Button
-            type="button"
-            size={"sm"}
-            variant={"ghost"}
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(prevURL);
-            }}
-          >
-            Back
-          </Button>
+          {modalFormProps ? null : (
+            <Button
+              type="button"
+              size={"sm"}
+              variant={"ghost"}
+              onClick={(e) => {
+                e.preventDefault();
+                router.push(prevURL);
+              }}
+            >
+              Back
+            </Button>
+          )}
+
           {(id !== "new" ||
             recordName !== "New " + modelConfig.verboseModelName) && (
             <Button
@@ -301,12 +358,15 @@ const TaskTemplateForm: React.FC<TaskTemplateFormProps> = (prop) => {
 
   return mounted ? (
     <>
-      <Breadcrumb
-        links={[
-          { name: modelConfig.pluralizedVerboseModelName, href: prevURL },
-          { name: recordName, href: "" },
-        ]}
-      />
+      {!modalFormProps ? (
+        <Breadcrumb
+          links={[
+            { name: modelConfig.pluralizedVerboseModelName, href: prevURL },
+            { name: recordName, href: "" },
+          ]}
+        />
+      ) : null}
+
       <Formik
         initialValues={initialValues}
         onSubmit={handleFormikSubmit}

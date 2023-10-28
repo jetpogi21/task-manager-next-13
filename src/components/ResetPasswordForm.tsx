@@ -32,7 +32,8 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ token }) => {
     }
   };
 
-  const { mutate, isLoading } = useMutation(resetPassword, {
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: resetPassword,
     onSuccess: (data) => {
       //router.push("/dashboard");
     },

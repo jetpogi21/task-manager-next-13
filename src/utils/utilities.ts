@@ -8,11 +8,11 @@ import {
   SortOptionsAsString,
 } from "../interfaces/GeneralInterfaces";
 import { NextRouter } from "next/router";
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
 import { encodeParams } from "@/utils/utils";
 import Decimal from "decimal.js";
 import { DataType, ModelConfig } from "@/interfaces/ModelConfig";
 import { AppConfig } from "@/lib/app-config";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 //expected: year,month or -year,-month
 export const getSortedBy = (
