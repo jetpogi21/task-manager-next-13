@@ -12,6 +12,7 @@ import { AppConfig } from "@/lib/app-config";
 import { getInitials } from "@/utils/utilities";
 import { ModelConfig } from "@/interfaces/ModelConfig";
 import { Home, LayoutGrid } from "lucide-react";
+import { LucideIcons } from "@/components/LucideIcons";
 
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
@@ -19,7 +20,7 @@ const Sidebar: React.FC = () => {
   const homeItem: Partial<ModelConfig> = {
     modelName: "home",
     modelPath: "/",
-    navItemIcon: Home, // Assuming this is the type based on provided context
+    navItemIcon: "Home", // Assuming this is the type based on provided context
     navItemOrder: 1,
     pluralizedVerboseModelName: "Home",
   };
@@ -55,41 +56,46 @@ const Sidebar: React.FC = () => {
             ({
               modelName,
               modelPath,
-              navItemIcon: NavItemIcon,
+              navItemIcon,
               pluralizedVerboseModelName,
-            }) => (
-              <Tooltip key={modelName}>
-                <TooltipTrigger>
-                  <Link
-                    href={"/" + modelPath!}
-                    className={cn(
-                      "p-2 rounded-sm hover:bg-accent flex gap-4 items-center",
-                      {
-                        "bg-accent":
-                          modelPath === "/"
-                            ? pathname === modelPath
-                            : pathname.includes(modelPath!),
-                      }
-                    )}
+            }) => {
+              const NavItemIcon = navItemIcon
+                ? LucideIcons[navItemIcon as keyof typeof LucideIcons]
+                : null;
+              return (
+                <Tooltip key={modelName}>
+                  <TooltipTrigger>
+                    <Link
+                      href={"/" + modelPath!}
+                      className={cn(
+                        "p-2 rounded-sm hover:bg-accent flex gap-4 items-center",
+                        {
+                          "bg-accent":
+                            modelPath === "/"
+                              ? pathname === modelPath
+                              : pathname.includes(modelPath!),
+                        }
+                      )}
+                    >
+                      {NavItemIcon ? (
+                        <NavItemIcon className="w-3.5 h-3.5" />
+                      ) : (
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                      )}
+                      <span className="hidden lg:block">
+                        {pluralizedVerboseModelName}
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    className="lg:hidden"
                   >
-                    {NavItemIcon ? (
-                      <NavItemIcon className="w-3.5 h-3.5" />
-                    ) : (
-                      <LayoutGrid className="w-3.5 h-3.5" />
-                    )}
-                    <span className="hidden lg:block">
-                      {pluralizedVerboseModelName}
-                    </span>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent
-                  side="right"
-                  className="lg:hidden"
-                >
-                  {pluralizedVerboseModelName}
-                </TooltipContent>
-              </Tooltip>
-            )
+                    {pluralizedVerboseModelName}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
           )}
       </div>
     </div>
